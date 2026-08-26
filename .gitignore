@@ -1,0 +1,32 @@
+# ===== Kết quả build =====
+# Không neo bằng dấu "/" ở đầu, để phủ mọi module: app/, engine/, ai/, net/
+build/
+.gradle/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+/captures
+
+# ===== Cấu hình máy cá nhân (KHÔNG được commit) =====
+# local.properties chứa đường dẫn Android SDK riêng của từng máy.
+local.properties
+*.iml
+
+# ===== Sản phẩm đóng gói =====
+*.apk
+*.aab
+*.aar
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.keystore
+*.jks
+
+# ===== IDE =====
+# Bỏ qua toàn bộ .idea: phần lớn là trạng thái cục bộ, sinh lại được khi mở project.
+.idea/
+
+# ===== Hệ điều hành =====
+.DS_Store
+
+# ===== Rác tạm của Phase 0 =====
+.phase0-removed/
