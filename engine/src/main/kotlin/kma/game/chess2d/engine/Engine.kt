@@ -1,17 +1,31 @@
 package kma.game.chess2d.engine
 
 /**
- * Placeholder cua Phase 0.
+ * Cạnh ngoài của module :engine — nơi :app và :ai gọi vào.
  *
- * Phase 1 se thay the file nay bang:
- *  - Board: ByteArray(64), make/unmake + undo stack
- *  - Move: value class dong goi vao mot Int
- *  - MoveGenerator, Fen, Perft
+ * Giữ mọi thứ ở đây thật mỏng: để UI phụ thuộc vào một điểm duy nhất thay vì
+ * gọi tản mát vào từng lớp bên trong.
  */
 object Engine {
-    const val START_FEN: String =
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-    /** So o tren ban co. Chi dung de xac nhan module build va test chay duoc. */
-    const val BOARD_SIZE: Int = 64
+    const val BOARD_SIZE = Squares.COUNT
+
+    const val START_FEN = Fen.START
+
+    /** Tạo thế cờ đầu ván. */
+    fun newGame(): Board = Board.startPosition()
+
+    fun fromFen(fen: String): Board = Fen.parse(fen)
+
+    fun legalMoves(board: Board): List<Move> = MoveGenerator.legalMoves(board)
+
+    fun status(board: Board): GameStatus = Rules.status(board)
+
+    /** Tìm nước hợp lệ khọp với ô đi và ô đến mà người chơi vừa chọn trên UI.
+     *
+     * Trả về danh sách vì phong cấp có tới bốn nước cùng ô đi và ô đến — lúc đó UI
+     * phải hỏi người chơi muốn phong quân gì.
+     */
+    fun movesBetween(board: Board, from: Int, to: Int): List<Move> =
+        legalMoves(board).filter { it.from == from && it.to == to }
 }
