@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
 
+    // StateFlow. Lifecycle keo theo san, nhung khai bao ro de khong phu thuoc ngam.
+    implementation(libs.kotlinx.coroutines.core)
+
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

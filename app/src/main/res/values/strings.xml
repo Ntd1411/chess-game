@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">Chess 2D</string>
+
+    <!-- Ten hai ben -->
+    <string name="side_white">Trắng</string>
+    <string name="side_black">Đen</string>
+
+    <!-- Nhan trang thai van dau -->
+    <string name="status_turn">Lượt %1$s</string>
+    <string name="status_check">%1$s đang bị chiếu</string>
+    <string name="status_checkmate">%1$s thắng — hết nước</string>
+    <string name="status_stalemate">Hòa — bí nước đi</string>
+    <string name="status_draw_fifty">Hòa — luật 50 nước</string>
+
+    <!-- Nut bam -->
+    <string name="action_undo">Đi lại</string>
+    <string name="action_new_game">Ván mới</string>
+    <string name="action_cancel">Hủy</string>
+
+    <!-- Hop thoai phong cap -->
+    <string name="promotion_title">Chọn quân phong cấp</string>
 </resources>
