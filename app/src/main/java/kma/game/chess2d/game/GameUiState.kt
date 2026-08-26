@@ -1,5 +1,6 @@
 package kma.game.chess2d.game
 
+import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Squares
@@ -26,6 +27,15 @@ data class PendingPromotion(
     val options: List<Move>,
 )
 
+/** Chế độ chơi. LAN ở Phase 4 sẽ thêm một giá trị nữa vào đây. */
+enum class GameMode {
+    /** Hai người trên cùng máy. */
+    TWO_PLAYERS,
+
+    /** Người chơi cầm Trắng, máy cầm Đen. */
+    VS_COMPUTER,
+}
+
 /**
  * Toàn bộ những gì giao diện cần để vẽ một khung hình.
  *
@@ -33,6 +43,8 @@ data class PendingPromotion(
  * với make/unmake, còn đi ra UI thì là snapshot immutable. Giao diện không bao giờ
  * giữ tham chiếu tới <code>Board</code>, nên không thể đọc phải trạng thái nửa vời trong
  * lúc search đang đi thử hàng triệu nước ở Phase 3.
+ *
+ * @param aiThinking máy đang nghĩ. Trong lúc này bàn cờ không nhận chạm và nút Đi lại bị khóa.
  */
 data class GameUiState(
     val pieces: List<PieceOnBoard> = emptyList(),
@@ -45,4 +57,7 @@ data class GameUiState(
     val checkedKingSquare: Int = Squares.NONE,
     val canUndo: Boolean = false,
     val pendingPromotion: PendingPromotion? = null,
+    val mode: GameMode = GameMode.TWO_PLAYERS,
+    val difficulty: Difficulty = Difficulty.MEDIUM,
+    val aiThinking: Boolean = false,
 )

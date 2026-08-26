@@ -11,6 +11,15 @@
     <string name="status_checkmate">%1$s thắng — hết nước</string>
     <string name="status_stalemate">Hòa — bí nước đi</string>
     <string name="status_draw_fifty">Hòa — luật 50 nước</string>
+    <string name="status_draw_repetition">Hòa — lặp ba lần thế</string>
+    <string name="status_draw_material">Hòa — không đủ quân</string>
+
+    <!-- Chon che do va cap do -->
+    <string name="mode_two_players">Hai người</string>
+    <string name="mode_vs_computer">Đấu máy</string>
+    <string name="difficulty_easy">Dễ</string>
+    <string name="difficulty_medium">Vừa</string>
+    <string name="difficulty_hard">Khó</string>
 
     <!-- Nut bam -->
     <string name="action_undo">Đi lại</string>

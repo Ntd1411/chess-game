@@ -27,6 +27,16 @@ class MoveList(capacity: Int = MAX_MOVES) {
 
     operator fun get(index: Int): Move = Move(raws[index])
 
+    /**
+     * Đổi chỗ hai nước. Move ordering dùng để đẩy nước đáng thử nhất lên đầu ngay
+     * tại chỗ, thay vì sort ra một danh sách mới ở mọi node của search.
+     */
+    fun swap(first: Int, second: Int) {
+        val temp = raws[first]
+        raws[first] = raws[second]
+        raws[second] = temp
+    }
+
     fun isEmpty(): Boolean = size == 0
 
     fun isNotEmpty(): Boolean = size > 0

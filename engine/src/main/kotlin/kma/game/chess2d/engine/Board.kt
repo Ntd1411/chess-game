@@ -26,12 +26,49 @@ class Board {
 
     private val historyMoves = IntArray(MAX_HISTORY)
     private val historyState = IntArray(MAX_HISTORY)
+
+    /**
+     * Khóa Zobrist của từng thế cờ đã đi qua. Khóa không suy ra được từ bàn cờ sau
+     * khi hoàn nguyên, nên phải nằm trên undo stack giống các thông tin khác. Đây
+     * cũng chính là dữ liệu để đếm lặp ba lần thế.
+     */
+    private val historyHash = LongArray(MAX_HISTORY)
     private var ply = 0
+
+    /** Khóa Zobrist của thế cờ hiện tại, được cập nhật tăng dần trong makeMove. */
+    var hashKey = 0L
+        private set
 
     /** Số nước đang nằm trên undo stack — UI dùng để bật/tắt nút Undo. */
     val movesPlayed: Int get() = ply
 
     fun canUndo(): Boolean = ply > 0
+
+    /**
+     * Tính lại khóa Zobrist từ đầu. Chỉ gọi sau khi dựng thế bằng setPiece — trong
+     * lúc đi thì khóa được cập nhật tăng dần, rẻ hơn rất nhiều.
+     */
+    fun refreshHash() {
+        hashKey = Zobrist.compute(this)
+    }
+
+    /**
+     * Số lần thế cờ hiện tại đã xuất hiện, tính cả lần này.
+     *
+     * Chỉ quét lùi tới nước không hoàn nguyên được gần nhất (ăn quân hoặc đi tốt):
+     * trước mốc đó thế cờ vĩnh viễn không thể trùng lại, nên quét thêm là vô ích.
+     * Bước nhảy 2 vì chỉ thế cờ cùng bên đến lượt mới có thể trùng nhau.
+     */
+    fun repetitionCount(): Int {
+        var count = 1
+        val earliest = maxOf(0, ply - halfmoveClock)
+        var index = ply - 2
+        while (index >= earliest) {
+            if (historyHash[index] == hashKey) count++
+            index -= 2
+        }
+        return count
+    }
 
     fun clear() {
         squares.fill(Piece.NONE)
@@ -43,6 +80,7 @@ class Board {
         kingSquares[0] = Squares.NONE
         kingSquares[1] = Squares.NONE
         ply = 0
+        hashKey = 0L
     }
 
     fun pieceAt(square: Int): Byte = squares[square]
@@ -123,19 +161,34 @@ class Board {
 
         historyMoves[ply] = move.raw
         historyState[ply] = packState(captured)
+        historyHash[ply] = hashKey
         ply++
+
+        // Giữ lại để cập nhật khóa Zobrist ở cuối hàm: cả hai sắp bị ghi đè.
+        val previousCastling = castlingRights
+        val previousEpSquare = epSquare
 
         squares[capturedSquare] = Piece.NONE
         squares[from] = Piece.NONE
         squares[to] = if (move.isPromotion) Piece.of(move.promotionType, movingWhite) else mover
 
+        // Giữ lại ô xe để cập nhật khóa Zobrist: nhập thành dịch chuyển hai quân.
+        var rookFrom = Squares.NONE
+        var rookTo = Squares.NONE
         if (moverType == Piece.KING) {
             kingSquares[colorIndex(movingWhite)] = to
             // Vua nhậy hai ô, xe nhảy qua vua. Ô xe suy ra được từ ô đến của vua.
             when (flag) {
-                Move.CASTLE_KING -> moveRook(to + 1, to - 1)
-                Move.CASTLE_QUEEN -> moveRook(to - 2, to + 1)
+                Move.CASTLE_KING -> {
+                    rookFrom = to + 1
+                    rookTo = to - 1
+                }
+                Move.CASTLE_QUEEN -> {
+                    rookFrom = to - 2
+                    rookTo = to + 1
+                }
             }
+            if (rookFrom != Squares.NONE) moveRook(rookFrom, rookTo)
         }
 
         // Một phép AND xử lý đủ ba trường hợp mất quyền nhập thành:
@@ -151,6 +204,25 @@ class Board {
         halfmoveClock = if (moverType == Piece.PAWN || captured != Piece.NONE) 0 else halfmoveClock + 1
         if (!movingWhite) fullmoveNumber++
         whiteToMove = !movingWhite
+
+        // Cập nhật khóa Zobrist tăng dần: chỉ XOR đúng những gì vừa đổi. Tính lại từ
+        // đầu sẽ tốn 64 ô ở mọi node của search, còn ở đây chỉ vài phép XOR.
+        var key = hashKey
+        if (captured != Piece.NONE) key = key xor Zobrist.pieceKey(captured, capturedSquare)
+        key = key xor Zobrist.pieceKey(mover, from)
+        // Đọc quân ở ô đến từ bàn cờ để phong cấp tự đúng, không phải xét lại flag.
+        key = key xor Zobrist.pieceKey(squares[to], to)
+        if (rookFrom != Squares.NONE) {
+            val rook = Piece.of(Piece.ROOK, movingWhite)
+            key = key xor Zobrist.pieceKey(rook, rookFrom) xor Zobrist.pieceKey(rook, rookTo)
+        }
+        key = key xor Zobrist.castling[previousCastling and 0xF] xor
+            Zobrist.castling[castlingRights and 0xF]
+        if (previousEpSquare != Squares.NONE) {
+            key = key xor Zobrist.epFile[Squares.fileOf(previousEpSquare)]
+        }
+        if (epSquare != Squares.NONE) key = key xor Zobrist.epFile[Squares.fileOf(epSquare)]
+        hashKey = key xor Zobrist.sideToMove
     }
 
     /** Hoàn nguyên nước đi gần nhất. Đây cũng chính là tính năng Undo của UI. */
@@ -160,6 +232,8 @@ class Board {
 
         val move = Move(historyMoves[ply])
         val state = historyState[ply]
+        // Khóa lấy lại nguyên vẹn từ stack, không cần XOR ngược từng bước.
+        hashKey = historyHash[ply]
 
         whiteToMove = !whiteToMove
         val movingWhite = whiteToMove

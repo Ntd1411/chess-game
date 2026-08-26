@@ -44,6 +44,8 @@ object Fen {
         // Hai trường cuối là tùy chọn: nhiều bộ test perft ghi FEN không có chúng.
         board.halfmoveClock = parts.getOrNull(4)?.toIntOrNull() ?: 0
         board.fullmoveNumber = parts.getOrNull(5)?.toIntOrNull() ?: 1
+        // Khóa Zobrist phải tính một lần ở đây: setPiece dựng thế không cập nhật khóa.
+        board.refreshHash()
         return board
     }
 

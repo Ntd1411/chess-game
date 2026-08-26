@@ -19,13 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
+import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.GameStatus
+import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.GameUiState
 import kma.game.chess2d.game.GameViewModel
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 
-/** Màn hình chơi 2 người trên cùng máy — mốc 1 của MVP. */
+/** Màn hình chơi: hai người trên cùng máy hoặc đấu máy ở ba cấp độ. */
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
@@ -35,10 +37,45 @@ fun GameScreen(
 
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(text = statusLabel(state), style = MaterialTheme.typography.titleLarge)
+
+        // Chọn chế độ. Đổi chế độ giữa ván được phép: ván đang chơi được giữ nguyên,
+        // máy chỉ nhắc lượt từ thế cờ hiện tại.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ChoiceButton(
+                label = stringResource(R.string.mode_two_players),
+                selected = state.mode == GameMode.TWO_PLAYERS,
+                onClick = { viewModel.setMode(GameMode.TWO_PLAYERS) },
+            )
+            ChoiceButton(
+                label = stringResource(R.string.mode_vs_computer),
+                selected = state.mode == GameMode.VS_COMPUTER,
+                onClick = { viewModel.setMode(GameMode.VS_COMPUTER) },
+            )
+        }
+
+        if (state.mode == GameMode.VS_COMPUTER) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ChoiceButton(
+                    label = stringResource(R.string.difficulty_easy),
+                    selected = state.difficulty == Difficulty.EASY,
+                    onClick = { viewModel.setDifficulty(Difficulty.EASY) },
+                )
+                ChoiceButton(
+                    label = stringResource(R.string.difficulty_medium),
+                    selected = state.difficulty == Difficulty.MEDIUM,
+                    onClick = { viewModel.setDifficulty(Difficulty.MEDIUM) },
+                )
+                ChoiceButton(
+                    label = stringResource(R.string.difficulty_hard),
+                    selected = state.difficulty == Difficulty.HARD,
+                    onClick = { viewModel.setDifficulty(Difficulty.HARD) },
+                )
+            }
+        }
 
         ChessBoard(
             pieces = state.pieces,
@@ -52,7 +89,10 @@ fun GameScreen(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = viewModel::undo, enabled = state.canUndo) {
+            OutlinedButton(
+                onClick = viewModel::undo,
+                enabled = state.canUndo && !state.aiThinking,
+            ) {
                 Text(stringResource(R.string.action_undo))
             }
             Button(onClick = viewModel::newGame) {
@@ -67,6 +107,16 @@ fun GameScreen(
             onChosen = viewModel::onPromotionChosen,
             onDismiss = viewModel::onPromotionDismissed,
         )
+    }
+}
+
+/** Nút chọn một trong nhiều: tô đậy là đang chọn. */
+@Composable
+private fun ChoiceButton(label: String, selected: Boolean, onClick: () -> Unit) {
+    if (selected) {
+        Button(onClick = onClick) { Text(label) }
+    } else {
+        OutlinedButton(onClick = onClick) { Text(label) }
     }
 }
 
@@ -86,5 +136,7 @@ private fun statusLabel(state: GameUiState): String {
         GameStatus.CHECKMATE -> stringResource(R.string.status_checkmate, otherSide)
         GameStatus.STALEMATE -> stringResource(R.string.status_stalemate)
         GameStatus.DRAW_FIFTY_MOVES -> stringResource(R.string.status_draw_fifty)
+        GameStatus.DRAW_REPETITION -> stringResource(R.string.status_draw_repetition)
+        GameStatus.DRAW_INSUFFICIENT_MATERIAL -> stringResource(R.string.status_draw_material)
     }
 }
