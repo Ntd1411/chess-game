@@ -17,6 +17,7 @@
     <!-- Chon che do va cap do -->
     <string name="mode_two_players">Hai người</string>
     <string name="mode_vs_computer">Đấu máy</string>
+    <string name="mode_lan">Qua mạng LAN</string>
     <string name="difficulty_easy">Dễ</string>
     <string name="difficulty_medium">Vừa</string>
     <string name="difficulty_hard">Khó</string>
@@ -25,7 +26,55 @@
     <string name="action_undo">Đi lại</string>
     <string name="action_new_game">Ván mới</string>
     <string name="action_cancel">Hủy</string>
+    <string name="action_back">Quay lại</string>
+    <string name="action_dismiss">Đóng</string>
+    <string name="action_yes">Đồng ý</string>
+    <string name="action_no">Từ chối</string>
 
     <!-- Hop thoai phong cap -->
     <string name="promotion_title">Chọn quân phong cấp</string>
+
+    <!-- Sanh cho LAN -->
+    <string name="lan_title">Chơi qua mạng LAN</string>
+    <string name="lan_your_name">Tên của bạn</string>
+    <string name="lan_host_room">Mở phòng</string>
+    <string name="lan_rooms_title">Phòng trong mạng</string>
+    <string name="lan_no_rooms">Chưa thấy phòng nào.\n\nHai máy phải cùng một mạng Wi-Fi. Một số mạng công cộng chặn hai thiết bị nói chuyện trực tiếp; lúc đó hãy phát Wi-Fi từ một điện thoại, hoặc vào bằng địa chỉ ở dưới.</string>
+    <string name="lan_room_busy">Đang có ván</string>
+    <string name="lan_room_incompatible">Khác phiên bản giao thức</string>
+    <string name="lan_join">Vào</string>
+    <string name="lan_manual_label">Vào bằng địa chỉ</string>
+    <string name="lan_manual_hint">192.168.1.5:45455</string>
+    <string name="lan_manual_join">Vào phòng theo địa chỉ</string>
+
+    <!-- Van dau qua LAN -->
+    <string name="lan_waiting_guest">Đang chờ đối thủ vào phòng (cổng %1$d)…</string>
+    <string name="lan_connecting">Đang kết nối…</string>
+    <string name="lan_opponent">Đối thủ: %1$s</string>
+    <string name="lan_you_play">Bạn cầm %1$s</string>
+    <string name="lan_latency">%1$d ms</string>
+    <string name="lan_your_turn">Lượt bạn</string>
+    <string name="lan_their_turn">Lượt đối thủ</string>
+    <string name="lan_action_resign">Đầu hàng</string>
+    <string name="lan_action_draw">Xin hòa</string>
+    <string name="lan_action_rematch">Đấu lại</string>
+    <string name="lan_action_leave">Rời phòng</string>
+    <string name="lan_waiting_draw">Đã gửi lời xin hòa, đang chờ trả lời…</string>
+    <string name="lan_waiting_rematch">Đã gửi lời mời đấu lại, đang chờ trả lời…</string>
+    <string name="lan_draw_offer_text">%1$s xin hòa. Bạn đồng ý không?</string>
+    <string name="lan_rematch_offer_text">%1$s muốn đấu lại. Bạn đồng ý không?</string>
+    <string name="lan_outcome_draw">Hòa — hai bên đồng ý</string>
+    <string name="lan_outcome_resign">%1$s đã đầu hàng</string>
+
+    <!-- Thong bao cua tang mang -->
+    <string name="lan_notice_version">Máy kia dùng phiên bản giao thức khác. Hai máy cần cùng một bản ứng dụng.</string>
+    <string name="lan_notice_busy">Phòng đó đã có người chơi.</string>
+    <string name="lan_notice_handshake">Bắt tay thất bại, không vào được phòng.</string>
+    <string name="lan_notice_move_rejected">Trọng tài từ chối nước đi: %1$s</string>
+    <string name="lan_notice_resynced">Đã đồng bộ lại ván theo máy mở phòng.</string>
+    <string name="lan_notice_opponent_left">Đối thủ đã rời phòng.</string>
+    <string name="lan_notice_retrying">Mất kết nối, đang thử nối lại…</string>
+    <string name="lan_notice_disconnected">Mất kết nối: %1$s</string>
+    <string name="lan_notice_connect_failed">Không kết nối được tới phòng.</string>
+    <string name="lan_notice_bad_address">Địa chỉ không hợp lệ. Đúng dạng là 192.168.1.5:45455</string>
 </resources>

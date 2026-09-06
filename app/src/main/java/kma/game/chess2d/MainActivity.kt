@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import kma.game.chess2d.ui.screen.GameScreen
+import kma.game.chess2d.ui.screen.AppRoot
 import kma.game.chess2d.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChessTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    GameScreen(modifier = Modifier.padding(innerPadding))
+                    AppRoot(modifier = Modifier.padding(innerPadding))
                 }
             }
         }

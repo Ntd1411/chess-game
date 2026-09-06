@@ -27,9 +27,15 @@ import kma.game.chess2d.game.GameViewModel
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 
-/** Màn hình chơi: hai người trên cùng máy hoặc đấu máy ở ba cấp độ. */
+/**
+ * Màn hình chơi: hai người trên cùng máy hoặc đấu máy ở ba cấp độ.
+ *
+ * @param onOpenLan mở nhánh chơi qua LAN. LAN không phải một giá trị của [GameMode] mà
+ *        là một nhánh riêng, vì nó có ViewModel và vòng đời riêng hẳn.
+ */
 @Composable
 fun GameScreen(
+    onOpenLan: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: GameViewModel = viewModel(),
 ) {
@@ -55,6 +61,11 @@ fun GameScreen(
                 selected = state.mode == GameMode.VS_COMPUTER,
                 onClick = { viewModel.setMode(GameMode.VS_COMPUTER) },
             )
+            // Không dùng ChoiceButton: đây không phải một lựa chọn của ván hiện tại mà là
+            // cửa đi sang một màn hình khác.
+            OutlinedButton(onClick = onOpenLan) {
+                Text(stringResource(R.string.mode_lan))
+            }
         }
 
         if (state.mode == GameMode.VS_COMPUTER) {

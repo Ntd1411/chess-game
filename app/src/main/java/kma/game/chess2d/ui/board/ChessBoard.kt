@@ -38,6 +38,10 @@ import kma.game.chess2d.game.PieceOnBoard
  *
  * Riêng quân cờ là composable độc lập, vì chúng cần animate vị trí — thứ không làm
  * được nếu quân cũng nằm trong Canvas.
+ *
+ * @param flipped xoay bàn 180 độ để quân Đen ngồi phía dưới. Cần cho chế độ LAN: khách
+ *        cầm Đen mà vẫn thấy Trắng ở dưới thì mọi trực giác về hướng tiến quân bị đảo
+ *        ngược. Chỉ đổi cách <b>vẽ</b> và cách đọc cú chạm; số ô của engine không đổi.
  */
 @Composable
 fun ChessBoard(
@@ -48,6 +52,7 @@ fun ChessBoard(
     lastMoveTo: Int,
     checkedKingSquare: Int,
     onSquareTap: (Int) -> Unit,
+    flipped: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
@@ -55,21 +60,36 @@ fun ChessBoard(
         val squarePx = with(LocalDensity.current) { squareSize.toPx() }
         val occupied = remember(pieces) { pieces.mapTo(HashSet()) { it.square } }
 
+        // Hai phép đổi tọa độ duy nhất trong file: ô của engine -> cột/hàng trên màn hình.
+        // Gom vào một chỗ để việc lật bàn không rải rác thành tám phép trừ ở tám nơi.
+        val screenCol = { square: Int ->
+            val file = Squares.fileOf(square)
+            if (flipped) BOARD_EDGE - 1 - file else file
+        }
+        val screenRow = { square: Int ->
+            val rank = Squares.rankOf(square)
+            if (flipped) rank else BOARD_EDGE - 1 - rank
+        }
+
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(squarePx) {
+                .pointerInput(squarePx, flipped) {
                     detectTapGestures { tap ->
-                        val file = (tap.x / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
+                        val col = (tap.x / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
                         val row = (tap.y / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
                         // Hàng 1 nằm dưới cùng trên màn hình nhưng là rank 0 trong engine.
-                        onSquareTap(Squares.of(file, BOARD_EDGE - 1 - row))
+                        val file = if (flipped) BOARD_EDGE - 1 - col else col
+                        val rank = if (flipped) row else BOARD_EDGE - 1 - row
+                        onSquareTap(Squares.of(file, rank))
                     }
                 },
         ) {
             for (square in 0 until Squares.COUNT) {
-                val topLeft = Offset(squarePx * Squares.fileOf(square), squarePx * screenRow(square))
+                val topLeft = Offset(squarePx * screenCol(square), squarePx * screenRow(square))
                 val size = Size(squarePx, squarePx)
+                // Màu ô tính theo ô của engine, không theo vị trí màn hình: a1 phải luôn
+                // là ô tối kể cả khi lật bàn.
                 val isLight = (Squares.fileOf(square) + Squares.rankOf(square)) % 2 != 0
 
                 drawRect(if (isLight) BoardColors.lightSquare else BoardColors.darkSquare, topLeft, size)
@@ -83,7 +103,7 @@ fun ChessBoard(
             // Gợi ý nước đi vẽ sau cùng để không bị màu ô nào phủ lên.
             for (target in legalTargets) {
                 val center = Offset(
-                    squarePx * Squares.fileOf(target) + squarePx / 2f,
+                    squarePx * screenCol(target) + squarePx / 2f,
                     squarePx * screenRow(target) + squarePx / 2f,
                 )
                 if (occupied.contains(target)) {
@@ -104,7 +124,7 @@ fun ChessBoard(
             // key theo id quân: đây chính là thứ biến một cú nhảy thành một chuyển động.
             key(piece.id) {
                 val x by animateDpAsState(
-                    targetValue = squareSize * Squares.fileOf(piece.square),
+                    targetValue = squareSize * screenCol(piece.square),
                     animationSpec = tween(MOVE_ANIMATION_MILLIS),
                     label = "pieceX",
                 )
@@ -172,9 +192,6 @@ internal fun glyphOf(piece: Byte): String = when (Piece.typeOf(piece)) {
     Piece.KNIGHT -> "\u265E"
     else -> "\u265F"
 }
-
-/** Hàng trên màn hình: rank 7 ở trên cùng nên Trắng ngồi phía dưới. */
-private fun screenRow(square: Int): Int = BOARD_EDGE - 1 - Squares.rankOf(square)
 
 private const val BOARD_EDGE = 8
 private const val MOVE_ANIMATION_MILLIS = 180

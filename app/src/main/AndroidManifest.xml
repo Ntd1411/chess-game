@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Choi qua LAN: mo socket TCP va gui/nhan beacon UDP trong mang noi bo.
+         Khong xin quyen vi tri: tu Android 10, quyen vi tri chi can khi doc
+         danh sach mang Wi-Fi lan can, con viec noi hai may trong cung mang
+         thi khong can. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
