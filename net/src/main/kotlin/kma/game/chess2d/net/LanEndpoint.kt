@@ -1,0 +1,423 @@
+package kma.game.chess2d.net
+
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.util.UUID
+import kma.game.chess2d.engine.Move
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * Phần chung của một đầu kết nối LAN, dùng cho cả host và khách.
+ *
+ * Giữ chung một lớp cho hai vai vì 90% hành vi là giống nhau (đi, xin hòa, đầu hàng,
+ * heartbeat, đọc thông điệp). Phần khác biệt duy nhất là **quyền trọng tài**: host
+ * từ chối nước đi sai và gửi lại trạng thái đúng, còn khách thấy lệch thì chỉ được
+ * quyền xin đồng bộ. Các chỗ đó đều được đánh dấu bằng [isReferee].
+ *
+ * Vòng đời: [state] và [game] sống lâu hơn socket. Kết nối đứt thì ván đấu vẫn ở
+ * đó, chỉ có `connected = false` — đây là điều kiện để nối lại được sau khi tắt
+ * Wi-Fi 10 giây mà không mất ván.
+ */
+abstract class LanEndpoint(val role: LanRole, val localName: String) {
+
+    protected val game = NetGame()
+
+    private val _state = MutableStateFlow(LanGameState(role = role))
+    val state: StateFlow<LanGameState> = _state.asStateFlow()
+
+    private val _events = MutableSharedFlow<LanEvent>(extraBufferCapacity = EVENT_BUFFER)
+    val events: SharedFlow<LanEvent> = _events.asSharedFlow()
+
+    /** Kênh đang mở, null khi chưa nối hoặc vừa đứt. */
+    @Volatile
+    protected var channel: MessageChannel? = null
+
+    /** Vé nhận diện để nối lại đúng ván cũ. Host sinh ra, khách nhận và gửi trả lại. */
+    @Volatile
+    protected var resumeToken: String? = null
+
+    protected var gameId: Int = 0
+
+    /** Màu của khách. Host mặc định giữ Trắng ván đầu, mỗi ván đấu lại thì đổi bên. */
+    protected var guestPlaysWhite: Boolean = false
+
+    /** Người dùng đã chủ động rời phòng: không được tự nối lại nữa. */
+    @Volatile
+    protected var closedByUser: Boolean = false
+
+    /**
+     * Đối thủ đã chủ động rời phòng.
+     *
+     * Trạng thái riêng, không dùng chung với [closedByUser]: khách thì phải ngừng nối
+     * lại, nhưng host thì vẫn phải tiếp tục mở phòng cho người khác vào.
+     */
+    @Volatile
+    protected var peerLeft: Boolean = false
+
+    protected val isReferee: Boolean get() = role == LanRole.HOST
+
+    protected fun youPlayWhite(): Boolean = if (isReferee) !guestPlaysWhite else guestPlaysWhite
+
+    protected fun currentSync(): StateSync = game.toSync(guestPlaysWhite, gameId)
+
+    protected fun emit(event: LanEvent) {
+        _events.tryEmit(event)
+    }
+
+    protected fun updateState(transform: (LanGameState) -> LanGameState) {
+        _state.update(transform)
+    }
+
+    /** Đẩy trạng thái bàn cờ từ [game] ra [state]. Gọi sau **mọi** thay đổi ván đấu. */
+    protected fun publishState() {
+        _state.update {
+            it.copy(
+                youPlayWhite = youPlayWhite(),
+                startFen = game.startFen,
+                moves = game.rawMoves(),
+                whiteToMove = game.whiteToMove,
+                status = game.status,
+                ruleFinished = game.isOver,
+                gameId = gameId,
+            )
+        }
+    }
+
+    protected fun send(message: NetMessage): Boolean {
+        val open = channel ?: return false
+        return runCatching { open.send(message) }.isSuccess
+    }
+
+    // ---------------------------------------------------------------- hành động của người chơi
+
+    /**
+     * Đi một nước.
+     *
+     * Áp dụng cục bộ trước rồi mới gửi: người chơi thấy quân chạy ngay, không phải
+     * chờ một vòng mạng. Rủi ro lệch được bù bằng [NetMessage.MoveRejected]: nếu trọng
+     * tài không đồng ý, bàn cờ được dụng lại theo trọng tài.
+     *
+     * @return false khi nước đi bị chính engine của mình từ chối, hoặc chưa tới lượt.
+     */
+    fun submitMove(raw: Int): Boolean {
+        if (!state.value.yourTurn) return false
+        val atPly = game.ply
+        if (game.rejectionReason(raw, youPlayWhite(), atPly) != null) return false
+        if (!game.apply(raw)) return false
+        publishState()
+        send(NetMessage.MoveMade(gameId, atPly, raw, Move(raw).toUci()))
+        return true
+    }
+
+    fun resign() {
+        if (state.value.finished) return
+        updateState {
+            it.copy(outcome = LanOutcome.RESIGNATION, resignedByWhite = youPlayWhite())
+        }
+        send(NetMessage.Resign(gameId))
+    }
+
+    fun offerDraw() {
+        if (state.value.finished || state.value.waitingDrawReply) return
+        updateState { it.copy(waitingDrawReply = true) }
+        send(NetMessage.DrawOffer(gameId))
+    }
+
+    fun respondDraw(accepted: Boolean) {
+        if (!state.value.opponentOffersDraw) return
+        updateState {
+            it.copy(
+                opponentOffersDraw = false,
+                outcome = if (accepted) LanOutcome.DRAW_AGREED else it.outcome,
+            )
+        }
+        send(NetMessage.DrawResponse(gameId, accepted))
+        emit(LanEvent.DrawSettled(accepted))
+    }
+
+    fun offerRematch() {
+        if (!state.value.finished || state.value.waitingRematchReply) return
+        updateState { it.copy(waitingRematchReply = true) }
+        send(NetMessage.RematchOffer(gameId))
+    }
+
+    fun respondRematch(accepted: Boolean) {
+        if (!state.value.opponentOffersRematch) return
+        updateState { it.copy(opponentOffersRematch = false) }
+        if (accepted && isReferee) {
+            // Trọng tài dụng ván mới rồi mới trả lời, để gói trả lời mang luôn ván mới.
+            startNextGame()
+            send(NetMessage.RematchResponse(true, currentSync()))
+        } else {
+            send(NetMessage.RematchResponse(accepted, null))
+        }
+        emit(LanEvent.RematchSettled(accepted))
+    }
+
+    /** Rời phòng có báo trước để đối thủ không phải ngồi chờ hết timeout. */
+    fun leave(reason: String = "") {
+        closedByUser = true
+        send(NetMessage.Bye(reason))
+        channel?.close()
+        channel = null
+        updateState { it.copy(connected = false) }
+    }
+
+    /** Đi bằng ký hiệu UCI ("e2e4", "e7e8q"). Dành cho client dòng lệnh và cho test. */
+    fun submitUci(uci: String): Boolean {
+        val move = game.legalMoves().firstOrNull { it.toUci().equals(uci, ignoreCase = true) }
+            ?: return false
+        return submitMove(move.raw)
+    }
+
+    /** Các nước đi hợp lệ ở thế cờ hiện tại. */
+    fun legalMoves(): List<Move> = game.legalMoves()
+
+    /** FEN hiện tại, dùng để in log và để test kiểm tra nhanh. */
+    fun fen(): String = game.fen()
+
+    /** Xin trọng tài gửi lại toàn bộ ván. Chỉ có nghĩa với khách. */
+    fun requestSync(reason: String = "manual") {
+        if (isReferee) return
+        send(NetMessage.SyncRequest(reason))
+    }
+
+    // ---------------------------------------------------------------- vòng đời kết nối
+
+    protected fun onConnected(opponentName: String) {
+        updateState { it.copy(connected = true, opponentName = opponentName) }
+        publishState()
+        emit(LanEvent.Connected(opponentName, youPlayWhite()))
+    }
+
+    /**
+     * Vòng đọc thông điệp, kèm một coroutine ping chạy song song.
+     *
+     * Ping là thứ duy nhất biến "mất mạng" thành một sự kiện quan sát được: cờ vua có
+     * thể im lặng hàng phút khi đối thủ đang nghĩ, nên không thể lấy "lâu không có nước
+     * đi" làm dấu hiệu mất kết nối.
+     *
+     * Hàm trả về khi kết nối đóng, và luôn dọn sạch trước khi trả về.
+     */
+    protected suspend fun pump(open: MessageChannel) {
+        try {
+            coroutineScope {
+                val heartbeat = launch(Dispatchers.IO) {
+                    while (isActive) {
+                        delay(LanTiming.PING_INTERVAL_MILLIS)
+                        if (!send(NetMessage.Ping(System.nanoTime()))) return@launch
+                    }
+                }
+                try {
+                    withContext(Dispatchers.IO) {
+                        while (true) {
+                            val message = open.receive() ?: break
+                            handle(message)
+                        }
+                    }
+                    emit(LanEvent.Disconnected("connection closed by peer", canRetry = !closedByUser))
+                } catch (timeout: SocketTimeoutException) {
+                    emit(
+                        LanEvent.Disconnected(
+                            "no data for ${LanTiming.CONNECTION_TIMEOUT_MILLIS} ms",
+                            canRetry = !closedByUser,
+                        ),
+                    )
+                } catch (bad: BadMessageException) {
+                    // Không giải mã được thì gần như chắc là hai bên khác phiên bản: nối lại vô ích.
+                    emit(LanEvent.Failed(LanErrorCode.VERSION_MISMATCH, bad.message ?: "bad message"))
+                    emit(LanEvent.Disconnected("protocol error", canRetry = false))
+                } catch (io: IOException) {
+                    emit(LanEvent.Disconnected(io.message ?: "io error", canRetry = !closedByUser))
+                } finally {
+                    heartbeat.cancel()
+                }
+            }
+        } catch (cancel: CancellationException) {
+            throw cancel
+        } finally {
+            open.close()
+            if (channel === open) channel = null
+            updateState { it.copy(connected = false, latencyMillis = -1) }
+        }
+    }
+
+    // ---------------------------------------------------------------- xử lý thông điệp
+
+    private fun handle(message: NetMessage) {
+        when (message) {
+            is NetMessage.Ping -> send(NetMessage.Pong(message.nanos))
+
+            is NetMessage.Pong -> {
+                val millis = (System.nanoTime() - message.nanos) / 1_000_000
+                updateState { it.copy(latencyMillis = millis) }
+            }
+
+            is NetMessage.MoveMade -> onOpponentMove(message)
+
+            is NetMessage.MoveAck -> Unit // Đã áp dụng cục bộ từ trước, không còn gì phải làm.
+
+            is NetMessage.MoveRejected -> {
+                applySync(message.sync)
+                emit(LanEvent.MoveRejected(message.reason))
+            }
+
+            is NetMessage.Sync -> {
+                applySync(message.state)
+                emit(LanEvent.Resynced)
+            }
+
+            is NetMessage.SyncRequest -> if (isReferee) send(NetMessage.Sync(currentSync()))
+
+            is NetMessage.Resign -> {
+                if (message.gameId != gameId) return
+                updateState {
+                    it.copy(outcome = LanOutcome.RESIGNATION, resignedByWhite = !youPlayWhite())
+                }
+            }
+
+            is NetMessage.DrawOffer -> {
+                if (message.gameId != gameId || state.value.finished) return
+                updateState { it.copy(opponentOffersDraw = true) }
+            }
+
+            is NetMessage.DrawResponse -> {
+                if (message.gameId != gameId) return
+                updateState {
+                    it.copy(
+                        waitingDrawReply = false,
+                        outcome = if (message.accepted) LanOutcome.DRAW_AGREED else it.outcome,
+                    )
+                }
+                emit(LanEvent.DrawSettled(message.accepted))
+            }
+
+            is NetMessage.RematchOffer -> updateState { it.copy(opponentOffersRematch = true) }
+
+            is NetMessage.RematchResponse -> {
+                updateState { it.copy(waitingRematchReply = false) }
+                when {
+                    !message.accepted -> Unit
+                    // Trọng tài nhận đồng ý: tự dụng ván mới rồi thông báo cho khách.
+                    isReferee -> {
+                        startNextGame()
+                        send(NetMessage.Sync(currentSync()))
+                    }
+                    message.sync != null -> applySync(message.sync)
+                }
+                emit(LanEvent.RematchSettled(message.accepted))
+            }
+
+            is NetMessage.Bye -> onPeerLeft(message.reason)
+
+            is NetMessage.Error -> emit(LanEvent.Failed(message.code, message.detail))
+
+            is NetMessage.Hello, is NetMessage.Welcome -> Unit // Chỉ hợp lệ trong lúc bắt tay.
+        }
+    }
+
+    /**
+     * Nước đi của đối thủ: tự kiểm tra lại bằng engine của mình.
+     *
+     * Hai vai xứ lý nước sai khác nhau, và đây là toàn bộ sự khác biệt giữa host và khách:
+     * host là trọng tài nên từ chối và áp trạng thái của mình; khách không có quyền đó
+     * nên chỉ xin đồng bộ lại.
+     */
+    private fun onOpponentMove(message: NetMessage.MoveMade) {
+        if (message.gameId != gameId) return
+        val reason = game.rejectionReason(message.raw, !youPlayWhite(), message.ply)
+        if (reason != null) {
+            if (isReferee) {
+                send(NetMessage.MoveRejected(gameId, reason, currentSync()))
+            } else {
+                send(NetMessage.SyncRequest(reason))
+            }
+            return
+        }
+        game.apply(message.raw)
+        publishState()
+        if (isReferee) send(NetMessage.MoveAck(gameId, message.ply))
+    }
+
+    /**
+     * Đối thủ chủ động rời phòng — khác với mất kết nối, nối lại không còn ý nghĩa.
+     *
+     * Trọng tài còn phải dụng lại ván sạch và bỏ vé nối lại. Nếu không, phòng vẫn bị
+     * coi là "đang có ván" và mọi người vào sau đều bị từ chối bằng ROOM_BUSY.
+     */
+    private fun onPeerLeft(reason: String) {
+        peerLeft = true
+        emit(LanEvent.OpponentLeft(reason))
+        if (isReferee) {
+            resumeToken = null
+            gameId += 1
+            guestPlaysWhite = false
+            game.reset()
+            updateState { LanGameState(role = role) }
+            publishState()
+        }
+        channel?.close()
+    }
+
+    protected fun applySync(sync: StateSync) {
+        if (!game.restore(sync)) {
+            emit(LanEvent.Failed(LanErrorCode.BAD_HANDSHAKE, "cannot replay game state"))
+            return
+        }
+        val startsNewGame = sync.gameId != gameId
+        gameId = sync.gameId
+        guestPlaysWhite = sync.guestPlaysWhite
+        if (startsNewGame) updateState { it.copy(outcome = null, resignedByWhite = null) }
+        updateState {
+            it.copy(
+                opponentOffersDraw = false,
+                waitingDrawReply = false,
+                opponentOffersRematch = false,
+                waitingRematchReply = false,
+            )
+        }
+        publishState()
+    }
+
+    /** Dụng ván mới. Đổi màu hai bên để không ai giữ Trắng mãi. Chỉ trọng tài được gọi. */
+    protected fun startNextGame() {
+        gameId += 1
+        guestPlaysWhite = !guestPlaysWhite
+        game.reset()
+        updateState {
+            it.copy(
+                outcome = null,
+                resignedByWhite = null,
+                opponentOffersDraw = false,
+                waitingDrawReply = false,
+                opponentOffersRematch = false,
+                waitingRematchReply = false,
+            )
+        }
+        publishState()
+    }
+
+    private companion object {
+        const val EVENT_BUFFER = 32
+    }
+}
+
+/** Mã ngắn đủ để phân biệt phòng và vé nối lại trong phạm vi một mạng LAN. */
+internal fun randomLanId(): String = UUID.randomUUID().toString().take(8)
+
+/** Thời gian chờ giữa hai lần thử nối lại, và số lần thử tối đa. */
+internal const val RECONNECT_DELAY_MILLIS: Long = 1_000
+internal const val DEFAULT_RECONNECT_ATTEMPTS: Int = 5
