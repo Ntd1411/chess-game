@@ -22,23 +22,30 @@ import kotlinx.coroutines.withContext
 class LanGuest(localName: String) : LanEndpoint(LanRole.GUEST, localName) {
 
     /** Tiện dùng từ màn hình sảnh chờ: vào thẳng một phòng vừa tìm thấy. */
-    suspend fun run(room: DiscoveredRoom, reconnectAttempts: Int = DEFAULT_RECONNECT_ATTEMPTS) =
-        run(room.host, room.gamePort, reconnectAttempts)
+    suspend fun run(
+        room: DiscoveredRoom,
+        reconnectWindowMillis: Long = RECONNECT_WINDOW_MILLIS,
+    ) = run(room.host, room.gamePort, reconnectWindowMillis)
 
     /**
      * Nối tới host và phục vụ tới khi hết đường nối lại, bị từ chối, hoặc người dùng rời phòng.
+     *
+     * @param reconnectWindowMillis khoảng thời gian cố nối lại trước khi bỏ cuộc; 0 nghĩa là
+     *        không nối lại. Đếm theo **thời gian** chứ không theo số lần thử, vì khi Wi-Fi
+     *        đang tắt thì connect() thất bại tức thì (mạng không tới được, không phải hết
+     *        hạn chờ): đếm số lần thì năm lần thử cháy hết trong vài giây, trước cả khi
+     *        người dùng kịp bật lại Wi-Fi.
      */
     suspend fun run(
         host: String,
         port: Int,
-        reconnectAttempts: Int = DEFAULT_RECONNECT_ATTEMPTS,
+        reconnectWindowMillis: Long = RECONNECT_WINDOW_MILLIS,
     ) {
-        var failures = 0
+        var giveUpAt = System.currentTimeMillis() + reconnectWindowMillis
         while (currentCoroutineContext().isActive && !closedByUser && !peerLeft) {
             val open = withContext(Dispatchers.IO) { dial(host, port) }
             if (open == null) {
-                failures += 1
-                if (failures > reconnectAttempts) {
+                if (System.currentTimeMillis() >= giveUpAt) {
                     emit(LanEvent.Disconnected("cannot reach $host:$port", canRetry = false))
                     return
                 }
@@ -54,16 +61,13 @@ class LanGuest(localName: String) : LanEndpoint(LanRole.GUEST, localName) {
                 return
             }
 
-            failures = 0
             pump(open)
             // Rời phòng có chủ đích (bên nào cũng vậy) thì không tự nối lại.
             if (closedByUser || peerLeft) return
 
-            failures += 1
-            if (failures > reconnectAttempts) {
-                emit(LanEvent.Disconnected("lost connection to $host:$port", canRetry = false))
-                return
-            }
+            // Đã từng nối được, nên cửa sổ nối lại được tính lại từ đầu: một ván dài có thể
+            // gặp nhiều lần sóng yếu, lần sau không được phạt vì lần trước.
+            giveUpAt = System.currentTimeMillis() + reconnectWindowMillis
             delay(RECONNECT_DELAY_MILLIS)
         }
     }

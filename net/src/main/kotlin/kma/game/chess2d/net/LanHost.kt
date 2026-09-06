@@ -120,7 +120,9 @@ class LanHost(
 
         synchronized(joinLock) {
             val resuming = resumeToken != null && hello.resumeToken == resumeToken
-            val occupied = channel != null || game.ply > 0
+            // Đọc bàn cờ trong ổ khóa của nó: lúc này ván cũ có thể đang được luồng đọc
+            // của kết nối trước sửa dở.
+            val occupied = channel != null || withGame { game.ply } > 0
             if (occupied && !resuming) {
                 runCatching {
                     open.send(NetMessage.Error(LanErrorCode.ROOM_BUSY, "room already has a game"))
@@ -132,7 +134,7 @@ class LanHost(
                 // Khách mới: ván sạch, host giữ Trắng, vé nối lại mới.
                 gameId += 1
                 guestPlaysWhite = false
-                game.reset()
+                withGame { game.reset() }
                 resumeToken = randomLanId()
             }
 
@@ -140,7 +142,7 @@ class LanHost(
             val welcome = NetMessage.Welcome(
                 hostName = localName,
                 resumeToken = requireNotNull(resumeToken),
-                sync = currentSync(),
+                sync = withGame { currentSync() },
             )
             if (runCatching { open.send(welcome) }.isFailure) {
                 channel = null

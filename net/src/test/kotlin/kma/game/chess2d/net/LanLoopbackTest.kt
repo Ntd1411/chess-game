@@ -100,7 +100,7 @@ class LanLoopbackTest {
         withHost { host, port ->
             val guest = LanGuest("guest")
             val guestJob = launch(Dispatchers.IO) {
-                guest.run("127.0.0.1", port, reconnectAttempts = 0)
+                guest.run("127.0.0.1", port, reconnectWindowMillis = 0)
             }
             try {
                 waitUntil { host.state.value.connected && guest.state.value.connected }
@@ -138,7 +138,7 @@ class LanLoopbackTest {
         withHost { host, port ->
             val guest = LanGuest("guest")
             val guestJob = launch(Dispatchers.IO) {
-                guest.run("127.0.0.1", port, reconnectAttempts = 0)
+                guest.run("127.0.0.1", port, reconnectWindowMillis = 0)
             }
             try {
                 waitUntil { host.state.value.connected && guest.state.value.connected }
@@ -166,7 +166,7 @@ class LanLoopbackTest {
         withHost { host, port ->
             val guest = LanGuest("guest")
             val guestJob = launch(Dispatchers.IO) {
-                guest.run("127.0.0.1", port, reconnectAttempts = 0)
+                guest.run("127.0.0.1", port, reconnectWindowMillis = 0)
             }
             try {
                 waitUntil { host.state.value.connected && guest.state.value.connected }
@@ -269,7 +269,7 @@ class LanLoopbackTest {
         withHost { host, port ->
             val guest = LanGuest("guest")
             val guestJob = launch(Dispatchers.IO) {
-                guest.run("127.0.0.1", port, reconnectAttempts = 0)
+                guest.run("127.0.0.1", port, reconnectWindowMillis = 0)
             }
             try {
                 waitUntil { host.state.value.connected }

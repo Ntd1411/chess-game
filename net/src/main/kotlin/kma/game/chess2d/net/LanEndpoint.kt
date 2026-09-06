@@ -6,6 +6,7 @@ import java.util.UUID
 import kma.game.chess2d.engine.Move
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,6 +36,18 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
 
     protected val game = NetGame()
 
+    /**
+     * Ở khóa bảo vệ [game].
+     *
+     * [NetGame] không thread-safe, mà nó bị hai luồng chạm vào: thông điệp đến được
+     * xử lý trên luồng đọc socket, còn cú chạm của người chơi đến từ luồng UI.
+     * Mọi chỗ đọc/sửa [game] đều phải nằm trong ổ khóa này.
+     */
+    private val gameLock = Any()
+
+    /** Chạy [block] trong ổ khóa của [game]. Dành cho lớp con (ví dụ lúc bắt tay). */
+    protected fun <T> withGame(block: () -> T): T = synchronized(gameLock, block)
+
     private val _state = MutableStateFlow(LanGameState(role = role))
     val state: StateFlow<LanGameState> = _state.asStateFlow()
 
@@ -44,6 +57,17 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     /** Kênh đang mở, null khi chưa nối hoặc vừa đứt. */
     @Volatile
     protected var channel: MessageChannel? = null
+
+    /**
+     * Hàng đợi gửi đi, được một luồng ghi riêng rút ra.
+     *
+     * Đây không phải tối ưu hóa mà là điều kiện để chạy được trên Android: ghi socket
+     * ngay tại luồng gọi nghĩa là ghi socket trên luồng UI, và Android ném thẳng
+     * NetworkOnMainThreadException. Hàng đợi khiến [send] chỉ còn là một phép nối
+     * vào danh sách, không chờ, không chạm vào dây.
+     */
+    @Volatile
+    private var outbox: Channel<NetMessage>? = null
 
     /** Vé nhận diện để nối lại đúng ván cũ. Host sinh ra, khách nhận và gửi trả lại. */
     @Volatile
@@ -96,9 +120,15 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
         }
     }
 
+    /**
+     * Xếp một thông điệp vào hàng đợi gửi đi. Gọi được từ bất kỳ luồng nào.
+     *
+     * @return false khi chưa có kết nối nào để gửi. Lưu ý true chỉ có nghĩa "đã xếp
+     *         hàng", không phải "đối thủ đã nhận" — TCP không cho ai biết điều đó ngay.
+     */
     protected fun send(message: NetMessage): Boolean {
-        val open = channel ?: return false
-        return runCatching { open.send(message) }.isSuccess
+        val queue = outbox ?: return false
+        return queue.trySend(message).isSuccess
     }
 
     // ---------------------------------------------------------------- hành động của người chơi
@@ -112,14 +142,14 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
      *
      * @return false khi nước đi bị chính engine của mình từ chối, hoặc chưa tới lượt.
      */
-    fun submitMove(raw: Int): Boolean {
-        if (!state.value.yourTurn) return false
+    fun submitMove(raw: Int): Boolean = withGame {
+        if (!state.value.yourTurn) return@withGame false
         val atPly = game.ply
-        if (game.rejectionReason(raw, youPlayWhite(), atPly) != null) return false
-        if (!game.apply(raw)) return false
+        if (game.rejectionReason(raw, youPlayWhite(), atPly) != null) return@withGame false
+        if (!game.apply(raw)) return@withGame false
         publishState()
         send(NetMessage.MoveMade(gameId, atPly, raw, Move(raw).toUci()))
-        return true
+        true
     }
 
     fun resign() {
@@ -154,8 +184,8 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
         send(NetMessage.RematchOffer(gameId))
     }
 
-    fun respondRematch(accepted: Boolean) {
-        if (!state.value.opponentOffersRematch) return
+    fun respondRematch(accepted: Boolean): Unit = withGame {
+        if (!state.value.opponentOffersRematch) return@withGame
         updateState { it.copy(opponentOffersRematch = false) }
         if (accepted && isReferee) {
             // Trọng tài dụng ván mới rồi mới trả lời, để gói trả lời mang luôn ván mới.
@@ -170,24 +200,28 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     /** Rời phòng có báo trước để đối thủ không phải ngồi chờ hết timeout. */
     fun leave(reason: String = "") {
         closedByUser = true
-        send(NetMessage.Bye(reason))
-        channel?.close()
-        channel = null
+        // Không đóng socket ngay khi còn hàng đợi: luồng ghi sẽ đóng ngay sau khi Bye
+        // ra được đến dây. Đóng trước thì đối thủ chỉ thấy kết nối chết và phải ngồi
+        // chờ hết hạn timeout thay vì biết ngay là đối thủ đã rồi phòng.
+        if (!send(NetMessage.Bye(reason))) {
+            channel?.close()
+            channel = null
+        }
         updateState { it.copy(connected = false) }
     }
 
     /** Đi bằng ký hiệu UCI ("e2e4", "e7e8q"). Dành cho client dòng lệnh và cho test. */
-    fun submitUci(uci: String): Boolean {
+    fun submitUci(uci: String): Boolean = withGame {
         val move = game.legalMoves().firstOrNull { it.toUci().equals(uci, ignoreCase = true) }
-            ?: return false
-        return submitMove(move.raw)
+            ?: return@withGame false
+        submitMove(move.raw)
     }
 
     /** Các nước đi hợp lệ ở thế cờ hiện tại. */
-    fun legalMoves(): List<Move> = game.legalMoves()
+    fun legalMoves(): List<Move> = withGame { game.legalMoves() }
 
     /** FEN hiện tại, dùng để in log và để test kiểm tra nhanh. */
-    fun fen(): String = game.fen()
+    fun fen(): String = withGame { game.fen() }
 
     /** Xin trọng tài gửi lại toàn bộ ván. Chỉ có nghĩa với khách. */
     fun requestSync(reason: String = "manual") {
@@ -213,8 +247,23 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
      * Hàm trả về khi kết nối đóng, và luôn dọn sạch trước khi trả về.
      */
     protected suspend fun pump(open: MessageChannel) {
+        val queue = Channel<NetMessage>(Channel.UNLIMITED)
+        outbox = queue
         try {
             coroutineScope {
+                // Luồng ghi duy nhất của kết nối này: mọi thông điệp ra dây đều đi qua đây,
+                // nên việc ghi socket không bao giờ xảy ra trên luồng UI.
+                launch(Dispatchers.IO) {
+                    for (message in queue) {
+                        if (runCatching { open.send(message) }.isFailure) break
+                        // Bye là thông điệp cuối cùng có nghĩa: đóng socket ngay sau khi nó đã
+                        // thật sự ra đến dây.
+                        if (message is NetMessage.Bye) {
+                            open.close()
+                            break
+                        }
+                    }
+                }
                 val heartbeat = launch(Dispatchers.IO) {
                     while (isActive) {
                         delay(LanTiming.PING_INTERVAL_MILLIS)
@@ -244,11 +293,16 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
                     emit(LanEvent.Disconnected(io.message ?: "io error", canRetry = !closedByUser))
                 } finally {
                     heartbeat.cancel()
+                    // Đóng hàng đợi để luồng ghi tự kết thúc vòng lặp, thay vì bị hủy giữa
+                    // lúc đang ghi dở một dòng JSON.
+                    queue.close()
                 }
             }
         } catch (cancel: CancellationException) {
             throw cancel
         } finally {
+            queue.close()
+            if (outbox === queue) outbox = null
             open.close()
             if (channel === open) channel = null
             updateState { it.copy(connected = false, latencyMillis = -1) }
@@ -257,7 +311,15 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
 
     // ---------------------------------------------------------------- xử lý thông điệp
 
-    private fun handle(message: NetMessage) {
+    /**
+     * Điểm vào duy nhất của thông điệp đến.
+     *
+     * Khóa [game] ngay ở đây vì hàm này chạy trên luồng đọc socket, còn các hành động
+     * của người chơi chạy trên luồng UI — hai luồng sửa cùng một bàn cờ.
+     */
+    private fun handle(message: NetMessage) = withGame { handleLocked(message) }
+
+    private fun handleLocked(message: NetMessage) {
         when (message) {
             is NetMessage.Ping -> send(NetMessage.Pong(message.nanos))
 
@@ -418,6 +480,13 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
 /** Mã ngắn đủ để phân biệt phòng và vé nối lại trong phạm vi một mạng LAN. */
 internal fun randomLanId(): String = UUID.randomUUID().toString().take(8)
 
-/** Thời gian chờ giữa hai lần thử nối lại, và số lần thử tối đa. */
+/** Thời gian chờ giữa hai lần thử nối lại. */
 internal const val RECONNECT_DELAY_MILLIS: Long = 1_000
-internal const val DEFAULT_RECONNECT_ATTEMPTS: Int = 5
+
+/**
+ * Khoảng thời gian cố nối lại trước khi coi như mất hẳn.
+ *
+ * 45 giây là con số đo từ hành vi thật: tắt rồi bật lại Wi-Fi trên Android mất
+ * khoảng 5–15 giây để liên kết xong và xin được IP, chưa kể người dùng còn phải bấm.
+ */
+internal const val RECONNECT_WINDOW_MILLIS: Long = 45_000
