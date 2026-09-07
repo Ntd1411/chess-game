@@ -1,25 +1,44 @@
-# Tự động dựng APK release khi đẩy một tag dạng v1.2.3 lên GitHub.
+# Tự động dựng APK release và phát hành lên GitHub Release.
 #
-# Chạy tay được bằng workflow_dispatch để thử toàn bộ quy trình mà không phải tạo tag
-# rác; lúc đó chỉ ra artifact chứ không tạo Release.
+# Có ba cách chạy:
+#   - Đẩy commit vào main: phiên bản được tự tính từ các commit kể từ tag gần nhất,
+#     tag mới được tạo ngay lúc phát hành.
+#   - Đẩy một tag dạng v1.2.3: dùng đúng phiên bản trong tag, không tự tính.
+#   - Bấm chạy tay (workflow_dispatch): chỉ thử quy trình, ra artifact chứ không
+#     tạo tag hay Release, nên không làm rác danh sách phiên bản.
+#
+# Muốn đẩy một commit vào main mà không phát hành thì ghi [skip release] trong
+# thông điệp commit.
 name: Release APK
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
 
-# Cần quyền ghi để tạo GitHub Release và đính file APK vào đó.
+# Cần quyền ghi để tạo tag, tạo GitHub Release và đính file APK vào đó.
 permissions:
   contents: write
+
+# Hai commit đẩy liên tiếp không được chạy song song, vì cả hai sẽ cùng đọc tag gần
+# nhất và tính ra cùng một số phiên bản.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
     steps:
+      # fetch-depth 0 để lấy toàn bộ tag và lịch sử commit, phục vụ việc tự tăng phiên bản.
       - name: Check out the repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -38,16 +57,50 @@ jobs:
       - name: Run the JVM tests
         run: ./gradlew :engine:test :ai:test :net:test
 
-      # versionName lấy từ tag (bỏ chữ v đứng đầu), versionCode lấy số lần chạy workflow
-      # vì nó luôn tăng. Chạy tay thì không có tag nên đặt tên tạm theo commit.
+      # Quy tắc tự tăng phiên bản, đọc các commit kể từ tag v* gần nhất:
+      #   - có commit kiểu "feat!:" hoặc "BREAKING CHANGE" -> tăng số major
+      #   - có commit kiểu "feat:" / "feat(scope):"          -> tăng số minor
+      #   - còn lại (fix, chore, docs...)                    -> tăng số patch
+      # versionCode luôn lấy số lần chạy workflow vì nó tăng đơn điệu, không bao giờ lặp.
       - name: Resolve the version
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            echo "VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            TAG_NAME="$GITHUB_REF_NAME"
           else
-            echo "VERSION_NAME=0.0.0-${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
+            LAST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
+            if [ -z "$LAST_TAG" ]; then
+              BASE="0.0.0"
+              LOG=$(git log --pretty=%B)
+            else
+              BASE="${LAST_TAG#v}"
+              LOG=$(git log --pretty=%B "$LAST_TAG..HEAD")
+            fi
+
+            BUMP=patch
+            if printf '%s\n' "$LOG" | grep -qE '^(BREAKING CHANGE|[a-z]+(\(.+\))?!:)'; then
+              BUMP=major
+            elif printf '%s\n' "$LOG" | grep -qE '^feat(\(.+\))?:'; then
+              BUMP=minor
+            fi
+
+            MAJOR=$(echo "$BASE" | cut -d. -f1)
+            MINOR=$(echo "$BASE" | cut -d. -f2)
+            PATCH=$(echo "$BASE" | cut -d. -f3)
+            case "$BUMP" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+            esac
+
+            VERSION_NAME="$MAJOR.$MINOR.$PATCH"
+            TAG_NAME="v$VERSION_NAME"
+            echo "Last tag ${LAST_TAG:-none}, bump $BUMP, next $TAG_NAME"
           fi
+
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_ENV"
 
       # Keystore được giữ dưới dạng base64 trong secret rồi giải ra file tạm của runner.
       # Báo lỗi rõ khi thiếu secret, vì nếu để chạy tiếp thì Gradle sẽ âm thầm ra một APK
@@ -82,9 +135,15 @@ jobs:
           name: chess-apk
           path: dist/*.apk
 
+      # Bước này tự tạo tag tại commit đang build khi tag chưa tồn tại, nên không cần
+      # đẩy tag bằng tay ở bước riêng. Chạy sau khi build xong để một lần build lỗi
+      # không đốt mất một số phiên bản.
       - name: Publish the GitHub release
-        if: github.ref_type == 'tag'
+        if: github.event_name != 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          target_commitish: ${{ github.sha }}
           files: dist/*.apk
           generate_release_notes: true
