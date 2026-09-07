@@ -11,6 +11,9 @@ build/
 # local.properties chứa đường dẫn Android SDK riêng của từng máy.
 local.properties
 *.iml
+# keystore.properties chứa mật khẩu keystore. Commit nhầm một lần là phải tạo key mới,
+# mà đổi key thì không cập nhật được app đã phát hành bằng key cũ.
+keystore.properties
 
 # ===== Sản phẩm đóng gói =====
 *.apk
