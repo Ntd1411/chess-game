@@ -108,12 +108,31 @@ jobs:
       - name: Decode the keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
             echo "Missing secret KEYSTORE_BASE64" >&2
             exit 1
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+          # Xoá mọi khoảng trắng rồi bỏ qua ký tự lạ khi giải base64. Giá trị dán vào
+          # secret rất hay bị lẫn dấu ngắt dòng, dấu cách, hoặc ký tự % mà zsh in ra ở
+          # cuối dòng không có newline; chỉ một ký tự lạ là base64 báo invalid input.
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' \
+            | base64 --decode --ignore-garbage > "$RUNNER_TEMP/release.jks"
+
+          if [ ! -s "$RUNNER_TEMP/release.jks" ]; then
+            echo "Decoded keystore is empty, re-create the KEYSTORE_BASE64 secret" >&2
+            exit 1
+          fi
+
+          # Mở thử keystore ngay tại đây để sai mật khẩu hay file hỏng hiện ra rõ ràng,
+          # thay vì lẫn trong hàng trăm dòng log của Gradle.
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" \
+            -storepass "$KEYSTORE_PASSWORD" > /dev/null; then
+            echo "Cannot open the keystore, check KEYSTORE_BASE64 and KEYSTORE_PASSWORD" >&2
+            exit 1
+          fi
 
       - name: Build the signed release APK
         env:
