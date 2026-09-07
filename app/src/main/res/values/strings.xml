@@ -59,8 +59,6 @@
     <string name="lan_action_draw">Xin hòa</string>
     <string name="lan_action_rematch">Đấu lại</string>
     <string name="lan_action_leave">Rời phòng</string>
-    <string name="lan_action_end_game">Kết thúc ván</string>
-    <string name="lan_action_close_room">Đóng phòng</string>
     <string name="lan_waiting_draw">Đã gửi lời xin hòa, đang chờ trả lời…</string>
     <string name="lan_waiting_rematch">Đã gửi lời mời đấu lại, đang chờ trả lời…</string>
     <string name="lan_draw_offer_text">%1$s xin hòa. Bạn đồng ý không?</string>
@@ -74,7 +72,8 @@
     <string name="lan_notice_handshake">Bắt tay thất bại, không vào được phòng.</string>
     <string name="lan_notice_move_rejected">Trọng tài từ chối nước đi: %1$s</string>
     <string name="lan_notice_resynced">Đã đồng bộ lại ván theo máy mở phòng.</string>
-    <string name="lan_notice_opponent_left">Đối thủ đã rời phòng.</string>
+    <string name="lan_notice_opponent_left">Đối thủ đã rời phòng. Đang chờ người khác vào.</string>
+    <string name="lan_notice_became_host">Đối thủ đã rời phòng. Bạn lên làm chủ phòng, đang chờ người khác vào.</string>
     <string name="lan_notice_retrying">Mất kết nối, đang thử nối lại…</string>
     <string name="lan_notice_disconnected">Mất kết nối: %1$s</string>
     <string name="lan_notice_connect_failed">Không kết nối được tới phòng.</string>

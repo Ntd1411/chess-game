@@ -25,7 +25,6 @@ import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
 import kma.game.chess2d.lan.LanUiState
 import kma.game.chess2d.net.LanOutcome
-import kma.game.chess2d.net.LanRole
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 
@@ -48,7 +47,6 @@ fun LanGameScreen(
     onOfferRematch: () -> Unit,
     onRespondRematch: (Boolean) -> Unit,
     onDismissNotice: () -> Unit,
-    onEndGame: () -> Unit,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -105,20 +103,10 @@ fun LanGameScreen(
                 onClick = onOfferRematch,
                 enabled = state.connected && state.finished && !state.waitingRematchReply,
             ) { Text(stringResource(R.string.lan_action_rematch)) }
-            // Host đang chơi thì nút này chỉ kết thúc ván chứ không đóng phòng: đóng theo luôn
-            // nghĩa là host phải mở lại phòng và đối thủ phải đi tìm lại từ đầu. Muốn đóng
-            // hẳn thì bấm tiếp lần nữa lúc đang chờ đối thủ.
-            val hostInGame = state.role == LanRole.HOST && state.connected
-            OutlinedButton(onClick = if (hostInGame) onEndGame else onLeave) {
-                Text(
-                    stringResource(
-                        when {
-                            hostInGame -> R.string.lan_action_end_game
-                            state.role == LanRole.HOST -> R.string.lan_action_close_room
-                            else -> R.string.lan_action_leave
-                        },
-                    ),
-                )
+            // Một nút duy nhất cho cả hai vai: rời phòng là rời khỏi phòng, không phải đóng
+            // phòng. Bên còn lại giữ phòng tiếp, nên phòng chỉ biến mất khi cả hai đều rời.
+            OutlinedButton(onClick = onLeave) {
+                Text(stringResource(R.string.lan_action_leave))
             }
         }
 
@@ -232,6 +220,7 @@ private fun noticeText(notice: LanNotice): String = when (notice.kind) {
     LanNoticeKind.MOVE_REJECTED -> stringResource(R.string.lan_notice_move_rejected, notice.detail)
     LanNoticeKind.RESYNCED -> stringResource(R.string.lan_notice_resynced)
     LanNoticeKind.OPPONENT_LEFT -> stringResource(R.string.lan_notice_opponent_left)
+    LanNoticeKind.BECAME_HOST -> stringResource(R.string.lan_notice_became_host)
     LanNoticeKind.DISCONNECTED_RETRYING -> stringResource(R.string.lan_notice_retrying)
     LanNoticeKind.DISCONNECTED_FINAL -> stringResource(R.string.lan_notice_disconnected, notice.detail)
     LanNoticeKind.CONNECT_FAILED -> stringResource(R.string.lan_notice_connect_failed)

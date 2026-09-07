@@ -93,24 +93,6 @@ class LanHost(
     }
 
     /**
-     * Bỏ đối thủ hiện tại nhưng **giữ phòng mở** cho người tiếp theo.
-     *
-     * Khác [leave]: [leave] đóng hẳn phòng (ngừng phát beacon, nghỉ nghe kết nối), còn
-     * hàm này chỉ kết thúc một ván. Không thể giữ cả hai: giữ ván cũ lại để chờ đúng
-     * người cũ quay về thì phòng phải khóa với mọi người khác, nên khi host chủ động
-     * bỏ đối thủ thì ván đó coi như xong luôn.
-     */
-    fun dropOpponent(reason: String = "") {
-        // Đánh dấu trước khi gửi: kết nối sắp đóng theo ý mình, không phải mất mạng.
-        peerLeft = true
-        if (!send(NetMessage.Bye(reason))) channel?.close()
-        // Giải phóng chỗ ngay, không chờ socket đóng xong: beacon lấy chính `channel` làm
-        // cờ `busy`, chậm một nhịp là máy khác vẫn thấy phòng "đang có ván".
-        channel = null
-        withGame { resetRoom() }
-    }
-
-    /**
      * Bắt tay: kiểm phiên bản, kiểm chỗ trống, rồi gửi [NetMessage.Welcome].
      *
      * Ba trường hợp phải phân biệt rõ, vì cách xử lý hoàn toàn khác nhau:

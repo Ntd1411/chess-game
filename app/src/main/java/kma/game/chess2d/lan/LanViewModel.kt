@@ -157,20 +157,11 @@ class LanViewModel : ViewModel() {
     }
 
     /**
-     * Host kết thúc ván đang chơi nhưng ở lại phòng, chờ đối thủ mới.
+     * Rời phòng và về sảnh chờ. Giống nhau cho cả hai vai.
      *
-     * Không dùng [leave] cho việc này: [leave] hủy cả phiên, nghĩa là beacon ngừng phát
-     * và phòng biến mất khỏi danh sách của mọi máy khác, host phải mở lại từ đầu.
+     * Rời phòng không đồng nghĩa với đóng phòng: bên còn lại sẽ giữ phòng tiếp (xem
+     * [onOpponentLeft]), nên phòng chỉ thực sự biến mất khi cả hai đều đã rời.
      */
-    fun endGame() {
-        val host = endpoint as? LanHost ?: return
-        selectedSquare = Squares.NONE
-        pendingPromotion = null
-        host.dropOpponent("host ended the game")
-        _uiState.update { it.copy(waitingForOpponent = true, notice = null) }
-    }
-
-    /** Đóng phòng (host) hoặc rời phòng (khách) rồi về sảnh chờ. */
     fun leave() {
         val leaving = endpoint
         val job = sessionJob
@@ -293,13 +284,7 @@ class LanViewModel : ViewModel() {
 
             LanEvent.Resynced -> notify(LanNoticeKind.RESYNCED)
 
-            is LanEvent.OpponentLeft -> {
-                // Host ở lại chờ người tiếp theo; khách thì phiên này coi như hết.
-                _uiState.update {
-                    it.copy(waitingForOpponent = it.role == LanRole.HOST)
-                }
-                notify(LanNoticeKind.OPPONENT_LEFT, event.reason)
-            }
+            is LanEvent.OpponentLeft -> onOpponentLeft(event.reason)
 
             is LanEvent.Disconnected -> notify(
                 if (event.canRetry) LanNoticeKind.DISCONNECTED_RETRYING else LanNoticeKind.DISCONNECTED_FINAL,
@@ -317,6 +302,29 @@ class LanViewModel : ViewModel() {
 
             is LanEvent.DrawSettled, is LanEvent.RematchSettled -> Unit // Trạng thái đã nói đủ.
         }
+    }
+
+    /**
+     * Đối thủ chủ động rời phòng.
+     *
+     * Phòng không chết theo người rời: host thì ở lại chờ người tiếp theo, còn khách
+     * thì **tự lên làm chủ phòng** — mở một phòng ngay trên máy mình rồi chờ. Nhờ vậy
+     * chỉ khi cả hai đều rời thì phòng mới biến mất khỏi danh sách.
+     *
+     * Ván cũ không được giữ lại: người vào sau là người khác, tiếp tục thế cờ của hai
+     * người trước là vô nghĩa.
+     */
+    private fun onOpponentLeft(reason: String) {
+        if (_uiState.value.role == LanRole.HOST) {
+            _uiState.update { it.copy(waitingForOpponent = true) }
+            notify(LanNoticeKind.OPPONENT_LEFT, reason)
+            return
+        }
+        // [host] gọi startSession, mà startSession hủy đúng cái job đang chạy hàm này. Không
+        // sao: phần còn lại của startSession không có điểm suspend nào nên vẫn chạy hết, và
+        // job mới được mở trong viewModelScope nên không chết theo job cũ.
+        host()
+        notify(LanNoticeKind.BECAME_HOST, reason)
     }
 
     private fun notify(kind: LanNoticeKind, detail: String = "") {
