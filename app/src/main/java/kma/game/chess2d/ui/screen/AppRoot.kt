@@ -63,6 +63,7 @@ private fun LanRoute(onExit: () -> Unit, modifier: Modifier = Modifier) {
             onOfferRematch = viewModel::offerRematch,
             onRespondRematch = viewModel::respondRematch,
             onDismissNotice = viewModel::dismissNotice,
+            onEndGame = viewModel::endGame,
             onLeave = viewModel::leave,
             modifier = modifier,
         )

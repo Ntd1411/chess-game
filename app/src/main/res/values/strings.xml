@@ -59,6 +59,8 @@
     <string name="lan_action_draw">Xin hòa</string>
     <string name="lan_action_rematch">Đấu lại</string>
     <string name="lan_action_leave">Rời phòng</string>
+    <string name="lan_action_end_game">Kết thúc ván</string>
+    <string name="lan_action_close_room">Đóng phòng</string>
     <string name="lan_waiting_draw">Đã gửi lời xin hòa, đang chờ trả lời…</string>
     <string name="lan_waiting_rematch">Đã gửi lời mời đấu lại, đang chờ trả lời…</string>
     <string name="lan_draw_offer_text">%1$s xin hòa. Bạn đồng ý không?</string>

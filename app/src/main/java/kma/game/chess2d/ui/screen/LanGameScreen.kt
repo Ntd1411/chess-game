@@ -25,6 +25,7 @@ import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
 import kma.game.chess2d.lan.LanUiState
 import kma.game.chess2d.net.LanOutcome
+import kma.game.chess2d.net.LanRole
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 
@@ -47,6 +48,7 @@ fun LanGameScreen(
     onOfferRematch: () -> Unit,
     onRespondRematch: (Boolean) -> Unit,
     onDismissNotice: () -> Unit,
+    onEndGame: () -> Unit,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -103,8 +105,20 @@ fun LanGameScreen(
                 onClick = onOfferRematch,
                 enabled = state.connected && state.finished && !state.waitingRematchReply,
             ) { Text(stringResource(R.string.lan_action_rematch)) }
-            OutlinedButton(onClick = onLeave) {
-                Text(stringResource(R.string.lan_action_leave))
+            // Host đang chơi thì nút này chỉ kết thúc ván chứ không đóng phòng: đóng theo luôn
+            // nghĩa là host phải mở lại phòng và đối thủ phải đi tìm lại từ đầu. Muốn đóng
+            // hẳn thì bấm tiếp lần nữa lúc đang chờ đối thủ.
+            val hostInGame = state.role == LanRole.HOST && state.connected
+            OutlinedButton(onClick = if (hostInGame) onEndGame else onLeave) {
+                Text(
+                    stringResource(
+                        when {
+                            hostInGame -> R.string.lan_action_end_game
+                            state.role == LanRole.HOST -> R.string.lan_action_close_room
+                            else -> R.string.lan_action_leave
+                        },
+                    ),
+                )
             }
         }
 

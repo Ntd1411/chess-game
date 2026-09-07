@@ -156,7 +156,21 @@ class LanViewModel : ViewModel() {
         }
     }
 
-    /** Rời phòng hẳn và về sảnh chể. */
+    /**
+     * Host kết thúc ván đang chơi nhưng ở lại phòng, chờ đối thủ mới.
+     *
+     * Không dùng [leave] cho việc này: [leave] hủy cả phiên, nghĩa là beacon ngừng phát
+     * và phòng biến mất khỏi danh sách của mọi máy khác, host phải mở lại từ đầu.
+     */
+    fun endGame() {
+        val host = endpoint as? LanHost ?: return
+        selectedSquare = Squares.NONE
+        pendingPromotion = null
+        host.dropOpponent("host ended the game")
+        _uiState.update { it.copy(waitingForOpponent = true, notice = null) }
+    }
+
+    /** Đóng phòng (host) hoặc rời phòng (khách) rồi về sảnh chờ. */
     fun leave() {
         val leaving = endpoint
         val job = sessionJob

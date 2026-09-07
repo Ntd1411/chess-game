@@ -83,10 +83,12 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     protected var closedByUser: Boolean = false
 
     /**
-     * Đối thủ đã chủ động rời phòng.
+     * Phiên hiện tại đã kết thúc có chủ đích: đối thủ rời phòng, hoặc chính mình bỏ đối thủ.
      *
-     * Trạng thái riêng, không dùng chung với [closedByUser]: khách thì phải ngừng nối
-     * lại, nhưng host thì vẫn phải tiếp tục mở phòng cho người khác vào.
+     * Trạng thái riêng, không dùng chung với [closedByUser]: [closedByUser] nói về cả
+     * phòng (khách thì ngừng nối lại, host thì đóng cửa), còn cờ này chỉ nói về một kết
+     * nối — host vẫn tiếp tục mở phòng cho người khác vào. Vì vậy host phải xóa cờ này
+     * mỗi lần nhận người mới.
      */
     @Volatile
     protected var peerLeft: Boolean = false
@@ -129,6 +131,18 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     protected fun send(message: NetMessage): Boolean {
         val queue = outbox ?: return false
         return queue.trySend(message).isSuccess
+    }
+
+    /**
+     * Báo mất kết nối, trừ khi phiên vừa kết thúc có chủ đích.
+     *
+     * Rời phòng cũng làm socket đóng, nên nếu báo vô điều kiện thì người dùng nhận hai
+     * thông báo cho một sự việc, trong đó cái thứ hai ("mất kết nối") còn nói sai nguyên
+     * nhân. [LanEvent.OpponentLeft] đã mô tả đúng chuyện xảy ra.
+     */
+    private fun emitDisconnected(reason: String, canRetry: Boolean = true) {
+        if (peerLeft) return
+        emit(LanEvent.Disconnected(reason, canRetry = canRetry && !closedByUser))
     }
 
     // ---------------------------------------------------------------- hành động của người chơi
@@ -277,20 +291,15 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
                             handle(message)
                         }
                     }
-                    emit(LanEvent.Disconnected("connection closed by peer", canRetry = !closedByUser))
+                    emitDisconnected("connection closed by peer")
                 } catch (timeout: SocketTimeoutException) {
-                    emit(
-                        LanEvent.Disconnected(
-                            "no data for ${LanTiming.CONNECTION_TIMEOUT_MILLIS} ms",
-                            canRetry = !closedByUser,
-                        ),
-                    )
+                    emitDisconnected("no data for ${LanTiming.CONNECTION_TIMEOUT_MILLIS} ms")
                 } catch (bad: BadMessageException) {
                     // Không giải mã được thì gần như chắc là hai bên khác phiên bản: nối lại vô ích.
                     emit(LanEvent.Failed(LanErrorCode.VERSION_MISMATCH, bad.message ?: "bad message"))
-                    emit(LanEvent.Disconnected("protocol error", canRetry = false))
+                    emitDisconnected("protocol error", canRetry = false)
                 } catch (io: IOException) {
-                    emit(LanEvent.Disconnected(io.message ?: "io error", canRetry = !closedByUser))
+                    emitDisconnected(io.message ?: "io error")
                 } finally {
                     heartbeat.cancel()
                     // Đóng hàng đợi để luồng ghi tự kết thúc vòng lặp, thay vì bị hủy giữa
@@ -423,15 +432,25 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     private fun onPeerLeft(reason: String) {
         peerLeft = true
         emit(LanEvent.OpponentLeft(reason))
-        if (isReferee) {
-            resumeToken = null
-            gameId += 1
-            guestPlaysWhite = false
-            game.reset()
-            updateState { LanGameState(role = role) }
-            publishState()
-        }
+        if (isReferee) resetRoom()
         channel?.close()
+    }
+
+    /**
+     * Dựng lại một phòng sạch cho người tiếp theo. Chỉ trọng tài được gọi.
+     *
+     * Bỏ vé nối lại là phần quan trọng nhất: còn vé và còn nước đi thì phòng vẫn bị coi
+     * là "đang có ván", và mọi người vào sau đều bị từ chối bằng ROOM_BUSY.
+     *
+     * Phải gọi trong ổ khóa của [game] (xem [withGame]).
+     */
+    protected fun resetRoom() {
+        resumeToken = null
+        gameId += 1
+        guestPlaysWhite = false
+        game.reset()
+        updateState { LanGameState(role = role) }
+        publishState()
     }
 
     protected fun applySync(sync: StateSync) {
