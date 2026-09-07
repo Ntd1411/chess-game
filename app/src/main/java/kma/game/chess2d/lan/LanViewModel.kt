@@ -46,6 +46,15 @@ class LanViewModel : ViewModel() {
     private var sessionJob: Job? = null
     private var endpoint: LanEndpoint? = null
 
+    /**
+     * Cách nối lại phòng hiện tại, chỉ có nghĩa với khách.
+     *
+     * Giữ nguyên hàm đã dùng lúc vào phòng chứ không chỉ giữ địa chỉ: vào bằng phòng
+     * tìm thấy và vào bằng địa chỉ gõ tay là hai đường khác nhau, mà [retry] thì phải
+     * đi lại đúng đường cũ.
+     */
+    private var reconnect: (suspend () -> Unit)? = null
+
     /** Trạng thái chọn quân là chuyện riêng của máy này, không gửi qua mạng. */
     private var selectedSquare = Squares.NONE
     private var pendingPromotion: PendingPromotion? = null
@@ -134,6 +143,7 @@ class LanViewModel : ViewModel() {
     private fun startSession(target: LanEndpoint, block: suspend () -> Unit) {
         sessionJob?.cancel()
         endpoint = target
+        reconnect = block.takeIf { target.role == LanRole.GUEST }
         selectedSquare = Squares.NONE
         pendingPromotion = null
         _uiState.update {
@@ -144,6 +154,7 @@ class LanViewModel : ViewModel() {
                 waitingForOpponent = target.role == LanRole.HOST,
                 hostPort = 0,
                 opponentName = "",
+                offerRetry = false,
                 notice = null,
                 board = LanBoardUiState(),
             )
@@ -166,6 +177,7 @@ class LanViewModel : ViewModel() {
         val leaving = endpoint
         val job = sessionJob
         endpoint = null
+        reconnect = null
         sessionJob = null
         viewModelScope.launch {
             // Gửi Bye trước khi hủy job, để đối thủ biết là mình chủ động rời chứ không
@@ -180,10 +192,24 @@ class LanViewModel : ViewModel() {
                 connected = false,
                 waitingForOpponent = false,
                 hostPort = 0,
+                offerRetry = false,
                 board = LanBoardUiState(),
             )
         }
         startScan()
+    }
+
+    /**
+     * Thử nối lại bằng tay sau khi tầng mạng đã bỏ cuộc.
+     *
+     * Dùng lại chính [LanGuest] cũ chứ không tạo mới: vé nối lại nằm trong đó, nên nếu
+     * host vẫn giữ ván thì vào lại là chơi tiếp đúng thế cờ đang dở, không phải bắt
+     * đầu ván mới.
+     */
+    fun retry() {
+        val guest = endpoint as? LanGuest ?: return
+        val again = reconnect ?: return
+        startSession(guest, again)
     }
 
     fun resign() = endpoint?.resign() ?: Unit
@@ -277,7 +303,7 @@ class LanViewModel : ViewModel() {
     private fun onNetworkEvent(event: LanEvent) {
         when (event) {
             is LanEvent.Connected -> _uiState.update {
-                it.copy(waitingForOpponent = false, notice = null)
+                it.copy(waitingForOpponent = false, offerRetry = false, notice = null)
             }
 
             is LanEvent.MoveRejected -> notify(LanNoticeKind.MOVE_REJECTED, event.reason)
@@ -286,10 +312,18 @@ class LanViewModel : ViewModel() {
 
             is LanEvent.OpponentLeft -> onOpponentLeft(event.reason)
 
-            is LanEvent.Disconnected -> notify(
-                if (event.canRetry) LanNoticeKind.DISCONNECTED_RETRYING else LanNoticeKind.DISCONNECTED_FINAL,
-                event.reason,
-            )
+            is LanEvent.Disconnected -> {
+                // canRetry ở đây nghĩa là "tầng mạng đang tự thử lại". Hết đường rồi thì mới
+                // đến lượt người dùng quyết định, nên nút thử lại chỉ hiện đúng lúc đó — và
+                // chỉ với khách, vì host không có địa chỉ nào để gọi.
+                _uiState.update {
+                    it.copy(offerRetry = !event.canRetry && it.role == LanRole.GUEST)
+                }
+                notify(
+                    if (event.canRetry) LanNoticeKind.DISCONNECTED_RETRYING else LanNoticeKind.DISCONNECTED_FINAL,
+                    event.reason,
+                )
+            }
 
             is LanEvent.Failed -> notify(
                 when (event.code) {

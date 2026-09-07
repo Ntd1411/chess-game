@@ -69,6 +69,7 @@ data class LanBoardUiState(
  * @param role null khi chưa mở/chưa vào phiên nào.
  * @param waitingForOpponent host đã mở phòng nhưng chưa ai vào.
  * @param hostPort cổng TCP đang mở, để hiện cho người dùng gõ tay khi discovery bị chặn.
+ * @param offerRetry tầng mạng đã bỏ cuộc, giờ để người dùng quyết định có nối lại hay không.
  */
 data class LanUiState(
     val phase: LanPhase = LanPhase.LOBBY,
@@ -92,5 +93,6 @@ data class LanUiState(
     val waitingDrawReply: Boolean = false,
     val opponentOffersRematch: Boolean = false,
     val waitingRematchReply: Boolean = false,
+    val offerRetry: Boolean = false,
     val notice: LanNotice? = null,
 )

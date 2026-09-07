@@ -47,6 +47,7 @@ fun LanGameScreen(
     onOfferRematch: () -> Unit,
     onRespondRematch: (Boolean) -> Unit,
     onDismissNotice: () -> Unit,
+    onRetry: () -> Unit,
     onLeave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -69,6 +70,13 @@ fun LanGameScreen(
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
+                    // Nút thử lại đứng ngay cạnh lời báo lỗi chứ không xếp cùng hàng với đầu
+                    // hàng / xin hòa: nó chỉ sống lúc mất kết nối, không phải một việc của ván đấu.
+                    if (state.offerRetry) {
+                        TextButton(onClick = onRetry) {
+                            Text(stringResource(R.string.lan_action_retry))
+                        }
+                    }
                     TextButton(onClick = onDismissNotice) {
                         Text(stringResource(R.string.action_dismiss))
                     }

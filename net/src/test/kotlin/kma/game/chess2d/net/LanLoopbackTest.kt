@@ -3,7 +3,9 @@ package kma.game.chess2d.net
 import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.ServerSocket
 import java.net.Socket
+import java.util.concurrent.atomic.AtomicInteger
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Squares
 import kotlinx.coroutines.CompletableDeferred
@@ -292,6 +294,49 @@ class LanLoopbackTest {
                 guest.leave("test over")
                 guestJob.cancelAndJoin()
             }
+        }
+    }
+
+    @Test
+    fun `a refused guest gives up instead of dialling again`() = runBlocking {
+        // "Host giả": bắt tay xong là từ chối ngay. Không dựng được cảnh này bằng LanHost
+        // thật, vì host thật luôn nói đúng PROTOCOL_VERSION của chính bản build đang test.
+        val server = ServerSocket(0, 1, InetAddress.getLoopbackAddress())
+        val dials = AtomicInteger()
+        val serverJob = launch(Dispatchers.IO) {
+            while (true) {
+                val socket = runCatching { server.accept() }.getOrNull() ?: break
+                dials.incrementAndGet()
+                val open = MessageChannel(socket)
+                runCatching {
+                    open.receive()
+                    open.send(NetMessage.Error(LanErrorCode.VERSION_MISMATCH, "host speaks v99"))
+                }
+                open.close()
+            }
+        }
+        val guest = LanGuest("guest")
+        val seen = mutableListOf<LanEvent>()
+        val watcher = launch { guest.events.collect { seen += it } }
+        try {
+            // Cửa sổ nối lại cực dài: nếu khách coi "bị từ chối" là sự cố mạng thì run() sẽ
+            // gọi lại suốt 30 giây và test này chết vì hết hạn chờ.
+            withTimeout(5_000) {
+                guest.run("127.0.0.1", server.localPort, reconnectWindowMillis = 30_000)
+            }
+
+            assertEquals(1, dials.get())
+            val failed = seen.filterIsInstance<LanEvent.Failed>()
+            assertEquals(1, failed.size)
+            assertEquals(LanErrorCode.VERSION_MISMATCH, failed.first().code)
+            // Và phải nói rõ là hết đường, để giao diện không mời bấm "thử nối lại" vô ích.
+            assertTrue(seen.filterIsInstance<LanEvent.Disconnected>().none { it.canRetry })
+        } finally {
+            watcher.cancel()
+            // Đóng server trước rồi mới hủy job: accept() đang chặn thì cancel không đánh
+            // thức nó, join sẽ treo cho tới khi có ai gõ cửa.
+            runCatching { server.close() }
+            serverJob.cancelAndJoin()
         }
     }
 
