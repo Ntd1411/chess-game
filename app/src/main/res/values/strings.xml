@@ -79,4 +79,33 @@
     <string name="lan_notice_disconnected">Mất kết nối: %1$s</string>
     <string name="lan_notice_connect_failed">Không kết nối được tới phòng.</string>
     <string name="lan_notice_bad_address">Địa chỉ không hợp lệ. Đúng dạng là 192.168.1.5:45455</string>
+
+    <!-- Splash va menu -->
+    <string name="app_tagline">Cờ vua 2D</string>
+    <string name="menu_difficulty">Cấp độ máy</string>
+
+    <!-- Khung van dau dung chung -->
+    <string name="match_player_one">Người chơi 1</string>
+    <string name="match_player_two">Người chơi 2</string>
+    <string name="match_computer">Máy</string>
+    <string name="match_thinking">Đang tính…</string>
+    <string name="match_side">Cầm %1$s</string>
+    <string name="match_waiting_opponent">Đang chờ đối thủ…</string>
+    <string name="action_menu">Menu</string>
+    <string name="action_level">Đổi cấp</string>
+    <string name="lan_action_sync">Đồng bộ lại</string>
+    <string name="confirm_resign">Đầu hàng ván này? Đối thủ sẽ được tính là thắng.</string>
+    <string name="confirm_leave">Rời phòng? Ván đang chơi sẽ không giữ lại.</string>
+
+    <!-- Sanh LAN -->
+    <string name="lan_scanning">Đang tìm phòng trong mạng… (thấy %1$d)</string>
+    <string name="lan_empty_hint_title">Chưa thấy phòng nào. Thử lần lượt ba bước:</string>
+    <string name="lan_empty_hint_1">1. Kiểm tra hai máy đang cùng một Wi-Fi.</string>
+    <string name="lan_empty_hint_2">2. Nhiều Wi-Fi công cộng chặn hai máy nhìn thấy nhau. Bật hotspot trên một máy rồi cho máy kia vào.</string>
+    <string name="lan_empty_hint_3">3. Vẫn không thấy thì gõ trực tiếp địa chỉ máy mở phòng ở phần Kết nối thủ công.</string>
+    <string name="lan_manual_section">Kết nối thủ công</string>
+    <string name="lan_my_address">Địa chỉ máy bạn: %1$s</string>
+    <string name="lan_badge_open">Trống</string>
+    <string name="lan_badge_playing">Đang chơi</string>
+    <string name="lan_badge_version">Lệch phiên bản</string>
 </resources>
