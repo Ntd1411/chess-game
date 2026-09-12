@@ -180,7 +180,7 @@ abstract class LanEndpoint(
      *
      * Áp dụng cục bộ trước rồi mới gửi: người chơi thấy quân chạy ngay, không phải
      * chờ một vòng mạng. Rủi ro lệch được bù bằng [NetMessage.MoveRejected]: nếu trọng
-     * tài không đồng ý, bàn cờ được dụng lại theo trọng tài.
+     * tài không đồng ý, bàn cờ được dựng lại theo trọng tài.
      *
      * @return false khi nước đi bị chính engine của mình từ chối, hoặc chưa tới lượt.
      */
@@ -247,7 +247,7 @@ abstract class LanEndpoint(
         closedByUser = true
         // Không đóng socket ngay khi còn hàng đợi: luồng ghi sẽ đóng ngay sau khi Bye
         // ra được đến dây. Đóng trước thì đối thủ chỉ thấy kết nối chết và phải ngồi
-        // chờ hết hạn timeout thay vì biết ngay là đối thủ đã rồi phòng.
+        // chờ hết hạn timeout thay vì biết ngay là đối thủ đã rời phòng.
         if (!send(NetMessage.Bye(reason))) {
             channel?.close()
             channel = null
@@ -452,7 +452,7 @@ abstract class LanEndpoint(
     /**
      * Nước đi của đối thủ: tự kiểm tra lại bằng engine của mình.
      *
-     * Hai vai xứ lý nước sai khác nhau, và đây là toàn bộ sự khác biệt giữa host và khách:
+     * Hai vai xử lý nước sai khác nhau, và đây là toàn bộ sự khác biệt giữa host và khách:
      * host là trọng tài nên từ chối và áp trạng thái của mình; khách không có quyền đó
      * nên chỉ xin đồng bộ lại.
      */
@@ -479,7 +479,7 @@ abstract class LanEndpoint(
     /**
      * Đối thủ chủ động rời phòng — khác với mất kết nối, nối lại không còn ý nghĩa.
      *
-     * Trọng tài còn phải dụng lại ván sạch và bỏ vé nối lại. Nếu không, phòng vẫn bị
+     * Trọng tài còn phải dựng lại ván sạch và bỏ vé nối lại. Nếu không, phòng vẫn bị
      * coi là "đang có ván" và mọi người vào sau đều bị từ chối bằng ROOM_BUSY.
      */
     private fun onPeerLeft(reason: String) {

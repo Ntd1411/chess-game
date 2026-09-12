@@ -62,7 +62,7 @@ data class MatchAction(
  * Hai ràng buộc bố cục được cố ý đặt ở đây chứ không ở từng màn hình con:
  * 1. Toàn bộ cột **cuộn được**. Máy nhỏ hoặc cỡ chữ lớn nhất từng đẩy hàng nút ra
  *    khỏi màn hình, mà đó là hàng chứa Rời phòng — tức là kẹt trong phòng.
- * 2. Bàn cờ đi kèm `aspectRatio(1f)` nên luôn vuông, không bị bóp méo theo chệ cao
+ * 2. Bàn cờ đi kèm `aspectRatio(1f)` nên luôn vuông, không bị bóp méo theo chiều cao
  *    còn lại.
  *
  * @param headline dòng trạng thái ngắn ở trên cùng (lượt ai, chiếu, kết quả).

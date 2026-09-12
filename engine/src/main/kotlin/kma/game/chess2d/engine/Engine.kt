@@ -21,7 +21,7 @@ object Engine {
 
     fun status(board: Board): GameStatus = Rules.status(board)
 
-    /** Tìm nước hợp lệ khọp với ô đi và ô đến mà người chơi vừa chọn trên UI.
+    /** Tìm nước hợp lệ khớp với ô đi và ô đến mà người chơi vừa chọn trên UI.
      *
      * Trả về danh sách vì phong cấp có tới bốn nước cùng ô đi và ô đến — lúc đó UI
      * phải hỏi người chơi muốn phong quân gì.

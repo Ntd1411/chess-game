@@ -99,7 +99,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
         startScan()
     }
 
-    // --------------------------------------------------------------- sảnh chể
+    // --------------------------------------------------------------- sảnh chờ
 
     /** Bắt đầu nghe beacon. Gọi lại nhiều lần không sao: lần thứ hai bị bỏ qua. */
     fun startScan() {
@@ -324,8 +324,8 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Người chơi chạm một ô.
      *
-     * Giống <code>GameViewModel</code> nhưng có thêm một của: không phải lượt mình thì
-     * không nhận chạm. Chặn ở đây chỉ để giao diện đử hạnh; trọng tài vẫn kiểm tra
+     * Giống <code>GameViewModel</code> nhưng có thêm một chặn: không phải lượt mình thì
+     * không nhận chạm. Chặn ở đây chỉ để giao diện đỡ hẫng; trọng tài vẫn kiểm tra
      * lại mọi nước, nên một bản bị sửa cũng không đi được hai nước liền.
      */
     fun onSquareTap(square: Int) {
@@ -368,7 +368,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     private fun submit(move: Move) {
         selectedSquare = Squares.NONE
         // submitMove tự áp dụng nước tại máy rồi mới gửi đi, nên quân đi ngay không
-        // chợ mạng. Nếu trọng tài từ chối, [LanEvent.MoveRejected] sẽ tới sau và bàn cờ
+        // chờ mạng. Nếu trọng tài từ chối, [LanEvent.MoveRejected] sẽ tới sau và bàn cờ
         // được đồng bộ lại.
         endpoint?.submitMove(move.raw)
     }
