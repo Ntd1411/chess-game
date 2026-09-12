@@ -62,6 +62,15 @@ fun GameScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showLevels by remember { mutableStateOf(false) }
+    // Bộ màu bàn và bộ quân đọc thẳng từ cài đặt: đây là sở thích của người chơi, không
+    // phải trạng thái của ván, nên không đi qua ViewModel.
+    val appearanceContext = LocalContext.current
+    val appearanceStore = remember(appearanceContext) {
+        SettingsStore(appearanceContext.applicationContext)
+    }
+    val appearance by appearanceStore.settings.collectAsStateWithLifecycle(
+        initialValue = AppSettings(),
+    )
     // Lật bàn là lựa chọn của người đang ngồi xem, không phải trạng thái của ván, nên
     // giữ ở màn hình bằng rememberSaveable chứ không đẩy vào ViewModel. Dùng lại đúng cờ
     // `flipped` của bàn cờ LAN nên không phải thêm đường vẽ nào mới.
@@ -172,6 +181,8 @@ fun GameScreen(
             checkedKingSquare = state.checkedKingSquare,
             onSquareTap = viewModel::onSquareTap,
             flipped = flipped,
+            palette = appearance.boardPalette,
+            pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),
         )
     }

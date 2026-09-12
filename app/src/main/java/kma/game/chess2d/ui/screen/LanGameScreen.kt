@@ -22,8 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
@@ -31,6 +33,8 @@ import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
 import kma.game.chess2d.lan.LanUiState
 import kma.game.chess2d.net.LanOutcome
+import kma.game.chess2d.settings.AppSettings
+import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 
@@ -62,6 +66,14 @@ fun LanGameScreen(
     // bình thường trong cùng một hàng.
     var confirmResign by remember { mutableStateOf(false) }
     var confirmLeave by remember { mutableStateOf(false) }
+
+    // Bàn cờ LAN dùng chung lựa chọn giao diện với bàn cờ offline: đổi bộ màu ở menu
+    // thì cả hai chế độ đều đổi theo.
+    val context = LocalContext.current
+    val appearanceStore = remember(context) { SettingsStore(context.applicationContext) }
+    val appearance by appearanceStore.settings.collectAsStateWithLifecycle(
+        initialValue = AppSettings(),
+    )
 
     val actions = buildList {
         add(
@@ -141,6 +153,8 @@ fun LanGameScreen(
             checkedKingSquare = state.board.checkedKingSquare,
             onSquareTap = onSquareTap,
             flipped = state.board.flipped,
+            palette = appearance.boardPalette,
+            pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),
         )
     }

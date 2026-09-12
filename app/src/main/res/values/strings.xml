@@ -141,4 +141,16 @@
     <string name="time_control_rapid">Cờ tiêu chuẩn 10+5</string>
     <string name="lan_clock">Còn %1$s</string>
     <string name="lan_outcome_timeout">%1$s hết giờ</string>
+
+    <!-- Chọn bộ màu bàn cờ và bộ quân ở menu -->
+    <string name="settings_appearance">Giao diện bàn cờ</string>
+    <string name="settings_board_palette">Bộ màu bàn</string>
+    <string name="settings_piece_theme">Bộ quân</string>
+    <string name="palette_green">Xanh lá</string>
+    <string name="palette_wood">Gỗ nâu</string>
+    <string name="palette_ocean">Xanh biển</string>
+    <string name="palette_slate">Xám đá</string>
+    <string name="piece_theme_solid">Quân đặc</string>
+    <string name="piece_theme_outline">Quân viền</string>
+    <string name="piece_theme_letter">Chữ cái</string>
 </resources>

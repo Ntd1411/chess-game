@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -16,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -30,6 +32,8 @@ import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.ui.board.BoardPalette
+import kma.game.chess2d.ui.board.PieceTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -114,7 +118,74 @@ fun MenuScreen(
         }
 
         SoundSettings()
+        AppearanceSettings()
     }
+}
+
+/**
+ * Chọn bộ màu bàn và bộ quân (mục 7.3).
+ *
+ * Đọc ghi trực tiếp qua [SettingsStore] giống hai công tắc âm thanh, và các màn hình
+ * chơi cũng đọc từ đó, nên không cần đẩy lựa chọn này xuyên qua [AppRoot].
+ */
+@Composable
+private fun AppearanceSettings() {
+    val context = LocalContext.current
+    val store = remember(context) { SettingsStore(context.applicationContext) }
+    val settings by store.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+    val scope = rememberCoroutineScope()
+
+    Text(
+        text = stringResource(R.string.settings_appearance),
+        style = MaterialTheme.typography.titleSmall,
+    )
+
+    Text(
+        text = stringResource(R.string.settings_board_palette),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (palette in BoardPalette.entries) {
+            key(palette) {
+                FilterChip(
+                    selected = palette == settings.boardPalette,
+                    onClick = { scope.launch { store.setBoardPalette(palette) } },
+                    label = { Text(stringResource(paletteLabel(palette))) },
+                )
+            }
+        }
+    }
+
+    Text(
+        text = stringResource(R.string.settings_piece_theme),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (theme in PieceTheme.entries) {
+            key(theme) {
+                FilterChip(
+                    selected = theme == settings.pieceTheme,
+                    onClick = { scope.launch { store.setPieceTheme(theme) } },
+                    label = { Text(stringResource(pieceThemeLabel(theme))) },
+                )
+            }
+        }
+    }
+}
+
+/** Nhãn hiện cho một bộ màu bàn. */
+private fun paletteLabel(palette: BoardPalette): Int = when (palette) {
+    BoardPalette.GREEN -> R.string.palette_green
+    BoardPalette.WOOD -> R.string.palette_wood
+    BoardPalette.OCEAN -> R.string.palette_ocean
+    BoardPalette.SLATE -> R.string.palette_slate
+}
+
+/** Nhãn hiện cho một bộ quân. */
+private fun pieceThemeLabel(theme: PieceTheme): Int = when (theme) {
+    PieceTheme.SOLID -> R.string.piece_theme_solid
+    PieceTheme.OUTLINE -> R.string.piece_theme_outline
+    PieceTheme.LETTER -> R.string.piece_theme_letter
 }
 
 /**
