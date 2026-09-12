@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Biểu tượng thích ứng ba lớp (mục 7.1): nền bàn cờ, quân Vua, và bản đơn sắc.
+     Có đủ cả ba thì launcher mới cắt được theo hình dạng của từng máy và mới
+     theo được bộ màu hệ thống ở Android 13 trở lên. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
 </adaptive-icon>

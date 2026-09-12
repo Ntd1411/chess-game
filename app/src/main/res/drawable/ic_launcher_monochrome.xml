@@ -1,33 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lớp trước của biểu tượng: quân Vua trắng (mục 7.1).
-     Khung 108dp nhưng mọi nét đều nằm trong vùng an toàn 72dp ở giữa: launcher
-     được phép cắt lớp này theo hình tròn, vuông bị bò, hay squircle tùy máy,
-     nên mép ngoài chỉ để dự trữ chứ không đặt nét vẽ vào đó. -->
+<!-- Lớp đơn sắc (themed icon, Android 13 trở lên).
+     Hệ thống tự tô lại màu theo hình nền của người dùng, nên ở đây chỉ cần
+     một khối đặc: màu ghi trong file không có tác dụng, chỉ hình dáng là quan trọng.
+     Tách thành file riêng thay vì dùng lại lớp trước để sau này đổi lớp trước
+     (thêm màu, thêm đổ bóng) mà không làm bẩn bản đơn sắc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Thánh giá trên đỉnh: hai thanh đặt chéo nhau -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M50,24h8v18h-8z" />
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M45,29h18v8h-18z" />
-
-    <!-- Đầu quân -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M54,42m-9,0a9,9 0 1,0 18,0a9,9 0 1,0 -18,0z" />
-
-    <!-- Thân xoè dần xuống chân đế -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M39,53c5,-4 10,-6 15,-6s10,2 15,6l-4,19h-22z" />
-
-    <!-- Chân đế -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M34,74h40v8h-40z" />
