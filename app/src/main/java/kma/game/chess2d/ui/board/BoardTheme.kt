@@ -4,13 +4,13 @@ import androidx.compose.ui.graphics.Color
 import kma.game.chess2d.engine.Piece
 
 /**
- * Bộ màu bàn cờ và bộ quań đổi được — mục 7.3.
+ * Bộ màu bàn cờ và bộ quân đổi được — mục 7.3.
  *
  * Tách thành enum thay vì những hằng số rải rác để ba việc sau đều rẻ: lưu lựa chọn
  * xuống DataStore (chỉ cần lưu tên enum), vẽ danh sách để người chơi chọn (duyệt
  * `entries`), và thêm bộ mới về sau (thêm một dòng).
  *
- * Màu Ổ **không** lấy từ dynamic color của hệ thống: bàn cờ cần độ tương phản ổn
+ * Màu ô **không** lấy từ dynamic color của hệ thống: bàn cờ cần độ tương phản ổn
  * định giữa ô sáng và ô tối, nên người chơi đổi bằng bộ màu ở đây chứ không bằng
  * hình nền điện thoại.
  */
@@ -29,9 +29,9 @@ enum class BoardPalette(val lightSquare: Color, val darkSquare: Color) {
 }
 
 /**
- * Bộ quań.
+ * Bộ quân.
  *
- * Vẫn dùng glyph Unicode chứ không dùng ảnh, vì asset bộ quań còn phải đợi xác nhẩn
+ * Vẫn dùng glyph Unicode chứ không dùng ảnh, vì asset bộ quân còn phải đợi xác nhận
  * license (mục 6 — chỉ nhận MIT). Ba cách vẽ dưới đây đều lấy từ font hệ thống nên
  * không vướng license và không làm nặng APK. Khi có bộ vector MIT thì thêm một
  * giá trị enum nữa, phần còn lại của màn hình không phải sửa.
@@ -43,12 +43,12 @@ enum class PieceTheme {
     /** Trắng dùng glyph rỗng ruột, Đen dùng glyph đặc — kiểu sách cờ in. */
     OUTLINE,
 
-    /** Chứ cái K Q R B N P, dành cho người quen đọc ký hiệu hơn quen hình quań. */
+    /** Chữ cái K Q R B N P, dành cho người quen đọc ký hiệu hơn quen hình quân. */
     LETTER,
     ;
 
     /**
-     * Ký tự cần vẽ cho [piece] theo bộ quań này.
+     * Ký tự cần vẽ cho [piece] theo bộ quân này.
      *
      * Biết màu quân là cần thiết: chỉ riêng bộ [OUTLINE] mới đổi glyph theo màu, hai
      * bộ còn lại dùng chung một ký tự rồi để [PieceGlyph] tô màu.
@@ -60,7 +60,7 @@ enum class PieceTheme {
     }
 }
 
-/** Glyph đặc (khối quań Đen của Unicode), dùng cho cả hai bên rồi tô màu sau. */
+/** Glyph đặc (khối quân Đen của Unicode), dùng cho cả hai bên rồi tô màu sau. */
 private fun solidGlyph(piece: Byte): String = when (Piece.typeOf(piece)) {
     Piece.KING -> "\u265A"
     Piece.QUEEN -> "\u265B"
@@ -70,7 +70,7 @@ private fun solidGlyph(piece: Byte): String = when (Piece.typeOf(piece)) {
     else -> "\u265F"
 }
 
-/** Glyph rỗng ruột (khối quań Trắng của Unicode). */
+/** Glyph rỗng ruột (khối quân Trắng của Unicode). */
 private fun hollowGlyph(piece: Byte): String = when (Piece.typeOf(piece)) {
     Piece.KING -> "\u2654"
     Piece.QUEEN -> "\u2655"
@@ -80,7 +80,7 @@ private fun hollowGlyph(piece: Byte): String = when (Piece.typeOf(piece)) {
     else -> "\u2659"
 }
 
-/** Chứ cái theo ký hiệu quốc tế; tốt viết là "P" cho dễ đọc trên màn hình nhỏ. */
+/** Chữ cái theo ký hiệu quốc tế; tốt viết là "P" cho dễ đọc trên màn hình nhỏ. */
 private fun letterGlyph(piece: Byte): String = when (Piece.typeOf(piece)) {
     Piece.KING -> "K"
     Piece.QUEEN -> "Q"
