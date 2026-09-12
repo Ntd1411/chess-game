@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.Flow
  *
  * **Chỉ lưu danh sách nước đi, không lưu thế cờ.** Từ [startFen] cộng [moves] là
  * dựng lại được mọi thế cờ bằng engine, nên lưu thêm thế cờ chỉ tốn chỗ và thêm
- * chỗ để dự liệu lệch nhau.
+ * chỗ để dữ liệu lệch nhau.
  *
  * Nước đi lưu kiểu UCI cách nhau bằng dấu cách: một cột văn bản là đủ, không cần
- * bảng con cho từng nước vì không bao giờ truy vấn theo từng nước riêng lẽ.
+ * bảng con cho từng nước vì không bao giờ truy vấn theo từng nước riêng lẻ.
  */
 @Entity(tableName = "matches")
 data class MatchRecord(
@@ -94,7 +94,7 @@ interface MatchDao {
 }
 
 /**
- * Cơ sở dự liệu lịch sử ván đấu.
+ * Cơ sở dữ liệu lịch sử ván đấu.
  *
  * Chưa có bản cũ nào ngoài thực tế nên chưa cần migration; khi đổi lược đồ phải tăng
  * `version` và viết migration thật, không dùng `fallbackToDestructiveMigration` để không

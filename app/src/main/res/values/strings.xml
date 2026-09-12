@@ -153,4 +153,24 @@
     <string name="piece_theme_solid">Quân đặc</string>
     <string name="piece_theme_outline">Quân viền</string>
     <string name="piece_theme_letter">Chữ cái</string>
+
+    <!-- Lịch sử ván đấu lưu bằng Room -->
+    <string name="history_title">Lịch sử ván đấu</string>
+    <string name="history_open">Lịch sử ván đấu</string>
+    <string name="history_empty">Chưa có ván nào được lưu</string>
+    <string name="history_stats">%1$d ván · %2$d thắng · %3$d hòa · %4$d thua</string>
+    <string name="history_result_win">Thắng</string>
+    <string name="history_result_loss">Thua</string>
+    <string name="history_result_draw">Hòa</string>
+    <string name="history_moves_count">%1$d nước</string>
+    <string name="history_delete">Xoá</string>
+    <string name="history_delete_all">Xoá tất cả</string>
+    <string name="history_review">Xem lại</string>
+    <string name="history_review_position">Thế cờ sau nước %1$d / %2$d</string>
+    <string name="history_prev">Nước trước</string>
+    <string name="history_next">Nước sau</string>
+    <string name="history_back">Quay lại</string>
+    <string name="history_mode_two_players">Hai người</string>
+    <string name="history_mode_vs_computer">Đấu máy</string>
+    <string name="history_mode_lan">Qua mạng LAN</string>
 </resources>

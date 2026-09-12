@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -107,6 +107,16 @@ fun AppRoot(modifier: Modifier = Modifier) {
                     screen = Screen.MATCH
                 },
                 onPlayLan = { screen = Screen.LOBBY },
+                onOpenHistory = { screen = Screen.HISTORY },
+                modifier = modifier,
+            )
+        }
+
+        Screen.HISTORY -> {
+            // Lịch sử mở từ menu nên back ở đây là về menu, giống đúng nút Quay lại trên màn.
+            BackHandler { screen = Screen.MENU }
+            HistoryScreen(
+                onBack = { screen = Screen.MENU },
                 modifier = modifier,
             )
         }

@@ -54,6 +54,7 @@ fun MenuScreen(
     onPlayTwoPlayers: () -> Unit,
     onPlayComputer: () -> Unit,
     onPlayLan: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -115,6 +116,11 @@ fun MenuScreen(
 
         Button(onClick = onPlayLan, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.mode_lan))
+        }
+
+        // Lịch sử là màn phụ, nên dùng nút viền để không đè lên ba nút vào chơi ở trên.
+        OutlinedButton(onClick = onOpenHistory, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.history_open))
         }
 
         SoundSettings()
