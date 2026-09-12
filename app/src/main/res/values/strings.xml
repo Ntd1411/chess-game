@@ -115,4 +115,10 @@
     <string name="lan_room_address">%1$s:%2$d</string>
     <string name="lan_room_address_unknown">Đang mở cổng…</string>
     <string name="lan_cancel_room">Huỷ phòng</string>
+
+    <!-- Hỏi "tiếp tục hay bỏ" khi mở app lên mà còn một ván offline đang chơi dở -->
+    <string name="resume_title">Tiếp tục ván cũ?</string>
+    <string name="resume_text">Bạn còn một ván đang chơi dở, đã đi %1$d nước.</string>
+    <string name="resume_continue">Tiếp tục</string>
+    <string name="resume_discard">Bỏ ván</string>
 </resources>

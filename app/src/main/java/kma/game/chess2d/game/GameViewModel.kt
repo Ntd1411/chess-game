@@ -1,7 +1,8 @@
 package kma.game.chess2d.game
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kma.game.chess2d.ai.Ai
 import kma.game.chess2d.ai.Difficulty
@@ -13,10 +14,15 @@ import kma.game.chess2d.engine.Rules
 import kma.game.chess2d.engine.Squares
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,11 +30,33 @@ import kotlinx.coroutines.withContext
  * Giữ trạng thái ván đấu và là cầu nối duy nhất giữa giao diện và <code>:engine</code>.
  *
  * Danh sách nước đã đi được lưu vào [SavedStateHandle] thay vì lưu cả bàn cờ: chỉ
- * một <code>IntArray</code> nhỏ mà dụng lại được y nguyên mọi thứ, kể cả quyền nhập
+ * một <code>IntArray</code> nhỏ mà dựng lại được y nguyên mọi thứ, kể cả quyền nhập
  * thành và cả stack Undo. Nhờ vậy xoay máy hay bị hệ thống giải phóng tiến trình
  * đều không mất ván đang chơi.
+ *
+ * Ngoài ra, ván còn được ghi xuống đĩa qua [SavedGameStore] để sống qua cả lần tắt app
+ * hẳn: [SavedStateHandle] chỉ cứu được trường hợp tiến trình bị thu hồi, còn người
+ * chơi tự thoát app thì nó cũng mất theo.
+ *
+ * Là [AndroidViewModel] chỉ vì cần `Context` của ứng dụng cho DataStore. Không giữ
+ * Context của Activity ở đây — đó là rò rỉ bộ nhớ kinh điển khi xoay máy.
  */
-class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
+@OptIn(FlowPreview::class)
+class GameViewModel(
+    application: Application,
+    private val savedState: SavedStateHandle,
+) : AndroidViewModel(application) {
+
+    private val store = SavedGameStore(application)
+
+    /**
+     * Hàng chờ ghi đĩa. `null` nghĩa là "xoá ván đã lưu".
+     *
+     * Phải debounce vì mỗi nước đi, mỗi lần Undo đều muốn ghi; ở chế độ hai người đi
+     * nhanh thì đó là hàng chục lần ghi đĩa trong vài giây. Chỉ cần trạng thái **cuối**
+     * đúng là đủ, nên dùng [collectLatest] để lần ghi cũ bị buông khi có yêu cầu mới.
+     */
+    private val saveRequests = MutableSharedFlow<SavedGame?>(extraBufferCapacity = 16)
 
     private var board = Engine.newGame()
     private val playedMoves = mutableListOf<Move>()
@@ -64,6 +92,14 @@ class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         // Đi lại toàn bộ ván cũ nếu có. Các nước này đã từng hợp lệ nên không cần lọc lại.
         savedState.get<IntArray>(KEY_PLAYED_MOVES)?.forEach { raw -> applyMove(Move(raw)) }
         publish()
+        // Vòng ghi đĩa chạy suốt đời ViewModel. Đặt trên [Dispatchers.IO] vì đây là I/O thật.
+        viewModelScope.launch {
+            saveRequests.debounce(SAVE_DEBOUNCE_MILLIS).collectLatest { game ->
+                withContext(Dispatchers.IO) {
+                    if (game == null) store.clear() else store.save(game)
+                }
+            }
+        }
         // Xoay máy đúng lúc đến lượt máy thì phải nghĩ lại: lượt nghĩ cũ đã chết cùng
         // ViewModel trước đó.
         maybeStartAiTurn()
@@ -138,6 +174,42 @@ class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         savedState[KEY_DIFFICULTY] = newDifficulty.name
         publish()
         maybeStartAiTurn()
+    }
+
+    /**
+     * Dựng lại ván đã lưu trên đĩa. Gọi khi người chơi chọn "Tiếp tục" ở sảnh.
+     *
+     * Chỉ chạy đúng một lần cho mỗi ViewModel: xoay máy sẽ gọi lại hàm này, mà lúc đó
+     * ván đã được [SavedStateHandle] giữ sẵn — đi lại lần nữa sẽ nối đuôi nước đi thành
+     * một ván lạ không ai chơi.
+     *
+     * Nước đi đọc từ đĩa **vẫn phải qua engine duyệt**: file có thể cũ, có thể bị sửa
+     * tay, nên gặp nước không hợp lệ thì dừng ở đó và giữ phần đã đi được, thay vì
+     * để một thế cờ sai luật luồn vào bàn cờ.
+     */
+    fun resumeSavedGame() {
+        if (savedState.get<Boolean>(KEY_RESUMED) == true) return
+        savedState[KEY_RESUMED] = true
+        viewModelScope.launch {
+            val game = withContext(Dispatchers.IO) { store.saved.first() } ?: return@launch
+            // Hiện app luôn mở ván từ thế chuẩn. Ván lưu với thế đầu khác (sau này mới có,
+            // ví dụ từ câu đố) thì chưa dựng lại được nên bỏ qua cho an toàn.
+            if (game.startFen != Engine.START_FEN) return@launch
+
+            cancelAiTurn()
+            ai.newGame()
+            resetBoard()
+            mode = game.mode
+            savedState[KEY_MODE] = game.mode.name
+            difficulty = game.difficulty
+            savedState[KEY_DIFFICULTY] = game.difficulty.name
+            for (uci in game.uciMoves) {
+                val move = Engine.legalMoves(board).firstOrNull { it.toUci() == uci } ?: break
+                applyMove(move)
+            }
+            publish()
+            maybeStartAiTurn()
+        }
     }
 
     fun undo() {
@@ -262,6 +334,27 @@ class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         saveMoves()
     }
 
+    /**
+     * Đẩy trạng thái hiện tại vào hàng chờ ghi đĩa.
+     *
+     * Ván đã xong hoặc chưa đi nước nào thì xoá luôn bản lưu: không có gì để "tiếp
+     * tục", và câu hỏi ở sảnh cũng không nên hiện nữa.
+     */
+    private fun requestSave() {
+        val finished = Rules.isGameOver(board)
+        val snapshot = if (finished || playedMoves.isEmpty()) {
+            null
+        } else {
+            SavedGame(
+                startFen = Engine.START_FEN,
+                uciMoves = playedMoves.map { it.toUci() },
+                mode = mode,
+                difficulty = difficulty,
+            )
+        }
+        saveRequests.tryEmit(snapshot)
+    }
+
     private fun resetBoard() {
         board = Engine.newGame()
         playedMoves.clear()
@@ -277,6 +370,7 @@ class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
 
     private fun saveMoves() {
         savedState[KEY_PLAYED_MOVES] = IntArray(playedMoves.size) { playedMoves[it].raw }
+        requestSave()
     }
 
     private fun publish() {
@@ -314,7 +408,16 @@ class GameViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         const val KEY_PLAYED_MOVES = "playedMoves"
         const val KEY_MODE = "gameMode"
         const val KEY_DIFFICULTY = "difficulty"
+        const val KEY_RESUMED = "resumedFromDisk"
         const val NO_PIECE_ID = -1
+
+        /**
+         * Chờ lặng một nhịp rồi mới ghi đĩa.
+         *
+         * Nửa giây đủ ngắn để thoát app ngay sau khi đi vẫn kịp lưu, và đủ dài để gộp
+         * một chuỗi nước đi nhanh thành một lần ghi.
+         */
+        const val SAVE_DEBOUNCE_MILLIS = 500L
 
         /** Máy cầm Đen, người chơi đi trước. */
         const val AI_PLAYS_WHITE = false

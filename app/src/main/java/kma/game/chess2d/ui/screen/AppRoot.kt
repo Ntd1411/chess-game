@@ -2,25 +2,36 @@ package kma.game.chess2d.ui.screen
 
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.game.GameMode
+import kma.game.chess2d.game.SavedGame
+import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Các màn hình cấp cao của app.
  *
  * Là enum chứ không phải sealed class để [rememberSaveable] lưu được trực tiếp vào
- * Bundle mà không cần viết Saver riêng. Các lụa chọn kèm theo (chế độ, cấp độ, tên)
+ * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
 private enum class Screen { SPLASH, LOBBY, MENU, MATCH }
@@ -48,6 +59,8 @@ fun AppRoot(modifier: Modifier = Modifier) {
     var difficulty by rememberSaveable { mutableStateOf(Difficulty.MEDIUM) }
     // Tên máy làm tên mặc định để người chơi không bắt buộc phải nhập gì mới chơi được.
     var playerName by rememberSaveable { mutableStateOf(Build.MODEL ?: "Android") }
+    // Ván sắp mở là ván cũ lưu trên đĩa, hay một ván mới từ menu.
+    var resumeSaved by rememberSaveable { mutableStateOf(false) }
 
     when (screen) {
         Screen.SPLASH -> SplashScreen(
@@ -57,11 +70,23 @@ fun AppRoot(modifier: Modifier = Modifier) {
 
         // Sảnh là màn chính: không đăng ký BackHandler ở đây để back lúc rảnh vẫn thoát app.
         // Riêng lúc đang mở phòng hoặc đang trong ván, [LanRoute] tự chặn back của nó.
-        Screen.LOBBY -> LanRoute(
-            playerName = playerName,
-            onOpenMenu = { screen = Screen.MENU },
-            modifier = modifier,
-        )
+        Screen.LOBBY -> {
+            LanRoute(
+                playerName = playerName,
+                onOpenMenu = { screen = Screen.MENU },
+                modifier = modifier,
+            )
+            // Câu hỏi "tiếp tục hay bỏ" đặt ở sảnh vì sảnh là màn đầu tiên người chơi thấy
+            // sau splash, không phải menu.
+            ResumePrompt(
+                onResume = { saved ->
+                    mode = saved.mode
+                    difficulty = saved.difficulty
+                    resumeSaved = true
+                    screen = Screen.MATCH
+                },
+            )
+        }
 
         Screen.MENU -> {
             // Back ở menu là về sảnh, vì sảnh mới là màn chính.
@@ -73,10 +98,12 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onDifficultyChange = { difficulty = it },
                 onPlayTwoPlayers = {
                     mode = GameMode.TWO_PLAYERS
+                    resumeSaved = false
                     screen = Screen.MATCH
                 },
                 onPlayComputer = {
                     mode = GameMode.VS_COMPUTER
+                    resumeSaved = false
                     screen = Screen.MATCH
                 },
                 onPlayLan = { screen = Screen.LOBBY },
@@ -92,9 +119,55 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 difficulty = difficulty,
                 onExitToMenu = { screen = Screen.MENU },
                 modifier = modifier,
+                resume = resumeSaved,
             )
         }
     }
+}
+
+/**
+ * Hỏi người chơi có muốn tiếp tục ván offline đang dở hay không.
+ *
+ * Không tự động nhảy vào ván cũ: mở app lên mà bị đẩy thẳng vào một bàn cờ từ hôm
+ * trước thì rất dễ lỡ tay đi một nước. Cũng không cho bấm ra ngoài để bỏ qua: hai
+ * lựa chọn đều phải rõ ràng, vì "bỏ ván" là việc không hoàn nguyên được.
+ *
+ * @param onResume nhận ván đã lưu để phía gọi biết mở đúng chế độ và cấp độ cũ.
+ */
+@Composable
+private fun ResumePrompt(onResume: (SavedGame) -> Unit) {
+    val context = LocalContext.current
+    // Dùng applicationContext: store sống lâu hơn một lần vẽ, không được giữ Activity.
+    val store = remember(context) { SavedGameStore(context.applicationContext) }
+    val saved by store.saved.collectAsStateWithLifecycle(initialValue = null)
+    // Đã trả lời rồi thì không hỏi lại trong cùng một lần mở app, kể cả khi quay về sảnh.
+    var answered by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val game = saved
+    if (game == null || answered) return
+
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(stringResource(R.string.resume_title)) },
+        text = { Text(stringResource(R.string.resume_text, game.uciMoves.size)) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    answered = true
+                    onResume(game)
+                },
+            ) { Text(stringResource(R.string.resume_continue)) }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    answered = true
+                    scope.launch { store.clear() }
+                },
+            ) { Text(stringResource(R.string.resume_discard)) }
+        },
+    )
 }
 
 /**

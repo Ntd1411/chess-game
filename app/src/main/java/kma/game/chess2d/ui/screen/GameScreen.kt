@@ -35,7 +35,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  *
  * Chế độ và cấp độ được chọn từ menu rồi truyền xuống, không còn hàng nút chọn chế
  * độ nằm ngay trên bàn cờ như trước. Vẫn để [GameViewModel] giữ nguồn sự thật vì nó
- * lưu ván vào SavedStateHandle; menu chỉ đẩy lụa chọn vào đó qua setMode/setDifficulty.
+ * lưu ván vào SavedStateHandle; menu chỉ đẩy lựa chọn vào đó qua setMode/setDifficulty.
+ *
+ * @param resume true khi người chơi vừa chọn "Tiếp tục" ở sảnh: ván lưu trên đĩa sẽ
+ *        được đi lại từ đầu thay vì mở một bàn cờ mới.
  */
 @Composable
 fun GameScreen(
@@ -44,13 +47,18 @@ fun GameScreen(
     difficulty: Difficulty,
     onExitToMenu: () -> Unit,
     modifier: Modifier = Modifier,
+    resume: Boolean = false,
     viewModel: GameViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showLevels by remember { mutableStateOf(false) }
 
-    // Đồng bộ lụa chọn từ menu vào ViewModel. Đặt trong LaunchedEffect để việc này chỉ
-    // chạy khi lụa chọn đổi, chứ không chạy lại mỗi lần vẽ lại màn hình.
+    // Dựng lại ván cũ trước khi đồng bộ lựa chọn: ViewModel tự chọn đúng chế độ và cấp
+    // độ của ván đó, và chính nó cũng chặn việc dựng lại lần thứ hai khi xoay máy.
+    LaunchedEffect(resume) { if (resume) viewModel.resumeSavedGame() }
+
+    // Đồng bộ lựa chọn từ menu vào ViewModel. Đặt trong LaunchedEffect để việc này chỉ
+    // chạy khi lựa chọn đổi, chứ không chạy lại mỗi lần vẽ lại màn hình.
     LaunchedEffect(mode) { viewModel.setMode(mode) }
     LaunchedEffect(difficulty) { viewModel.setDifficulty(difficulty) }
 
