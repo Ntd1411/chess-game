@@ -3,9 +3,9 @@ package kma.game.chess2d.net
 import kotlinx.serialization.Serializable
 
 /**
- * Thể thức thọi gian (mục 7.2).
+ * Thể thức thời gian (mục 7.2).
  *
- * @param initialMillis thọi gian ban đầu mỗi bên; 0 là không giới hạn.
+ * @param initialMillis thời gian ban đầu mỗi bên; 0 là không giới hạn.
  * @param incrementMillis cộng thêm sau mỗi nước đi.
  */
 @Serializable
@@ -24,9 +24,9 @@ enum class TimeControl(val initialMillis: Long, val incrementMillis: Long) {
 }
 
 /**
- * Thọi gian còn lại của hai bên tại một thọi điểm — dạng gửi được qua dây.
+ * Thời gian còn lại của hai bên tại một thời điểm — dạng gửi được qua dây.
  *
- * Gửi **thọi gian còn lại** chứ không gửi mốc bắt đầu: hai máy không chung đồng hồ
+ * Gửi **thời gian còn lại** chứ không gửi mốc bắt đầu: hai máy không chung đồng hồ
  * hệ thống, mọi phép trừ dựa trên mốc của máy kia đều sai.
  */
 @Serializable
@@ -40,8 +40,8 @@ data class ClockTimes(
  * con số host gửi kèm `MoveAck`, không tự trừ. Hai đồng hồ chạy độc lập thì chỉ sau
  * vài phút là lệch nhau, và không có cách nào phân định bên nào hết giờ trước.
  *
- * Lớp này thuần tính toán: mọi hàm nhận mốc thọi gian từ ngoài vào thay vì tự gọi
- * `System.currentTimeMillis()`, nhờ vậy test JVM điều khiển được thọi gian mà không
+ * Lớp này thuần tính toán: mọi hàm nhận mốc thời gian từ ngoài vào thay vì tự gọi
+ * `System.currentTimeMillis()`, nhờ vậy test JVM điều khiển được thời gian mà không
  * phải chờ thật.
  *
  * Không an toàn đa luồng: được dùng từ đúng một vòng đọc thông điệp của host.
@@ -51,10 +51,10 @@ class MatchClock(val control: TimeControl) {
     private var whiteMillis: Long = control.initialMillis
     private var blackMillis: Long = control.initialMillis
 
-    /** Mốc lần cuối trừ thọi gian; `null` là đồng hồ chưa chạy. */
+    /** Mốc lần cuối trừ thời gian; `null` là đồng hồ chưa chạy. */
     private var lastTickMillis: Long? = null
 
-    /** Bên đang bị trừ thọi gian. */
+    /** Bên đang bị trừ thời gian. */
     private var whiteToMove: Boolean = true
 
     /**
@@ -78,7 +78,7 @@ class MatchClock(val control: TimeControl) {
     }
 
     /**
-     * Ghi nhận một nước vừa đi xong: trừ thọi gian đã nghĩ của bên vừa đi, cộng phần
+     * Ghi nhận một nước vừa đi xong: trừ thời gian đã nghĩ của bên vừa đi, cộng phần
      * tăng thêm, rồi chuyển lượt trừ sang bên kia.
      */
     fun onMovePlayed(nowMillis: Long) {
@@ -95,7 +95,7 @@ class MatchClock(val control: TimeControl) {
         lastTickMillis = nowMillis
     }
 
-    /** Thọi gian còn lại tính đến [nowMillis], kể cả phần đang chạy của bên đến lượt. */
+    /** Thời gian còn lại tính đến [nowMillis], kể cả phần đang chạy của bên đến lượt. */
     fun snapshot(nowMillis: Long): ClockTimes {
         if (!control.limited) return ClockTimes(0, 0)
         val elapsed = lastTickMillis?.let { (nowMillis - it).coerceAtLeast(0) } ?: 0
@@ -116,7 +116,7 @@ class MatchClock(val control: TimeControl) {
         }
     }
 
-    /** Trừ phần thọi gian đã trôi của bên đến lượt vào số còn lại. */
+    /** Trừ phần thời gian đã trôi của bên đến lượt vào số còn lại. */
     private fun drain(nowMillis: Long) {
         val last = lastTickMillis ?: return
         val elapsed = (nowMillis - last).coerceAtLeast(0)

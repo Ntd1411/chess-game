@@ -32,7 +32,21 @@ import kotlinx.coroutines.withContext
  * đó, chỉ có `connected = false` — đây là điều kiện để nối lại được sau khi tắt
  * Wi-Fi 10 giây mà không mất ván.
  */
-abstract class LanEndpoint(val role: LanRole, val localName: String) {
+abstract class LanEndpoint(
+    val role: LanRole,
+    val localName: String,
+    /** Thể thức thời gian. Chỉ có nghĩa với host, vì chỉ host giữ đồng hồ (mục 7.2). */
+    val timeControl: TimeControl = TimeControl.UNLIMITED,
+) {
+
+    /**
+     * Đồng hồ duy nhất của ván đấu, `null` ở phía khách và khi không bấm giờ.
+     *
+     * Khách cố tình không có đồng hồ riêng: hai đồng hồ chạy song song sẽ lệch nhau sau
+     * vài phút, và lúc đó không ai phân định được bên nào hết giờ trước.
+     */
+    private val clock: MatchClock? =
+        if (role == LanRole.HOST && timeControl.limited) MatchClock(timeControl) else null
 
     protected val game = NetGame()
 
@@ -99,6 +113,20 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
 
     protected fun currentSync(): StateSync = game.toSync(guestPlaysWhite, gameId)
 
+    /** Ảnh chụp đồng hồ của host, `null` khi phòng không bấm giờ hoặc mình là khách. */
+    protected fun clockSnapshot(): ClockTimes? = clock?.snapshot(System.currentTimeMillis())
+
+    /** Khách nhận thể thức và con số đầu tiên từ `Welcome`; nó không tự tính gì cả. */
+    protected fun adoptHostClock(control: TimeControl, times: ClockTimes?) {
+        _state.update { it.copy(timeControl = control, clock = times ?: it.clock) }
+    }
+
+    /** Ghi con số thời gian mới nhất vào [state] để UI vẽ lại. */
+    private fun publishClock(times: ClockTimes?) {
+        if (times == null) return
+        _state.update { it.copy(clock = times) }
+    }
+
     protected fun emit(event: LanEvent) {
         _events.tryEmit(event)
     }
@@ -161,8 +189,11 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
         val atPly = game.ply
         if (game.rejectionReason(raw, youPlayWhite(), atPly) != null) return@withGame false
         if (!game.apply(raw)) return@withGame false
+        clock?.onMovePlayed(System.currentTimeMillis())
+        val times = clockSnapshot()
+        publishClock(times)
         publishState()
-        send(NetMessage.MoveMade(gameId, atPly, raw, Move(raw).toUci()))
+        send(NetMessage.MoveMade(gameId, atPly, raw, Move(raw).toUci(), times))
         true
     }
 
@@ -246,7 +277,13 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
     // ---------------------------------------------------------------- vòng đời kết nối
 
     protected fun onConnected(opponentName: String) {
-        updateState { it.copy(connected = true, opponentName = opponentName) }
+        updateState {
+            it.copy(connected = true, opponentName = opponentName, timeControl = timeControl)
+        }
+        // Đồng hồ chỉ chạy từ lúc có đối thủ: thời gian ngồi chờ trong sảnh không được
+        // trừ của ai.
+        clock?.start(System.currentTimeMillis(), whiteToMove = game.whiteToMove)
+        publishClock(clockSnapshot())
         publishState()
         emit(LanEvent.Connected(opponentName, youPlayWhite()))
     }
@@ -282,6 +319,9 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
                     while (isActive) {
                         delay(LanTiming.PING_INTERVAL_MILLIS)
                         if (!send(NetMessage.Ping(System.nanoTime()))) return@launch
+                        // Nhịp ping cũng là nhịp soát đồng hồ: hết giờ là chuyện xảy ra khi
+                        // không có nước đi nào, nên không thể chỉ soát lúc nhận thông điệp.
+                        checkFlagFall()
                     }
                 }
                 try {
@@ -339,7 +379,8 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
 
             is NetMessage.MoveMade -> onOpponentMove(message)
 
-            is NetMessage.MoveAck -> Unit // Đã áp dụng cục bộ từ trước, không còn gì phải làm.
+            // Nước đã áp dụng cục bộ từ trước; thứ duy nhất còn mới là đồng hồ của host.
+            is NetMessage.MoveAck -> publishClock(message.clock)
 
             is NetMessage.MoveRejected -> {
                 applySync(message.sync)
@@ -392,6 +433,14 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
                 emit(LanEvent.RematchSettled(message.accepted))
             }
 
+            is NetMessage.Flagged -> {
+                if (message.gameId != gameId) return
+                publishClock(message.clock)
+                updateState {
+                    it.copy(outcome = LanOutcome.TIMEOUT, flaggedWhite = message.whiteFlagged)
+                }
+            }
+
             is NetMessage.Bye -> onPeerLeft(message.reason)
 
             is NetMessage.Error -> emit(LanEvent.Failed(message.code, message.detail))
@@ -419,8 +468,12 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
             return
         }
         game.apply(message.raw)
+        clock?.onMovePlayed(System.currentTimeMillis())
+        val times = clockSnapshot()
+        publishClock(times)
         publishState()
-        if (isReferee) send(NetMessage.MoveAck(gameId, message.ply))
+        if (isReferee) send(NetMessage.MoveAck(gameId, message.ply, times))
+        else publishClock(message.clock)
     }
 
     /**
@@ -461,7 +514,9 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
         val startsNewGame = sync.gameId != gameId
         gameId = sync.gameId
         guestPlaysWhite = sync.guestPlaysWhite
-        if (startsNewGame) updateState { it.copy(outcome = null, resignedByWhite = null) }
+        if (startsNewGame) {
+            updateState { it.copy(outcome = null, resignedByWhite = null, flaggedWhite = null) }
+        }
         updateState {
             it.copy(
                 opponentOffersDraw = false,
@@ -473,15 +528,35 @@ abstract class LanEndpoint(val role: LanRole, val localName: String) {
         publishState()
     }
 
+    /**
+     * Soát xem có bên nào hết giờ. Chỉ trọng tài làm việc này và chỉ tuyên một lần.
+     *
+     * Phải khóa [game] vì hàm đọc cả trạng thái ván lẫn đồng hồ, trong khi luồng đọc
+     * socket có thể đang áp dụng một nước đi.
+     */
+    private fun checkFlagFall(): Unit = withGame {
+        val running = clock ?: return@withGame
+        if (state.value.finished || !state.value.connected) return@withGame
+        val now = System.currentTimeMillis()
+        val flagged = running.flaggedSide(now) ?: return@withGame
+        running.stop(now)
+        val times = running.snapshot(now)
+        publishClock(times)
+        updateState { it.copy(outcome = LanOutcome.TIMEOUT, flaggedWhite = flagged) }
+        send(NetMessage.Flagged(gameId, flagged, times))
+    }
+
     /** Dụng ván mới. Đổi màu hai bên để không ai giữ Trắng mãi. Chỉ trọng tài được gọi. */
     protected fun startNextGame() {
         gameId += 1
+        clock?.start(System.currentTimeMillis())
         guestPlaysWhite = !guestPlaysWhite
         game.reset()
         updateState {
             it.copy(
                 outcome = null,
                 resignedByWhite = null,
+                flaggedWhite = null,
                 opponentOffersDraw = false,
                 waitingDrawReply = false,
                 opponentOffersRematch = false,

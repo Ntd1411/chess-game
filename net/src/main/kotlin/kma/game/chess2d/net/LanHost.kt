@@ -32,7 +32,8 @@ class LanHost(
     private val requestedPort: Int = 0,
     private val discoveryPort: Int = DISCOVERY_PORT,
     private val advertiseTargets: List<InetAddress>? = null,
-) : LanEndpoint(LanRole.HOST, localName) {
+    timeControl: TimeControl = TimeControl.UNLIMITED,
+) : LanEndpoint(LanRole.HOST, localName, timeControl) {
 
     /** Cổng TCP thật đang lắng nghe, -1 khi chưa chạy. */
     @Volatile
@@ -143,6 +144,10 @@ class LanHost(
                 hostName = localName,
                 resumeToken = requireNotNull(resumeToken),
                 sync = withGame { currentSync() },
+                // Khách không giữ đồng hồ, nên thể thức và con số ban đầu phải đến từ host
+                // ngay từ lúc bắt tay, không chờ đến nước đi đầu tiên.
+                timeControl = timeControl,
+                clock = clockSnapshot(),
             )
             if (runCatching { open.send(welcome) }.isFailure) {
                 channel = null

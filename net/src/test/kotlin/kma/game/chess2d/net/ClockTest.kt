@@ -8,7 +8,7 @@ import org.junit.Test
 /**
  * Kiểm tra đồng hồ thi đấu (mục 7.2).
  *
- * Mọi mốc thọi gian được truyền vào bằng tay nên test chạy tức thì, không cần chọ
+ * Mọi mốc thời gian được truyền vào bằng tay nên test chạy tức thì, không cần chờ
  * một giây thật nào.
  */
 class ClockTest {

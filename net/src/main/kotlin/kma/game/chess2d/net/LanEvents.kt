@@ -3,7 +3,7 @@ package kma.game.chess2d.net
 import kma.game.chess2d.engine.Engine
 import kma.game.chess2d.engine.GameStatus
 
-/** Vai trong một phòng LAN. Host đồng thọi là trọng tài của ván đấu. */
+/** Vai trong một phòng LAN. Host đồng thời là trọng tài của ván đấu. */
 enum class LanRole { HOST, GUEST }
 
 /**
@@ -35,6 +35,17 @@ data class LanGameState(
     val waitingRematchReply: Boolean = false,
     /** Độ trễ đo được từ heartbeat, -1 khi chưa có số đo. */
     val latencyMillis: Long = -1,
+    /** Thể thức thời gian của phòng. */
+    val timeControl: TimeControl = TimeControl.UNLIMITED,
+    /**
+     * Thời gian còn lại do host tính, `null` khi không bấm giờ hoặc chưa nhận số nào.
+     *
+     * Đây là ảnh chụp tại thời điểm nhận — UI muốn đếm lùi mượt thì tự trừ từ con số
+     * này, nhưng kết quả hết giờ luôn do host tuyên.
+     */
+    val clock: ClockTimes? = null,
+    /** Bên hết giờ, chỉ có nghĩa khi [outcome] là TIMEOUT. */
+    val flaggedWhite: Boolean? = null,
 ) {
     val finished: Boolean get() = ruleFinished || outcome != null
 

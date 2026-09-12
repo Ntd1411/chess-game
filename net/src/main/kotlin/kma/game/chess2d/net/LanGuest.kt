@@ -104,6 +104,8 @@ class LanGuest(localName: String) : LanEndpoint(LanRole.GUEST, localName) {
                     resumeToken = reply.resumeToken
                     channel = open
                     applySync(reply.sync)
+                    // Khách chỉ vẽ lại đồng hồ của host, không tự giữ đồng hồ nào (mục 7.2).
+                    adoptHostClock(reply.timeControl, reply.clock)
                     onConnected(reply.hostName)
                     true
                 }

@@ -12,8 +12,13 @@ import kotlinx.serialization.json.Json
  * thay đổi giao thức, nên [PROTOCOL_VERSION] được gửi ngay trong nước bắt tay đầu
  * tiên. Hai máy cài hai phiên bản khác nhau phải báo lỗi rõ ràng thay vì lệch bàn
  * cờ giữa ván.
+ *
+ * v2 thêm đồng hồ thi đấu: `MoveAck` và `MoveMade` mang theo thời gian còn lại do host
+ * tính, `Welcome` mang theo thể thức, và có thêm thông điệp báo hết giờ. Bản v1 không
+ * biết những trường này nên phải lệch phiên bản một cách rõ ràng thay vì chạy tiếp với
+ * một cái đồng hồ rỗng.
  */
-const val PROTOCOL_VERSION: Int = 1
+const val PROTOCOL_VERSION: Int = 2
 
 /** Cổng UDP để phát và nghe beacon tìm phòng. Cố định vì client cần biết trước để nghe. */
 const val DISCOVERY_PORT: Int = 45_454
@@ -95,6 +100,9 @@ data class StateSync(
 enum class LanOutcome {
     RESIGNATION,
     DRAW_AGREED,
+
+    /** Hết giờ. Do host — bên giữ đồng hồ duy nhất — tuyên, khách chỉ nhận kết quả. */
+    TIMEOUT,
 }
 
 @Serializable
@@ -123,6 +131,10 @@ sealed interface NetMessage {
         val hostName: String,
         val resumeToken: String,
         val sync: StateSync,
+        /** Thể thức thời gian do host đặt; khách chỉ nhận để hiện đúng nhãn. */
+        val timeControl: TimeControl = TimeControl.UNLIMITED,
+        /** Thời gian còn lại lúc vào phòng, `null` khi không bấm giờ. */
+        val clock: ClockTimes? = null,
     ) : NetMessage
 
     /**
@@ -136,11 +148,28 @@ sealed interface NetMessage {
      */
     @Serializable
     @SerialName("move")
-    data class MoveMade(val gameId: Int, val ply: Int, val raw: Int, val uci: String) : NetMessage
+    data class MoveMade(
+        val gameId: Int,
+        val ply: Int,
+        val raw: Int,
+        val uci: String,
+        /**
+         * Thời gian còn lại sau nước này, chỉ có khi host gửi.
+         *
+         * Khách gửi `null`: khách không giữ đồng hồ, mọi con số nó tự tính đều không
+         * được phép ghi đè số của trọng tài.
+         */
+        val clock: ClockTimes? = null,
+    ) : NetMessage
 
+    /** Xác nhận nước của khách, kèm thời gian còn lại do host tính (mục 7.2). */
     @Serializable
     @SerialName("moveAck")
-    data class MoveAck(val gameId: Int, val ply: Int) : NetMessage
+    data class MoveAck(
+        val gameId: Int,
+        val ply: Int,
+        val clock: ClockTimes? = null,
+    ) : NetMessage
 
     /**
      * Host từ chối nước đi của client và kèm luôn trạng thái đúng.
@@ -195,6 +224,20 @@ sealed interface NetMessage {
     @Serializable
     @SerialName("bye")
     data class Bye(val reason: String = "") : NetMessage
+
+    /**
+     * Host tuyên một bên hết giờ.
+     *
+     * Chỉ host được gửi: nếu cả hai bên được tuyên thì hai đồng hồ lệch nhau sẽ cho
+     * ra hai kết quả ngược nhau và không có cách nào phân định.
+     */
+    @Serializable
+    @SerialName("flag")
+    data class Flagged(
+        val gameId: Int,
+        val whiteFlagged: Boolean,
+        val clock: ClockTimes,
+    ) : NetMessage
 
     @Serializable
     @SerialName("error")
