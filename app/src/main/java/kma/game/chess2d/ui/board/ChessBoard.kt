@@ -47,6 +47,9 @@ import kma.game.chess2d.game.PieceOnBoard
  * @param flipped xoay bàn 180 độ để quân Đen ngồi phía dưới. Cần cho chế độ LAN: khách
  *        cầm Đen mà vẫn thấy Trắng ở dưới thì mọi trực giác về hướng tiến quân bị đảo
  *        ngược. Chỉ đổi cách <b>vẽ</b> và cách đọc cú chạm; số ô của engine không đổi.
+ * @param palette bộ màu ô bàn cờ (mục 7.3). Màu ô luôn lấy từ đây chứ không lấy từ
+ *        dynamic color của hệ thống, để độ tương phản sáng/tối không phụ thuộc hình nền.
+ * @param pieceTheme bộ quân đang chọn; chỉ đổi ký tự được vẽ, không đổi luật gì cả.
  */
 @Composable
 fun ChessBoard(
@@ -58,6 +61,8 @@ fun ChessBoard(
     checkedKingSquare: Int,
     onSquareTap: (Int) -> Unit,
     flipped: Boolean = false,
+    palette: BoardPalette = BoardPalette.GREEN,
+    pieceTheme: PieceTheme = PieceTheme.SOLID,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
@@ -131,7 +136,7 @@ fun ChessBoard(
                 // là ô tối kể cả khi lật bàn.
                 val isLight = (Squares.fileOf(square) + Squares.rankOf(square)) % 2 != 0
 
-                drawRect(if (isLight) BoardColors.lightSquare else BoardColors.darkSquare, topLeft, size)
+                drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
                 if (square == lastMoveFrom || square == lastMoveTo) {
                     drawRect(BoardColors.lastMove, topLeft, size)
                 }
@@ -183,7 +188,7 @@ fun ChessBoard(
                         .zIndex(if (dragging) 1f else 0f),
                     contentAlignment = Alignment.Center,
                 ) {
-                    PieceGlyph(piece.piece, squareSize)
+                    PieceGlyph(piece.piece, squareSize, pieceTheme)
                 }
             }
         }
@@ -201,8 +206,8 @@ fun ChessBoard(
  * gần như vô hình trên ô sáng. Viền được vẽ thành một lớp riêng bên dưới.
  */
 @Composable
-private fun PieceGlyph(piece: Byte, squareSize: Dp) {
-    val glyph = glyphOf(piece)
+private fun PieceGlyph(piece: Byte, squareSize: Dp, theme: PieceTheme) {
+    val glyph = theme.glyphOf(piece)
     val white = Piece.isWhite(piece)
     val density = LocalDensity.current
     val fontSize = with(density) { (squareSize.toPx() * GLYPH_SCALE).toSp() }
@@ -229,15 +234,14 @@ private fun PieceGlyph(piece: Byte, squareSize: Dp) {
     }
 }
 
-/** Chỉ lấy glyph đặc theo loại quân; màu quân do [PieceGlyph] tô. */
-internal fun glyphOf(piece: Byte): String = when (Piece.typeOf(piece)) {
-    Piece.KING -> "\u265A"
-    Piece.QUEEN -> "\u265B"
-    Piece.ROOK -> "\u265C"
-    Piece.BISHOP -> "\u265D"
-    Piece.KNIGHT -> "\u265E"
-    else -> "\u265F"
-}
+/**
+ * Glyph đặc theo loại quân; màu quân do nơi vẽ tô.
+ *
+ * Giữ lại hàm này cho những chỗ chỉ cần một ký tự quân ngoài bàn cờ (hộp thoại phong
+ * cấp, hàng quân bị bắt, ảnh đại diện người chơi) — ở đó luôn dùng glyph đặc để nhìn
+ * rõ trên nền phẳng, không phụ thuộc bộ quân đang chọn.
+ */
+internal fun glyphOf(piece: Byte): String = PieceTheme.SOLID.glyphOf(piece)
 
 /** Cột trên màn hình của một ô engine. */
 private fun squareCol(square: Int, flipped: Boolean): Int {
