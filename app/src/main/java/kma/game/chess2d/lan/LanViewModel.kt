@@ -8,7 +8,6 @@ import java.net.NetworkInterface
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PendingPromotion
-import kma.game.chess2d.net.DiscoveredRoom
 import kma.game.chess2d.net.LanEndpoint
 import kma.game.chess2d.net.LanErrorCode
 import kma.game.chess2d.net.LanEvent
@@ -16,7 +15,9 @@ import kma.game.chess2d.net.LanGameState
 import kma.game.chess2d.net.LanGuest
 import kma.game.chess2d.net.LanHost
 import kma.game.chess2d.net.LanRole
-import kma.game.chess2d.net.RoomScanner
+import kma.game.chess2d.net.LanRoomSource
+import kma.game.chess2d.net.RoomInfo
+import kma.game.chess2d.net.RoomSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,14 @@ import kotlinx.coroutines.launch
  */
 class LanViewModel : ViewModel() {
 
-    private val scanner = RoomScanner()
+    /**
+     * Nơi lấy danh sách phòng cho sảnh.
+     *
+     * Khai báo theo kiểu [RoomSource] chứ không phải `RoomScanner`: ViewModel chỉ cần
+     * "một nơi có phòng", không cần biết beacon UDP hay cổng nào. Nhờ vậy luồng sảnh
+     * kiểm tra được bằng nguồn giả trong test JVM.
+     */
+    private val roomSource: RoomSource = LanRoomSource()
     private val mirror = BoardMirror()
 
     private var scanJob: Job? = null
@@ -77,8 +85,8 @@ class LanViewModel : ViewModel() {
     fun startScan() {
         if (scanJob?.isActive == true) return
         scanJob = viewModelScope.launch {
-            launch { scanner.run() }
-            scanner.rooms.collect { rooms ->
+            launch { roomSource.discover() }
+            roomSource.rooms.collect { rooms ->
                 _uiState.update { it.copy(lobby = it.lobby.copy(rooms = rooms)) }
             }
         }
@@ -87,7 +95,7 @@ class LanViewModel : ViewModel() {
     fun stopScan() {
         scanJob?.cancel()
         scanJob = null
-        scanner.clear()
+        roomSource.clear()
         _uiState.update { it.copy(lobby = it.lobby.copy(rooms = emptyList())) }
     }
 
@@ -147,7 +155,7 @@ class LanViewModel : ViewModel() {
         startScan()
     }
 
-    fun join(room: DiscoveredRoom) {
+    fun join(room: RoomInfo) {
         // Chặn ngay tại đây thay vì để host từ chối: đỡ một vòng bắt tay và thông báo
         // cũng rõ hơn, vì beacon đã nói sẵn phiên bản giao thức của phòng đó.
         if (!room.compatible) {
@@ -155,7 +163,10 @@ class LanViewModel : ViewModel() {
             return
         }
         val guest = LanGuest(localName = currentName())
-        startSession(guest) { guest.run(room) }
+        // Vào bằng địa chỉ + cổng lấy từ [RoomInfo]: phòng được định danh bằng mã phòng,
+        // còn địa chỉ chỉ là dữ liệu để nối, nên lần nào vào cũng dùng địa chỉ mới nhất
+        // mà beacon vừa báo.
+        startSession(guest) { guest.run(room.address, room.port) }
     }
 
     /**

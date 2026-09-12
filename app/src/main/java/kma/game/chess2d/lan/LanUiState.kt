@@ -4,9 +4,9 @@ import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PendingPromotion
 import kma.game.chess2d.game.PieceOnBoard
-import kma.game.chess2d.net.DiscoveredRoom
 import kma.game.chess2d.net.LanOutcome
 import kma.game.chess2d.net.LanRole
+import kma.game.chess2d.net.RoomInfo
 
 /** Màn hình LAN đang ở đâu. */
 enum class LanPhase {
@@ -51,11 +51,17 @@ enum class LanNoticeKind {
 /** @param detail phần chi tiết bằng tiếng Anh từ tầng mạng, chỉ dùng để gợi ý chẩn đoán. */
 data class LanNotice(val kind: LanNoticeKind, val detail: String = "")
 
-/** Sảnh chể. */
+/**
+ * Sảnh chờ.
+ *
+ * Danh sách phòng dùng [RoomInfo] chứ không dùng trực tiếp `DiscoveredRoom`: sảnh
+ * không cần biết phòng đến từ beacon UDP hay từ một nguồn khác, và nhờ vậy test
+ * JVM thay được bằng nguồn giả mà không mở socket nào.
+ */
 data class LanLobbyUiState(
     val localName: String = "",
     val manualAddress: String = "",
-    val rooms: List<DiscoveredRoom> = emptyList(),
+    val rooms: List<RoomInfo> = emptyList(),
 )
 
 /**

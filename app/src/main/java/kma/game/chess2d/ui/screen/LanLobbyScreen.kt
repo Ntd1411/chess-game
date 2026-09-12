@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kma.game.chess2d.R
 import kma.game.chess2d.lan.LanLobbyUiState
-import kma.game.chess2d.net.DiscoveredRoom
+import kma.game.chess2d.net.RoomInfo
 
 /**
  * Sảnh chờ LAN: mở phòng, hoặc chọn một phòng đã thấy trong mạng.
@@ -49,7 +50,7 @@ fun LanLobbyScreen(
     state: LanLobbyUiState,
     localAddresses: List<String>,
     onHost: () -> Unit,
-    onJoin: (DiscoveredRoom) -> Unit,
+    onJoin: (RoomInfo) -> Unit,
     onManualAddressChange: (String) -> Unit,
     onManualJoin: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -129,8 +130,12 @@ fun LanLobbyScreen(
         if (state.rooms.isEmpty()) {
             EmptyRoomsHint()
         } else {
+            // Khoá của mỗi thẻ là `room.key` (nguồn + mã phòng), không phải địa chỉ IP: máy
+            // đổi IP thì vẫn là đúng một phòng đó.
             for (room in state.rooms) {
-                RoomCard(room = room, onJoin = { onJoin(room) })
+                key(room.key) {
+                    RoomCard(room = room, onJoin = { onJoin(room) })
+                }
             }
         }
 
@@ -228,7 +233,7 @@ private fun YourRoomCard(
  * Trước đây nút chỉ xám đi mà không nói lý do.
  */
 @Composable
-private fun RoomCard(room: DiscoveredRoom, onJoin: () -> Unit) {
+private fun RoomCard(room: RoomInfo, onJoin: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -257,7 +262,7 @@ private fun RoomCard(room: DiscoveredRoom, onJoin: () -> Unit) {
 }
 
 /** Nhãn trạng thái của phòng. */
-private fun badgeOf(room: DiscoveredRoom): Int = when {
+private fun badgeOf(room: RoomInfo): Int = when {
     !room.compatible -> R.string.lan_badge_version
     room.busy -> R.string.lan_badge_playing
     else -> R.string.lan_badge_open
