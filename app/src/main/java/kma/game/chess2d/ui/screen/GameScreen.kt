@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -18,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +62,10 @@ fun GameScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showLevels by remember { mutableStateOf(false) }
+    // Lật bàn là lựa chọn của người đang ngồi xem, không phải trạng thái của ván, nên
+    // giữ ở màn hình bằng rememberSaveable chứ không đẩy vào ViewModel. Dùng lại đúng cờ
+    // `flipped` của bàn cờ LAN nên không phải thêm đường vẽ nào mới.
+    var flipped by rememberSaveable { mutableStateOf(false) }
 
     // Dựng lại ván cũ trước khi đồng bộ lựa chọn: ViewModel tự chọn đúng chế độ và cấp
     // độ của ván đó, và chính nó cũng chặn việc dựng lại lần thứ hai khi xoay máy.
@@ -100,6 +106,13 @@ fun GameScreen(
                 ),
             )
         }
+        add(
+            MatchAction(
+                icon = Icons.Filled.KeyboardArrowUp,
+                label = stringResource(R.string.action_flip),
+                onClick = { flipped = !flipped },
+            ),
+        )
         add(
             MatchAction(
                 icon = Icons.Filled.Home,
@@ -158,6 +171,7 @@ fun GameScreen(
             lastMoveTo = state.lastMoveTo,
             checkedKingSquare = state.checkedKingSquare,
             onSquareTap = viewModel::onSquareTap,
+            flipped = flipped,
             modifier = Modifier.fillMaxSize(),
         )
     }
