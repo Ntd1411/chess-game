@@ -7,6 +7,8 @@ plugins {
     // Kể từ Kotlin 2.0, plugin Compose Compiler là BẮT BUỘC khi bật compose.
     // Plugin này tương thích với built-in Kotlin (khác kotlin-android).
     alias(libs.plugins.kotlin.compose)
+    // KSP: Room sinh mã DAO cho lịch sử ván đấu (mục 7.3).
+    alias(libs.plugins.ksp)
 }
 
 // Cấu hình ký bản release. Ưu tiên file keystore.properties (máy cá nhân), sau đó
@@ -106,6 +108,12 @@ dependencies {
     // Lưu ván offline đang chơi (mục 7.1). Dùng bản Preferences chứ không Proto: dữ liệu
     // cần lưu chỉ là vài chuỗi và vài cờ, không đáng thêm một bước sinh mã protobuf.
     implementation(libs.datastore.preferences)
+
+    // Lịch sử ván đấu (mục 7.3). Chỉ lưu danh sách nước đi chứ không lưu thế cờ:
+    // thế cờ nào cũng dựng lại được từ FEN đầu cộng dãy nước, lưu thêm chỉ tốn chỗ.
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

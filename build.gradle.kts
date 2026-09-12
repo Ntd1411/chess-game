@@ -6,4 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    // KSP: Room sinh mã DAO lúc biên dịch (mục 7.3).
+    alias(libs.plugins.ksp) apply false
 }
