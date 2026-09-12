@@ -65,11 +65,17 @@ android {
 
     buildTypes {
         release {
-            // R8 tạm tắt: kotlinx.serialization trong :net là chỗ dễ vỡ nhất khi rút
-            // gọn, nên chỉ bật sau khi đã test tay luồng LAN trên bản release.
+            // Bật R8 (mục 7.1): rút gọn mã và tài nguyên cho bản phát hành.
+            // Chỗ dễ vỡ nhất là kotlinx.serialization trong :net, nên keep rule cho
+            // nó nằm sẵn trong proguard-rules.pro; đặc biệt là tên các lớp con của
+            // NetMessage phải giữ nguyên vì chúng là một phần của giao thức LAN.
             optimization {
-                enable = false
+                enable = true
             }
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             signingConfig = signingConfigs.findByName("release")
         }
     }
