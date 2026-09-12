@@ -19,9 +19,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Chess">
+        <!-- Khoa huong doc (muc 5.7 A0). Khai bao trong manifest chu khong goi
+             setRequestedOrientation trong code: goi trong code thi man splash
+             nhay mot nhip ngang truoc khi bi khoa.
+             Luu y: tu Android 16, he thong BO QUA yeu cau nay tren man hinh rong
+             (tablet, may gap, desktop mode) voi app targetSdk du moi - nen van
+             khong duoc viet code gia dinh chieu cao > chieu rong. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
