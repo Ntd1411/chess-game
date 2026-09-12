@@ -1,5 +1,8 @@
 package kma.game.chess2d.ui.screen
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.Board
 import kma.game.chess2d.engine.Engine
+import kma.game.chess2d.engine.Pgn
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.GameMode
@@ -121,6 +125,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 MatchRow(
                     record = record,
                     onReview = { reviewing = record },
+                    onExport = { exportPgn(context, record) },
                     onDelete = {
                         scope.launch {
                             withContext(Dispatchers.IO) { dao.deleteById(record.id) }
@@ -132,9 +137,14 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Một dòng ván đã lưu: ngày, chế độ, kết quả, số nước và hai nút. */
+/** Một dòng ván đã lưu: ngày, chế độ, kết quả, số nước và ba nút hành động. */
 @Composable
-private fun MatchRow(record: MatchRecord, onReview: () -> Unit, onDelete: () -> Unit) {
+private fun MatchRow(
+    record: MatchRecord,
+    onReview: () -> Unit,
+    onExport: () -> Unit,
+    onDelete: () -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -154,6 +164,7 @@ private fun MatchRow(record: MatchRecord, onReview: () -> Unit, onDelete: () -> 
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = onReview) { Text(stringResource(R.string.history_review)) }
+                TextButton(onClick = onExport) { Text(stringResource(R.string.history_export_pgn)) }
                 TextButton(onClick = onDelete) { Text(stringResource(R.string.history_delete)) }
             }
         }
@@ -237,6 +248,50 @@ private fun piecesOf(board: Board): List<PieceOnBoard> =
         val piece = board.pieceAt(square)
         if (piece == Piece.NONE) null else PieceOnBoard(square, piece, square)
     }
+
+/**
+ * Xuất một ván đã lưu thành PGN rồi đẩy sang ứng dụng khác bằng [Intent.ACTION_SEND].
+ *
+ * Chia sẻ chuỗi văn bản chứ không tự ghi file: không phải xin quyền lưu trữ, và người
+ * chơi tự chọn lưu vào đâu hay gửi cho ai.
+ *
+ * [Pgn.export] tính lại SAN bằng engine nên dãy nước hỏng trong DB sẽ ném lỗi; bắt lại
+ * để báo một câu thay vì làm sập app.
+ */
+private fun exportPgn(context: Context, record: MatchRecord) {
+    val pgn = runCatching {
+        Pgn.export(
+            Pgn.Game(
+                event = "Chess 2D",
+                site = "Android",
+                date = SimpleDateFormat("yyyy.MM.dd", Locale.US).format(Date(record.playedAtMillis)),
+                result = pgnResultOf(record.result),
+                startFen = record.startFen,
+                uciMoves = record.uciMoves,
+            ),
+        )
+    }.getOrNull()
+
+    if (pgn == null) {
+        Toast.makeText(context, R.string.history_export_failed, Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, pgn)
+    }
+    context.startActivity(
+        Intent.createChooser(send, context.getString(R.string.history_export_chooser)),
+    )
+}
+
+/** Kết quả theo ký hiệu PGN, luôn nhìn từ phía Bên Trắng như chuẩn yêu cầu. */
+private fun pgnResultOf(result: String): String = when (result) {
+    MatchResult.WIN -> "1-0"
+    MatchResult.LOSS -> "0-1"
+    else -> "1/2-1/2"
+}
 
 /** Ngày giờ ván đã đánh, theo định dạng ngắn kiểu Việt Nam. */
 private fun formatPlayedAt(millis: Long): String =

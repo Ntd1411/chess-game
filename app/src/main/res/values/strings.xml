@@ -173,4 +173,7 @@
     <string name="history_mode_two_players">Hai người</string>
     <string name="history_mode_vs_computer">Đấu máy</string>
     <string name="history_mode_lan">Qua mạng LAN</string>
+    <string name="history_export_pgn">Xuất PGN</string>
+    <string name="history_export_chooser">Chia sẻ ván dưới dạng PGN</string>
+    <string name="history_export_failed">Không xuất được PGN cho ván này</string>
 </resources>
