@@ -1,13 +1,18 @@
 package kma.game.chess2d.lan
 
+import android.app.Application
 import android.os.Build
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PendingPromotion
+import kma.game.chess2d.history.MatchHistoryDatabase
+import kma.game.chess2d.history.MatchRecord
+import kma.game.chess2d.history.MatchResult
 import kma.game.chess2d.net.LanEndpoint
 import kma.game.chess2d.net.LanErrorCode
 import kma.game.chess2d.net.LanEvent
@@ -18,7 +23,9 @@ import kma.game.chess2d.net.LanRole
 import kma.game.chess2d.net.LanRoomSource
 import kma.game.chess2d.net.RoomInfo
 import kma.game.chess2d.net.RoomSource
+import kma.game.chess2d.net.LanOutcome
 import kma.game.chess2d.net.TimeControl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Cầu nối duy nhất giữa giao diện và module <code>:net</code>.
@@ -39,7 +47,18 @@ import kotlinx.coroutines.launch
  * mất ván vì ViewModel sống qua cả configuration change; bị hệ thống giải phóng tiến
  * trình thì phải vào lại phòng — đúng như mọi game LAN khác.
  */
-class LanViewModel : ViewModel() {
+class LanViewModel(application: Application) : AndroidViewModel(application) {
+
+    /** Lịch sử ván đấu (mục 7.3): ván LAN cũng được lưu như ván offline. */
+    private val matches = MatchHistoryDatabase.get(application).matches()
+
+    /**
+     * Mã ván đã ghi vào lịch sử gần nhất.
+     *
+     * So theo mã ván chứ không dùng cờ bật/tắt: đấu lại sẽ đổi mã ván, mà trạng thái
+     * kết thúc thì có thể được đẩy lên nhiều lần cho cùng một ván.
+     */
+    private var recordedGameId: Int? = null
 
     /**
      * Nơi lấy danh sách phòng cho sảnh.
@@ -370,6 +389,47 @@ class LanViewModel : ViewModel() {
             pendingPromotion = null
         }
         publish(state)
+        recordIfFinished(state)
+    }
+
+    /**
+     * Ghi ván LAN vừa kết thúc vào lịch sử.
+     *
+     * Kết quả tính theo phía người chơi này chứ không theo Bên Trắng: cùng một ván thì
+     * hai máy phải ghi ra hai kết quả ngược nhau.
+     *
+     * Chỉ lưu FEN đầu + dãy nước UCI, giống ván offline, để xem lại bằng engine.
+     */
+    private fun recordIfFinished(state: LanGameState) {
+        if (!state.finished || recordedGameId == state.gameId) return
+        val winnerWhite: Boolean? = when {
+            // Đầu hàng: bên đầu hàng là bên thua.
+            state.outcome == LanOutcome.RESIGNATION -> state.resignedByWhite?.not()
+            // Hết giờ: bên rụng cờ là bên thua.
+            state.outcome == LanOutcome.TIMEOUT -> state.flaggedWhite?.not()
+            state.outcome == LanOutcome.DRAW_AGREED -> null
+            // Chiếu hết: bên đến lượt là bên bị thua.
+            state.status == GameStatus.CHECKMATE -> !state.whiteToMove
+            else -> null
+        }
+        val result = when (winnerWhite) {
+            null -> MatchResult.DRAW
+            state.youPlayWhite -> MatchResult.WIN
+            else -> MatchResult.LOSS
+        }
+
+        recordedGameId = state.gameId
+        val record = MatchRecord(
+            playedAtMillis = System.currentTimeMillis(),
+            mode = MODE_LAN,
+            opponent = state.opponentName,
+            startFen = state.startFen,
+            moves = state.moves.joinToString(" ") { Move(it).toUci() },
+            result = result,
+        )
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { matches.insert(record) }
+        }
     }
 
     private fun onNetworkEvent(event: LanEvent) {
@@ -498,6 +558,11 @@ class LanViewModel : ViewModel() {
 
     private fun currentName(): String =
         _uiState.value.lobby.localName.trim().ifEmpty { defaultLocalName() }
+
+    private companion object {
+        /** Chế độ ghi trong lịch sử cho ván đánh qua mạng LAN. */
+        const val MODE_LAN = "LAN"
+    }
 
     override fun onCleared() {
         // ViewModel chết thì socket và beacon phải chết theo, không để sót một ván "ảo"
