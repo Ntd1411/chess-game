@@ -65,6 +65,8 @@ enum class GameMode {
  * @param aiThinking máy đang nghĩ. Trong lúc này bàn cờ không nhận chạm và nút Đi lại bị khóa.
  * @param soundCue tiếng cần phát cho nước đi gần nhất, `null` khi chưa đi nước nào.
  * @param sanMoves danh sách nước đã đi theo ký hiệu SAN, theo đúng thứ tự đã đi.
+ * @param reviewPly đang xem lại thế cờ ngay sau nước thứ này (đếm từ 0). `null` là
+ *        đang ở thế hiện tại; khác `null` thì bàn cờ không nhận đi nước nào.
  */
 data class GameUiState(
     val pieces: List<PieceOnBoard> = emptyList(),
@@ -82,4 +84,5 @@ data class GameUiState(
     val aiThinking: Boolean = false,
     val soundCue: SoundCue? = null,
     val sanMoves: List<String> = emptyList(),
+    val reviewPly: Int? = null,
 )

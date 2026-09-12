@@ -89,6 +89,15 @@ class GameViewModel(
     private var aiJob: Job? = null
     private var aiThinking = false
 
+    /**
+     * Đang xem lại thế cờ sau nước thứ (reviewPly + 1), `null` là đang ở thế hiện tại.
+     *
+     * Bàn cờ thật [board] **không** bị hoàn nguyên khi xem lại: thế cũ được dựng
+     * trên một bàn riêng để vẽ. Nhờ vậy thoát xem lại là về đúng ván đang chơi, không
+     * có cách nào làm mất những nước đã đi.
+     */
+    private var reviewPly: Int? = null
+
     /** Tiếng cần phát cho nước đi gần nhất. */
     private var soundCue: SoundCue? = null
 
@@ -127,6 +136,9 @@ class GameViewModel(
      * không có đường nào để giao diện thực hiện một nước sai luật.
      */
     fun onSquareTap(square: Int) {
+        // Đang xem lại thì bàn cờ chỉ để ngắm: đi tại đây sẽ là đi từ thế cũ, không khớp
+        // với thế hiện tại mà người chơi đang thấy.
+        if (reviewPly != null) return
         if (pendingPromotion != null || Rules.isGameOver(board)) return
         // Không cho đi hộ máy, và không nhận chạm trong lúc máy đang nghĩ.
         if (isComputerTurn()) return
@@ -227,8 +239,25 @@ class GameViewModel(
         }
     }
 
+    /**
+     * Chuyển sang xem lại thế cờ sau nước thứ [ply] (đếm từ 0), `null` để về hiện tại.
+     *
+     * Bỏ chọn quân và đóng hộp phong cấp khi vào chế độ xem lại: những thứ đó thuộc
+     * thế hiện tại, để lại trên một thế cờ khác chỉ gây hiểu nhầm.
+     */
+    fun reviewAt(ply: Int?) {
+        val target = ply?.coerceIn(0, playedMoves.lastIndex.coerceAtLeast(0))
+            ?.takeIf { playedMoves.isNotEmpty() }
+        if (reviewPly == target) return
+        reviewPly = target
+        selectedSquare = Squares.NONE
+        pendingPromotion = null
+        publish()
+    }
+
     fun undo() {
         cancelAiTurn()
+        reviewPly = null
         if (!board.canUndo()) return
         undoOneMove()
         // Ở chế độ đấu máy, một lần bấm phải trả về đúng lượt của người chơi. Hoàn nguyên
@@ -242,6 +271,7 @@ class GameViewModel(
 
     fun newGame() {
         cancelAiTurn()
+        reviewPly = null
         // Xóa bộ nhớ của AI: điểm của ván cũ không còn ý nghĩa với ván mới.
         ai.newGame()
         resetBoard()
@@ -305,11 +335,30 @@ class GameViewModel(
             board.whiteToMove == AI_PLAYS_WHITE &&
             !Rules.isGameOver(board)
 
-    private fun replayOnFreshBoard(): Board {
+    /**
+     * Dựng một bàn cờ mới rồi đi lại [plies] nước đầu tiên của ván.
+     *
+     * Mặc định đi lại toàn bộ ván (bản sao cho AI). Truyền số nhỏ hơn để lấy một thế
+     * cờ giữa ván khi xem lại.
+     */
+    private fun replayOnFreshBoard(plies: Int = playedMoves.size): Board {
         val copy = Engine.newGame()
-        for (move in playedMoves) copy.makeMove(move)
+        for (index in 0 until plies) copy.makeMove(playedMoves[index])
         return copy
     }
+
+    /**
+     * Danh sách quân trên một bàn cờ bất kỳ, dùng khi xem lại.
+     *
+     * Ở đây lấy luôn số ô làm id: bản đồ id thật chỉ đúng cho thế hiện tại, mà xem
+     * lại thì không cần định danh liên tục — nhảy từ thế này sang thế khác không phải
+     * là một nước đi để mà chạy hoạt ảnh.
+     */
+    private fun piecesOf(shownBoard: Board): List<PieceOnBoard> =
+        (0 until Squares.COUNT).mapNotNull { square ->
+            val piece = shownBoard.pieceAt(square)
+            if (piece == Piece.NONE) null else PieceOnBoard(square, piece, square)
+        }
 
     private fun undoOneMove() {
         board.unmakeMove()
@@ -332,6 +381,8 @@ class GameViewModel(
         // Sinh SAN trước khi đi: sau makeMove thì không còn biết quân nào khác cũng
         // đi tới được ô đó, mà đó là thứ quyết định có phải viết thêm ô đi hay không.
         val san = San.of(board, move, legalMoves.ifEmpty { Engine.legalMoves(board) })
+        // Đi một nước mới thì đương nhiên là thôi xem lại: người chơi cần thấy nước vừa đi.
+        reviewPly = null
         idHistory.addLast(squareIds.copyOf())
         board.makeMove(move)
 
@@ -419,16 +470,24 @@ class GameViewModel(
 
     private fun publish() {
         legalMoves = Engine.legalMoves(board)
-        val lastMove = playedMoves.lastOrNull()
+        val review = reviewPly
+        // Khi xem lại, mọi thứ vẽ trên bàn cờ dựng riêng cho thế cũ; còn trạng thái ván
+        // (lượt ai, kết quả, Undo) vẫn là của thế hiện tại — xem lại không đổi ván.
+        val shownBoard = if (review == null) board else replayOnFreshBoard(review + 1)
+        val shownMove = if (review == null) playedMoves.lastOrNull() else playedMoves[review]
         _uiState.value = GameUiState(
-            pieces = currentPieces(),
+            pieces = if (review == null) currentPieces() else piecesOf(shownBoard),
             whiteToMove = board.whiteToMove,
             status = Rules.status(board),
             selectedSquare = selectedSquare,
             legalTargets = targetsFrom(selectedSquare),
-            lastMoveFrom = lastMove?.from ?: Squares.NONE,
-            lastMoveTo = lastMove?.to ?: Squares.NONE,
-            checkedKingSquare = if (board.isInCheck()) board.kingSquare(board.whiteToMove) else Squares.NONE,
+            lastMoveFrom = shownMove?.from ?: Squares.NONE,
+            lastMoveTo = shownMove?.to ?: Squares.NONE,
+            checkedKingSquare = if (shownBoard.isInCheck()) {
+                shownBoard.kingSquare(shownBoard.whiteToMove)
+            } else {
+                Squares.NONE
+            },
             canUndo = board.canUndo(),
             pendingPromotion = pendingPromotion,
             mode = mode,
@@ -436,6 +495,7 @@ class GameViewModel(
             aiThinking = aiThinking,
             soundCue = soundCue,
             sanMoves = sanMoves.toList(),
+            reviewPly = review,
         )
     }
 

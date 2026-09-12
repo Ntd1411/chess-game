@@ -122,9 +122,19 @@ fun GameScreen(
             active = state.whiteToMove,
         ),
         actions = actions,
-        headline = statusLabel(state),
+        headline = state.reviewPly?.let {
+            // Đang xem lại thì dòng trạng thái phải nói điều đó, không phải nói lượt ai:
+            // bàn cờ đang không nhận đi, mà không nói thì người chơi tưởng app treo.
+            stringResource(R.string.moves_reviewing, it + 1)
+        } ?: statusLabel(state),
         modifier = modifier,
-        belowBoard = { MoveList(sanMoves = state.sanMoves) },
+        belowBoard = {
+            MoveList(
+                sanMoves = state.sanMoves,
+                reviewPly = state.reviewPly,
+                onSelectPly = viewModel::reviewAt,
+            )
+        },
     ) {
         ChessBoard(
             pieces = state.pieces,
