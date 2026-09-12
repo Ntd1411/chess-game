@@ -9,11 +9,15 @@ import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.Board
 import kma.game.chess2d.engine.CaptureTally
 import kma.game.chess2d.engine.Engine
+import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Rules
 import kma.game.chess2d.engine.San
 import kma.game.chess2d.engine.Squares
+import kma.game.chess2d.history.MatchHistoryDatabase
+import kma.game.chess2d.history.MatchRecord
+import kma.game.chess2d.history.MatchResult
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -50,6 +54,17 @@ class GameViewModel(
 ) : AndroidViewModel(application) {
 
     private val store = SavedGameStore(application)
+
+    /** Lịch sử ván đấu (mục 7.3). Chỉ ghi đúng một dòng khi ván kết thúc. */
+    private val matches = MatchHistoryDatabase.get(application).matches()
+
+    /**
+     * Ván hiện tại đã được ghi vào lịch sử hay chưa.
+     *
+     * Cần cờ này vì sau khi hết ván người chơi vẫn có thể bấm Undo rồi đi lại, và
+     * một ván chỉ nên nằm một lần trong lịch sử.
+     */
+    private var recordedInHistory = false
 
     /**
      * Hàng chờ ghi đĩa. `null` nghĩa là "xoá ván đã lưu".
@@ -366,6 +381,8 @@ class GameViewModel(
         playedMoves.removeAt(playedMoves.lastIndex)
         sanMoves.removeAt(sanMoves.lastIndex)
         squareIds = idHistory.removeLast()
+        // Đã hoàn nguyên thì ván lại đang chơi; lần kết thúc sau đáng được ghi tiếp.
+        recordedInHistory = false
         selectedSquare = Squares.NONE
         pendingPromotion = null
     }
@@ -405,6 +422,44 @@ class GameViewModel(
         sanMoves.add(san)
         noteSound(move)
         saveMoves()
+        recordIfFinished()
+    }
+
+    /**
+     * Ghi ván vừa kết thúc vào lịch sử.
+     *
+     * Chỉ lưu FEN đầu + dãy nước UCI chứ không lưu thế cờ: xem lại thì đi lại bằng
+     * engine, vừa nhẹ vừa không bao giờ lệch với luật hiện tại.
+     *
+     * Kết quả ghi theo góc nhìn Bên Trắng, cũng chính là góc nhìn người chơi khi đấu máy
+     * vì máy luôn cầm Đen ([AI_PLAYS_WHITE]).
+     */
+    private fun recordIfFinished() {
+        if (recordedInHistory) return
+        val status = Rules.status(board)
+        val result = when (status) {
+            // Hết ván bởi chiếu hết: bên đến lượt chính là bên bị thua.
+            GameStatus.CHECKMATE -> if (board.whiteToMove) MatchResult.LOSS else MatchResult.WIN
+            GameStatus.STALEMATE,
+            GameStatus.DRAW_FIFTY_MOVES,
+            GameStatus.DRAW_REPETITION,
+            GameStatus.DRAW_INSUFFICIENT_MATERIAL -> MatchResult.DRAW
+            // Ván chưa xong thì chưa có gì để ghi.
+            GameStatus.ONGOING, GameStatus.CHECK -> return
+        }
+
+        recordedInHistory = true
+        val record = MatchRecord(
+            playedAtMillis = System.currentTimeMillis(),
+            mode = mode.name,
+            difficulty = if (mode == GameMode.VS_COMPUTER) difficulty.name else null,
+            startFen = Engine.START_FEN,
+            moves = playedMoves.joinToString(" ") { it.toUci() },
+            result = result,
+        )
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { matches.insert(record) }
+        }
     }
 
     /**
@@ -460,6 +515,7 @@ class GameViewModel(
         }
         selectedSquare = Squares.NONE
         pendingPromotion = null
+        recordedInHistory = false
         // Ván mới thì không còn nước nào để phát tiếng, kể cả tiếng của ván trước.
         soundCue = null
     }
