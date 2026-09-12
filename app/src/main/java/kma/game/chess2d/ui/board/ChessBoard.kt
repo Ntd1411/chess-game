@@ -3,6 +3,7 @@ package kma.game.chess2d.ui.board
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,7 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -25,6 +28,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PieceOnBoard
@@ -60,29 +65,63 @@ fun ChessBoard(
         val squarePx = with(LocalDensity.current) { squareSize.toPx() }
         val occupied = remember(pieces) { pieces.mapTo(HashSet()) { it.square } }
 
-        // Hai phép đổi tọa độ duy nhất trong file: ô của engine -> cột/hàng trên màn hình.
-        // Gom vào một chỗ để việc lật bàn không rải rác thành tám phép trừ ở tám nơi.
-        val screenCol = { square: Int ->
-            val file = Squares.fileOf(square)
-            if (flipped) BOARD_EDGE - 1 - file else file
-        }
-        val screenRow = { square: Int ->
-            val rank = Squares.rankOf(square)
-            if (flipped) rank else BOARD_EDGE - 1 - rank
-        }
+        // Ô đang được kéo và khoảng đã kéo (đơn vị px). Kéo thả chỉ là một lối vào khác
+        // của đúng luồng tap: nhấc quân = chạm ô nguồn, nhả quân = chạm ô đích. Nhờ vậy
+        // mọi luật chọn quân, phong cấp, chặn khi xem lại hay khi máy đang nghĩ đều dùng
+        // chung một đường, không có đường thứ hai để lệch nhau.
+        var dragSquare by remember { mutableStateOf(Squares.NONE) }
+        var dragOffset by remember { mutableStateOf(Offset.Zero) }
+
+        // Hai phép đổi tọa độ duy nhất trong file nằm ở [squareCol] và [squareRow]; ở đây
+        // chỉ gọi lại cho gọn để việc lật bàn không rải rác thành tám phép trừ ở tám nơi.
+        val screenCol = { square: Int -> squareCol(square, flipped) }
+        val screenRow = { square: Int -> squareRow(square, flipped) }
 
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(squarePx, flipped) {
                     detectTapGestures { tap ->
-                        val col = (tap.x / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
-                        val row = (tap.y / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
-                        // Hàng 1 nằm dưới cùng trên màn hình nhưng là rank 0 trong engine.
-                        val file = if (flipped) BOARD_EDGE - 1 - col else col
-                        val rank = if (flipped) row else BOARD_EDGE - 1 - row
-                        onSquareTap(Squares.of(file, rank))
+                        onSquareTap(squareAt(tap, squarePx, flipped))
                     }
+                }
+                .pointerInput(squarePx, flipped, occupied) {
+                    detectDragGestures(
+                        onDragStart = { start ->
+                            val square = squareAt(start, squarePx, flipped)
+                            // Chỉ nhấc được ô có quân; kéo từ ô trống là người chơi đang
+                            // cuộn màn hình hoặc lỡ tay, không phải đang đi nước nào.
+                            if (occupied.contains(square)) {
+                                dragSquare = square
+                                dragOffset = Offset.Zero
+                                onSquareTap(square)
+                            }
+                        },
+                        onDrag = { change, amount ->
+                            if (dragSquare != Squares.NONE) {
+                                change.consume()
+                                dragOffset += amount
+                            }
+                        },
+                        onDragEnd = {
+                            if (dragSquare != Squares.NONE) {
+                                // Ô nhả tính từ tâm quân đang kéo, không từ điểm ngón tay:
+                                // ngón tay thường lệch xuống dưới quân khi kéo.
+                                val center = Offset(
+                                    squarePx * (squareCol(dragSquare, flipped) + 0.5f) + dragOffset.x,
+                                    squarePx * (squareRow(dragSquare, flipped) + 0.5f) + dragOffset.y,
+                                )
+                                val target = squareAt(center, squarePx, flipped)
+                                if (target != dragSquare) onSquareTap(target)
+                                dragSquare = Squares.NONE
+                                dragOffset = Offset.Zero
+                            }
+                        },
+                        onDragCancel = {
+                            dragSquare = Squares.NONE
+                            dragOffset = Offset.Zero
+                        },
+                    )
                 },
         ) {
             for (square in 0 until Squares.COUNT) {
@@ -133,8 +172,15 @@ fun ChessBoard(
                     animationSpec = tween(MOVE_ANIMATION_MILLIS),
                     label = "pieceY",
                 )
+                // Quân đang kéo đi theo ngón tay: cộng thêm khoảng đã kéo vào vị trí ô.
+                val dragging = piece.square == dragSquare
+                val dragX = if (dragging) with(LocalDensity.current) { dragOffset.x.toDp() } else 0.dp
+                val dragY = if (dragging) with(LocalDensity.current) { dragOffset.y.toDp() } else 0.dp
                 Box(
-                    modifier = Modifier.offset(x, y).size(squareSize),
+                    modifier = Modifier
+                        .offset(x + dragX, y + dragY)
+                        .size(squareSize)
+                        .zIndex(if (dragging) 1f else 0f),
                     contentAlignment = Alignment.Center,
                 ) {
                     PieceGlyph(piece.piece, squareSize)
@@ -191,6 +237,27 @@ internal fun glyphOf(piece: Byte): String = when (Piece.typeOf(piece)) {
     Piece.BISHOP -> "\u265D"
     Piece.KNIGHT -> "\u265E"
     else -> "\u265F"
+}
+
+/** Cột trên màn hình của một ô engine. */
+private fun squareCol(square: Int, flipped: Boolean): Int {
+    val file = Squares.fileOf(square)
+    return if (flipped) BOARD_EDGE - 1 - file else file
+}
+
+/** Hàng trên màn hình của một ô engine: hàng 1 ở dưới cùng nhưng là rank 0 trong engine. */
+private fun squareRow(square: Int, flipped: Boolean): Int {
+    val rank = Squares.rankOf(square)
+    return if (flipped) rank else BOARD_EDGE - 1 - rank
+}
+
+/** Ô engine ứng với một điểm trên màn hình; điểm ngoài bàn bị kéo về ô gần nhất. */
+private fun squareAt(point: Offset, squarePx: Float, flipped: Boolean): Int {
+    val col = (point.x / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
+    val row = (point.y / squarePx).toInt().coerceIn(0, BOARD_EDGE - 1)
+    val file = if (flipped) BOARD_EDGE - 1 - col else col
+    val rank = if (flipped) row else BOARD_EDGE - 1 - row
+    return Squares.of(file, rank)
 }
 
 private const val BOARD_EDGE = 8
