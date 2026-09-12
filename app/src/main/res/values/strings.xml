@@ -126,4 +126,8 @@
     <string name="settings_title">Âm thanh và rung</string>
     <string name="settings_sound">Tiếng đặt quân</string>
     <string name="settings_haptic">Rung khi đi</string>
+
+    <!-- Danh sách nước đi hai cột trong ván đấu -->
+    <string name="moves_title">Nước đi</string>
+    <string name="moves_empty">Chưa có nước nào</string>
 </resources>

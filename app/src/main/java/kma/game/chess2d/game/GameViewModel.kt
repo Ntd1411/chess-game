@@ -11,6 +11,7 @@ import kma.game.chess2d.engine.Engine
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Rules
+import kma.game.chess2d.engine.San
 import kma.game.chess2d.engine.Squares
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +61,14 @@ class GameViewModel(
 
     private var board = Engine.newGame()
     private val playedMoves = mutableListOf<Move>()
+
+    /**
+     * Ký hiệu SAN của từng nước đã đi, song song với [playedMoves].
+     *
+     * Phải sinh **ngay lúc đi** và giữ lại, vì SAN phụ thuộc thế cờ trước nước đó;
+     * để đến lúc vẽ danh sách mới tính thì phải đi lại cả ván cho mỗi lần vẽ.
+     */
+    private val sanMoves = mutableListOf<String>()
 
     /** id của quân đang đứng ở từng ô, [NO_PIECE_ID] là ô trống. */
     private var squareIds = IntArray(Squares.COUNT) { NO_PIECE_ID }
@@ -305,6 +314,7 @@ class GameViewModel(
     private fun undoOneMove() {
         board.unmakeMove()
         playedMoves.removeAt(playedMoves.lastIndex)
+        sanMoves.removeAt(sanMoves.lastIndex)
         squareIds = idHistory.removeLast()
         selectedSquare = Squares.NONE
         pendingPromotion = null
@@ -319,6 +329,9 @@ class GameViewModel(
 
     private fun applyMove(move: Move) {
         val movingWhite = board.whiteToMove
+        // Sinh SAN trước khi đi: sau makeMove thì không còn biết quân nào khác cũng
+        // đi tới được ô đó, mà đó là thứ quyết định có phải viết thêm ô đi hay không.
+        val san = San.of(board, move, legalMoves.ifEmpty { Engine.legalMoves(board) })
         idHistory.addLast(squareIds.copyOf())
         board.makeMove(move)
 
@@ -337,6 +350,7 @@ class GameViewModel(
         }
 
         playedMoves.add(move)
+        sanMoves.add(san)
         noteSound(move)
         saveMoves()
     }
@@ -385,6 +399,7 @@ class GameViewModel(
     private fun resetBoard() {
         board = Engine.newGame()
         playedMoves.clear()
+        sanMoves.clear()
         idHistory.clear()
         nextPieceId = 0
         squareIds = IntArray(Squares.COUNT) { NO_PIECE_ID }
@@ -420,6 +435,7 @@ class GameViewModel(
             difficulty = difficulty,
             aiThinking = aiThinking,
             soundCue = soundCue,
+            sanMoves = sanMoves.toList(),
         )
     }
 

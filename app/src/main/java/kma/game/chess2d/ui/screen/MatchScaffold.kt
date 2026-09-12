@@ -67,6 +67,8 @@ data class MatchAction(
  *
  * @param headline dòng trạng thái ngắn ở trên cùng (lượt ai, chiếu, kết quả).
  * @param notice ô thông báo cần người dùng quyết định, ví dụ thử nối lại ở chế độ LAN.
+ * @param belowBoard phần phụ nằm dưới hàng nút, ví dụ danh sách nước đi. Đặt ở đây
+ *        để mọi chế độ dùng chung một chỗ, không mỗi màn hình đặt một kiểu.
  */
 @Composable
 fun MatchScaffold(
@@ -76,6 +78,7 @@ fun MatchScaffold(
     modifier: Modifier = Modifier,
     headline: String? = null,
     notice: (@Composable () -> Unit)? = null,
+    belowBoard: (@Composable () -> Unit)? = null,
     board: @Composable () -> Unit,
 ) {
     Column(
@@ -105,6 +108,8 @@ fun MatchScaffold(
         PlayerRow(player = you)
 
         ActionRow(actions = actions)
+
+        belowBoard?.invoke()
     }
 }
 

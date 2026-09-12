@@ -124,6 +124,7 @@ fun GameScreen(
         actions = actions,
         headline = statusLabel(state),
         modifier = modifier,
+        belowBoard = { MoveList(sanMoves = state.sanMoves) },
     ) {
         ChessBoard(
             pieces = state.pieces,
