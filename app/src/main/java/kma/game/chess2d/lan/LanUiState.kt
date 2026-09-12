@@ -13,7 +13,18 @@ enum class LanPhase {
     /** Sảnh chể: quét phòng, mở phòng, hoặc vào bằng địa chỉ. */
     LOBBY,
 
-    /** Đã mở hoặc đã vào một phiên; bàn cờ được hiển thị. */
+    /**
+     * Đã mở phòng nhưng chưa ai vào: server TCP và beacon đang chạy, **vẫn ở sảnh**.
+     *
+     * Tách hẳn một pha riêng thay vì nhảy luôn sang [SESSION] với một bàn cờ trống:
+     * lúc chờ người vào, thứ người mở phòng cần là tên phòng, địa chỉ IPv4 để đọc cho
+     * người kia, và một nút huỷ — không phải một bàn cờ chưa đi được nước nào. Nhờ vậy
+     * người mở phòng vẫn thấy danh sách phòng khác trong mạng và vẫn vào được phòng
+     * của người khác nếu đổi ý.
+     */
+    HOSTING,
+
+    /** Đã bắt tay xong với đối thủ; bàn cờ được hiển thị. */
     SESSION,
 }
 

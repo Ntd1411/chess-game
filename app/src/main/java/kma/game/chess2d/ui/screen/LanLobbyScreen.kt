@@ -51,6 +51,9 @@ fun LanLobbyScreen(
     onManualJoin: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    hosting: Boolean = false,
+    hostPort: Int = 0,
+    onCancelHosting: () -> Unit = {},
 ) {
     // Khối kết nối thủ công gập lại mặc định: nó là đường dự phòng khi Wi-Fi chặn
     // broadcast, không phải việc đầu tiên người chơi nên làm.
@@ -87,12 +90,24 @@ fun LanLobbyScreen(
             }
         }
 
-        Button(onClick = onHost, modifier = Modifier.fillMaxWidth()) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-            Text(
-                text = stringResource(R.string.lan_host_room),
-                modifier = Modifier.padding(start = 8.dp),
+        // Phòng của chính mình luôn nằm trên cùng, trên cả danh sách phòng khác: đang chờ
+        // người vào thì đó là thứ duy nhất người mở phòng muốn nhìn, và cũng là chỗ để
+        // đọc địa chỉ cho người đối diện gõ tay khi mạng chặn broadcast.
+        if (hosting) {
+            YourRoomCard(
+                roomName = state.localName,
+                addresses = localAddresses,
+                hostPort = hostPort,
+                onCancel = onCancelHosting,
             )
+        } else {
+            Button(onClick = onHost, modifier = Modifier.fillMaxWidth()) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                Text(
+                    text = stringResource(R.string.lan_host_room),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
         }
 
         Text(
@@ -135,6 +150,68 @@ fun LanLobbyScreen(
 
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_back))
+        }
+    }
+}
+
+/**
+ * Thẻ "Phòng của bạn": tên phòng, địa chỉ IPv4 kèm cổng, thanh tiến trình, nút huỷ.
+ *
+ * Thanh tiến trình ở đây không đo được gì cả (không ai biết khi nào người khác bấm
+ * vào), nên nó là loại vô định: việc của nó chỉ là nói "phòng đang sống, beacon vẫn
+ * đang phát" để người mở phòng không phải đoán xem app còn chạy hay đã treo.
+ *
+ * Cổng chỉ biết được sau khi ServerSocket bàn giao số thật, nên trước đó hiện một
+ * dòng chờ thay vì in ra cổng 0 — đọc cho nhau một cổng sai còn tệ hơn là chờ thêm
+ * nửa giây.
+ */
+@Composable
+private fun YourRoomCard(
+    roomName: String,
+    addresses: List<String>,
+    hostPort: Int,
+    onCancel: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.lan_your_room),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PlayerAvatar(name = roomName)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = roomName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = if (hostPort > 0 && addresses.isNotEmpty()) {
+                            stringResource(R.string.lan_room_address, addresses.first(), hostPort)
+                        } else {
+                            stringResource(R.string.lan_room_address_unknown)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            Text(
+                text = stringResource(R.string.lan_room_waiting),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.lan_cancel_room))
+            }
         }
     }
 }

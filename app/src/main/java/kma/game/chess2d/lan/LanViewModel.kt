@@ -99,14 +99,52 @@ class LanViewModel : ViewModel() {
         _uiState.update { it.copy(lobby = it.lobby.copy(manualAddress = address)) }
     }
 
-    /** Mở phòng: vừa lắng nghe TCP vừa phát beacon, và làm trọng tài của ván. */
+    /**
+     * Mở phòng: vừa lắng nghe TCP vừa phát beacon, và làm trọng tài của ván.
+     *
+     * **Không đổi màn hình.** Pha mới là [LanPhase.HOSTING], tức vẫn ở sảnh: người mở
+     * phòng đứng đó chạm thẻ "Phòng của bạn", đọc địa chỉ cho người kia, và vẫn thấy
+     * các phòng khác trong mạng. Chỉ khi bắt tay xong (xem [LanEvent.Connected]) màn hình
+     * mới chuyển sang bàn cờ.
+     */
     fun host() {
         val host = LanHost(localName = currentName())
-        startSession(host) {
+        startSession(host, LanPhase.HOSTING) {
             host.run { port ->
                 _uiState.update { it.copy(hostPort = port) }
             }
         }
+    }
+
+    /**
+     * Huỷ phòng vừa mở, khi chưa ai vào.
+     *
+     * Tách hẳn khỏi [leave] chứ không dùng chung: [leave] là "rời một ván đang chơi" nên
+     * nó gửi Bye cho đối thủ và phải hỏi xác nhận trước; còn ở đây chưa có đối thủ nào
+     * để gửi và cũng không có gì để mất, nên bấm là đóng ngay. Huỷ job là đủ để đóng
+     * cả ServerSocket và tắt advertiser, vì `LanHost.run` dọn chúng trong khối finally.
+     */
+    fun cancelHosting() {
+        if (_uiState.value.phase != LanPhase.HOSTING) return
+        val job = sessionJob
+        endpoint = null
+        reconnect = null
+        sessionJob = null
+        viewModelScope.launch { job?.cancelAndJoin() }
+        _uiState.update {
+            it.copy(
+                phase = LanPhase.LOBBY,
+                role = null,
+                connected = false,
+                waitingForOpponent = false,
+                hostPort = 0,
+                opponentName = "",
+                offerRetry = false,
+                notice = null,
+                board = LanBoardUiState(),
+            )
+        }
+        startScan()
     }
 
     fun join(room: DiscoveredRoom) {
@@ -140,7 +178,15 @@ class LanViewModel : ViewModel() {
 
     // ------------------------------------------------------------------- phiên
 
-    private fun startSession(target: LanEndpoint, block: suspend () -> Unit) {
+    /**
+     * @param phase pha màn hình sau khi mở phiên: mở phòng thì vẫn ở sảnh
+     *        ([LanPhase.HOSTING]), còn vào phòng người khác thì sang thẳng bàn cờ.
+     */
+    private fun startSession(
+        target: LanEndpoint,
+        phase: LanPhase = LanPhase.SESSION,
+        block: suspend () -> Unit,
+    ) {
         sessionJob?.cancel()
         endpoint = target
         reconnect = block.takeIf { target.role == LanRole.GUEST }
@@ -148,7 +194,7 @@ class LanViewModel : ViewModel() {
         pendingPromotion = null
         _uiState.update {
             it.copy(
-                phase = LanPhase.SESSION,
+                phase = phase,
                 role = target.role,
                 connected = false,
                 waitingForOpponent = target.role == LanRole.HOST,
@@ -209,7 +255,7 @@ class LanViewModel : ViewModel() {
     fun retry() {
         val guest = endpoint as? LanGuest ?: return
         val again = reconnect ?: return
-        startSession(guest, again)
+        startSession(guest, block = again)
     }
 
     fun resign() = endpoint?.resign() ?: Unit
@@ -302,8 +348,16 @@ class LanViewModel : ViewModel() {
 
     private fun onNetworkEvent(event: LanEvent) {
         when (event) {
+            // Đây là chỗ duy nhất đưa màn hình sang bàn cờ: chỉ khi đã bắt tay xong thì
+            // bàn cờ mới có nghĩa. Người mở phòng đi qua đúng đường này, không được
+            // chuyển màn ngay lúc bấm Mở phòng.
             is LanEvent.Connected -> _uiState.update {
-                it.copy(waitingForOpponent = false, offerRetry = false, notice = null)
+                it.copy(
+                    phase = LanPhase.SESSION,
+                    waitingForOpponent = false,
+                    offerRetry = false,
+                    notice = null,
+                )
             }
 
             is LanEvent.MoveRejected -> notify(LanNoticeKind.MOVE_REJECTED, event.reason)
@@ -350,7 +404,11 @@ class LanViewModel : ViewModel() {
      */
     private fun onOpponentLeft(reason: String) {
         if (_uiState.value.role == LanRole.HOST) {
-            _uiState.update { it.copy(waitingForOpponent = true) }
+            // Phòng vẫn mở, nhưng không còn ván nào để vẽ: về đúng pha chờ người vào ở sảnh
+            // thay vì để người mở phòng ngồi nhìn một bàn cờ đã bị xóa.
+            _uiState.update {
+                it.copy(phase = LanPhase.HOSTING, waitingForOpponent = true, connected = false)
+            }
             notify(LanNoticeKind.OPPONENT_LEFT, reason)
             return
         }

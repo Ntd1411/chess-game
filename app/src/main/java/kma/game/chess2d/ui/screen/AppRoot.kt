@@ -104,10 +104,11 @@ private fun LanRoute(
     // Tên nhập ở menu là tên đối thủ sẽ thấy, nên đẩy sang ViewModel trước khi mở phòng.
     LaunchedEffect(playerName) { viewModel.setLocalName(playerName) }
 
-    // Chỉ quét khi đang ở sảnh. Quét tiếp lúc đang chơi thì vừa tốn pin vừa làm ồn mạng
-    // mà không ai đọc kết quả.
+    // Chỉ quét khi còn ở sảnh (kể cả lúc đang mở phòng chờ người vào, vì danh sách phòng
+    // khác vẫn hiện và người chơi vẫn đổi ý được). Quét tiếp lúc đang chơi thì vừa tốn
+    // pin vừa làm ồn mạng mà không ai đọc kết quả.
     LaunchedEffect(state.phase) {
-        if (state.phase == LanPhase.LOBBY) viewModel.startScan() else viewModel.stopScan()
+        if (state.phase == LanPhase.SESSION) viewModel.stopScan() else viewModel.startScan()
     }
 
     when (state.phase) {
@@ -122,6 +123,26 @@ private fun LanRoute(
                 onManualJoin = viewModel::joinManual,
                 onBack = onExit,
                 modifier = modifier,
+            )
+        }
+
+        LanPhase.HOSTING -> {
+            // Vẫn là sảnh, chỉ khác là có thêm thẻ "Phòng của bạn" ở đầu. Back lúc này là
+            // huỷ phòng rồi ở lại sảnh, không phải thoát hẳn chế độ LAN: bỏ phòng và rời
+            // sảnh là hai ý định khác nhau.
+            BackHandler(onBack = viewModel::cancelHosting)
+            LanLobbyScreen(
+                state = state.lobby,
+                localAddresses = state.localAddresses,
+                onHost = viewModel::host,
+                onJoin = viewModel::join,
+                onManualAddressChange = viewModel::setManualAddress,
+                onManualJoin = viewModel::joinManual,
+                onBack = onExit,
+                modifier = modifier,
+                hosting = true,
+                hostPort = state.hostPort,
+                onCancelHosting = viewModel::cancelHosting,
             )
         }
 
