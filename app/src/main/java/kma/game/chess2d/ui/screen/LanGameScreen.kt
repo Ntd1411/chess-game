@@ -253,6 +253,13 @@ private fun headline(state: LanUiState): String {
 
     val outcome = when {
         state.outcome == LanOutcome.DRAW_AGREED -> stringResource(R.string.lan_outcome_draw)
+        state.outcome == LanOutcome.TIMEOUT -> {
+            val loser = stringResource(
+                if (state.flaggedWhite == true) R.string.side_white else R.string.side_black,
+            )
+            stringResource(R.string.lan_outcome_timeout, loser)
+        }
+
         state.outcome == LanOutcome.RESIGNATION -> {
             val loser = stringResource(
                 if (state.resignedByWhite == true) R.string.side_white else R.string.side_black,
@@ -283,19 +290,52 @@ private fun headline(state: LanUiState): String {
     }
 }
 
-/** Phụ đề của đối thủ: độ trễ đường truyền, vì đó là thứ duy nhất thuộc về bên kia. */
+/**
+ * Phụ đề của đối thủ: thời gian còn lại nếu phòng có bấm giờ, không thì độ trễ.
+ *
+ * Đồng hồ được ưu tiên hơn độ trễ: khi đang bấm giờ thì thứ người chơi cần biết là
+ * đối thủ còn bao nhiêu phút, không phải mạng nhanh hay chậm.
+ */
 @Composable
 private fun opponentSubtitle(state: LanUiState): String = when {
     !state.connected -> ""
+    state.timeControl.limited -> clockLabel(state, forYou = false)
     state.latencyMillis >= 0 -> stringResource(R.string.lan_latency, state.latencyMillis)
     else -> ""
 }
 
-/** Phụ đề của mình: đang cầm quân bên nào. */
+/** Phụ đề của mình: đang cầm quân bên nào, kèm thời gian còn lại khi có bấm giờ. */
 @Composable
 private fun youSubtitle(state: LanUiState): String {
     val side = stringResource(if (state.youPlayWhite) R.string.side_white else R.string.side_black)
-    return stringResource(R.string.match_side, side)
+    val mine = stringResource(R.string.match_side, side)
+    if (!state.timeControl.limited) return mine
+    return "$mine · " + clockLabel(state, forYou = true)
+}
+
+/**
+ * Con số thời gian của một bên.
+ *
+ * Lấy trực tiếp số do host gửi, không tự trừ dần ở đây: máy khách tự đếm thì sau
+ * vài phút hai bên sẽ thấy hai con số khác nhau, mà chỉ số của host mới có giá trị
+ * phân định thắng thua.
+ */
+@Composable
+private fun clockLabel(state: LanUiState, forYou: Boolean): String {
+    val times = state.clock
+    val white = if (forYou) state.youPlayWhite else !state.youPlayWhite
+    val millis = when {
+        times != null -> if (white) times.whiteMillis else times.blackMillis
+        else -> state.timeControl.initialMillis
+    }
+    return stringResource(R.string.lan_clock, formatClock(millis))
+}
+
+/** Định dạng `m:ss`. Làm tròn lên để không hiện 0:00 khi vẫn còn nửa giây. */
+private fun formatClock(millis: Long): String {
+    val safe = millis.coerceAtLeast(0L)
+    val totalSeconds = (safe + 999L) / 1_000L
+    return "${totalSeconds / 60}:${(totalSeconds % 60).toString().padStart(2, '0')}"
 }
 
 @Composable

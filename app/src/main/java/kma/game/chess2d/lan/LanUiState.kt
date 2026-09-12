@@ -4,13 +4,15 @@ import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PendingPromotion
 import kma.game.chess2d.game.PieceOnBoard
+import kma.game.chess2d.net.ClockTimes
 import kma.game.chess2d.net.LanOutcome
 import kma.game.chess2d.net.LanRole
 import kma.game.chess2d.net.RoomInfo
+import kma.game.chess2d.net.TimeControl
 
 /** Màn hình LAN đang ở đâu. */
 enum class LanPhase {
-    /** Sảnh chể: quét phòng, mở phòng, hoặc vào bằng địa chỉ. */
+    /** Sảnh chờ: quét phòng, mở phòng, hoặc vào bằng địa chỉ. */
     LOBBY,
 
     /**
@@ -62,6 +64,13 @@ data class LanLobbyUiState(
     val localName: String = "",
     val manualAddress: String = "",
     val rooms: List<RoomInfo> = emptyList(),
+    /**
+     * Thể thức thời gian sẽ dùng khi mở phòng.
+     *
+     * Chọn trước khi mở phòng chứ không để đổi giữa ván: host là bên giữ đồng hồ
+     * duy nhất, đổi thể thức giữa ván thì khách đang hiện một con số không còn nghĩa.
+     */
+    val timeControl: TimeControl = TimeControl.UNLIMITED,
 )
 
 /**
@@ -112,4 +121,10 @@ data class LanUiState(
     val waitingRematchReply: Boolean = false,
     val offerRetry: Boolean = false,
     val notice: LanNotice? = null,
+    /** Thể thức thời gian của phiên đang chơi, do host đặt. */
+    val timeControl: TimeControl = TimeControl.UNLIMITED,
+    /** Thời gian còn lại do host tính, `null` khi phòng không bấm giờ. */
+    val clock: ClockTimes? = null,
+    /** Bên hết giờ, chỉ có nghĩa khi [outcome] là TIMEOUT. */
+    val flaggedWhite: Boolean? = null,
 )

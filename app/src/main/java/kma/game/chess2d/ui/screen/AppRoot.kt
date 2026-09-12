@@ -209,6 +209,7 @@ private fun LanRoute(
                 onManualJoin = viewModel::joinManual,
                 onOpenMenu = onOpenMenu,
                 modifier = modifier,
+                onTimeControlChange = viewModel::setTimeControl,
             )
         }
 

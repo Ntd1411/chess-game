@@ -133,4 +133,12 @@
     <string name="moves_back_to_live">Về thế hiện tại</string>
     <string name="action_flip">Lật bàn</string>
     <string name="moves_reviewing">Đang xem lại nước %1$d — không đi được</string>
+
+    <!-- Đồng hồ thi đấu trong phòng LAN: chọn thể thức trước khi mở phòng -->
+    <string name="lan_time_control">Thể thức thời gian</string>
+    <string name="time_control_unlimited">Không giới hạn</string>
+    <string name="time_control_blitz">Cờ nhanh 5 phút</string>
+    <string name="time_control_rapid">Cờ tiêu chuẩn 10+5</string>
+    <string name="lan_clock">Còn %1$s</string>
+    <string name="lan_outcome_timeout">%1$s hết giờ</string>
 </resources>

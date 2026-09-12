@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import kma.game.chess2d.R
 import kma.game.chess2d.lan.LanLobbyUiState
 import kma.game.chess2d.net.RoomInfo
+import kma.game.chess2d.net.TimeControl
 
 /**
  * Sảnh chờ LAN: mở phòng, hoặc chọn một phòng đã thấy trong mạng.
@@ -58,6 +60,7 @@ fun LanLobbyScreen(
     hosting: Boolean = false,
     hostPort: Int = 0,
     onCancelHosting: () -> Unit = {},
+    onTimeControlChange: (TimeControl) -> Unit = {},
 ) {
     // Khối kết nối thủ công gập lại mặc định: nó là đường dự phòng khi Wi-Fi chặn
     // broadcast, không phải việc đầu tiên người chơi nên làm.
@@ -105,6 +108,9 @@ fun LanLobbyScreen(
                 onCancel = onCancelHosting,
             )
         } else {
+            // Chọn thể thức trước khi mở phòng, vì host là bên giữ đồng hồ và con số này
+            // đi theo `Welcome` sang máy khách ngay lúc bắt tay.
+            TimeControlPicker(selected = state.timeControl, onSelect = onTimeControlChange)
             Button(onClick = onHost, modifier = Modifier.fillMaxWidth()) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)
                 Text(
@@ -224,6 +230,35 @@ private fun YourRoomCard(
             }
         }
     }
+}
+
+/** Ba thể thức thời gian, chọn một. */
+@Composable
+private fun TimeControlPicker(selected: TimeControl, onSelect: (TimeControl) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = stringResource(R.string.lan_time_control),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (control in TimeControl.entries) {
+                key(control) {
+                    FilterChip(
+                        selected = control == selected,
+                        onClick = { onSelect(control) },
+                        label = { Text(stringResource(timeControlLabel(control))) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Nhãn tiếng Việt của từng thể thức. */
+internal fun timeControlLabel(control: TimeControl): Int = when (control) {
+    TimeControl.UNLIMITED -> R.string.time_control_unlimited
+    TimeControl.BLITZ -> R.string.time_control_blitz
+    TimeControl.RAPID -> R.string.time_control_rapid
 }
 
 /**

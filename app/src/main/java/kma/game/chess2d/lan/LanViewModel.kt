@@ -18,6 +18,7 @@ import kma.game.chess2d.net.LanRole
 import kma.game.chess2d.net.LanRoomSource
 import kma.game.chess2d.net.RoomInfo
 import kma.game.chess2d.net.RoomSource
+import kma.game.chess2d.net.TimeControl
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,6 +109,17 @@ class LanViewModel : ViewModel() {
     }
 
     /**
+     * Chọn thể thức thời gian cho phòng sắp mở.
+     *
+     * Chỉ nhận khi còn ở sảnh: phòng đã mở thì khách có thể đã nhận thể thức cũ qua
+     * `Welcome`, đổi nửa đường sẽ làm hai máy hiển thị hai con số khác nhau.
+     */
+    fun setTimeControl(control: TimeControl) {
+        if (_uiState.value.phase != LanPhase.LOBBY) return
+        _uiState.update { it.copy(lobby = it.lobby.copy(timeControl = control)) }
+    }
+
+    /**
      * Mở phòng: vừa lắng nghe TCP vừa phát beacon, và làm trọng tài của ván.
      *
      * **Không đổi màn hình.** Pha mới là [LanPhase.HOSTING], tức vẫn ở sảnh: người mở
@@ -116,7 +128,10 @@ class LanViewModel : ViewModel() {
      * mới chuyển sang bàn cờ.
      */
     fun host() {
-        val host = LanHost(localName = currentName())
+        val host = LanHost(
+            localName = currentName(),
+            timeControl = _uiState.value.lobby.timeControl,
+        )
         startSession(host, LanPhase.HOSTING) {
             host.run { port ->
                 _uiState.update { it.copy(hostPort = port) }
@@ -454,6 +469,9 @@ class LanViewModel : ViewModel() {
                 finished = state.finished,
                 outcome = state.outcome,
                 resignedByWhite = state.resignedByWhite,
+                timeControl = state.timeControl,
+                clock = state.clock,
+                flaggedWhite = state.flaggedWhite,
                 latencyMillis = state.latencyMillis,
                 opponentOffersDraw = state.opponentOffersDraw,
                 waitingDrawReply = state.waitingDrawReply,
