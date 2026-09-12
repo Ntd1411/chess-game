@@ -12,16 +12,25 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
+import kma.game.chess2d.settings.AppSettings
+import kma.game.chess2d.settings.SettingsStore
+import kotlinx.coroutines.launch
 
 /**
  * Màn hình menu: chọn chế độ rồi vào ván.
@@ -103,6 +112,53 @@ fun MenuScreen(
         Button(onClick = onPlayLan, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.mode_lan))
         }
+
+        SoundSettings()
+    }
+}
+
+/**
+ * Hai công tắc âm thanh và rung.
+ *
+ * Đọc và ghi trực tiếp qua [SettingsStore] thay vì đẩy lên [AppRoot]: đây là cài đặt
+ * của riêng thiết bị, không phải trạng thái của ván đấu, nên không có lý do để nó
+ * đi xuyên qua các màn hình khác.
+ */
+@Composable
+private fun SoundSettings() {
+    val context = LocalContext.current
+    val store = remember(context) { SettingsStore(context.applicationContext) }
+    // Chưa đọc xong file thì hiện mặc định; đúng với giá trị mà store sẽ trả về.
+    val settings by store.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+    // Ghi đĩa là việc treo, mà `onCheckedChange` thì không: cần một scope sống theo màn hình.
+    val scope = rememberCoroutineScope()
+
+    Text(
+        text = stringResource(R.string.settings_title),
+        style = MaterialTheme.typography.titleSmall,
+    )
+    SettingSwitch(
+        label = stringResource(R.string.settings_sound),
+        checked = settings.soundEnabled,
+        onCheckedChange = { enabled -> scope.launch { store.setSoundEnabled(enabled) } },
+    )
+    SettingSwitch(
+        label = stringResource(R.string.settings_haptic),
+        checked = settings.hapticEnabled,
+        onCheckedChange = { enabled -> scope.launch { store.setHapticEnabled(enabled) } },
+    )
+}
+
+/** Một dòng công tắc: nhãn bên trái, [Switch] ở sát lề phải. */
+@Composable
+private fun SettingSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
