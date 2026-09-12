@@ -67,6 +67,9 @@ enum class GameMode {
  * @param sanMoves danh sách nước đã đi theo ký hiệu SAN, theo đúng thứ tự đã đi.
  * @param reviewPly đang xem lại thế cờ ngay sau nước thứ này (đếm từ 0). `null` là
  *        đang ở thế hiện tại; khác `null` thì bàn cờ không nhận đi nước nào.
+ * @param takenFromWhite quân Trắng đã mất, theo thứ tự bị bắt.
+ * @param takenFromBlack quân Đen đã mất, theo thứ tự bị bắt.
+ * @param materialBalance chênh lệch vật chất theo góc nhìn Trắng; dương là Trắng hơn.
  */
 data class GameUiState(
     val pieces: List<PieceOnBoard> = emptyList(),
@@ -85,4 +88,7 @@ data class GameUiState(
     val soundCue: SoundCue? = null,
     val sanMoves: List<String> = emptyList(),
     val reviewPly: Int? = null,
+    val takenFromWhite: List<Byte> = emptyList(),
+    val takenFromBlack: List<Byte> = emptyList(),
+    val materialBalance: Int = 0,
 )

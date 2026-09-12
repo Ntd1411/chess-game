@@ -1,5 +1,6 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
@@ -129,11 +131,23 @@ fun GameScreen(
         } ?: statusLabel(state),
         modifier = modifier,
         belowBoard = {
-            MoveList(
-                sanMoves = state.sanMoves,
-                reviewPly = state.reviewPly,
-                onSelectPly = viewModel::reviewAt,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Trắng ăn quân Đen nên hàng đầu là những quân Đen đã mất, và điểm hơn
+                // của Trắng chính là chênh lệch dương.
+                CapturedRow(
+                    captured = state.takenFromBlack,
+                    advantage = state.materialBalance,
+                )
+                CapturedRow(
+                    captured = state.takenFromWhite,
+                    advantage = -state.materialBalance,
+                )
+                MoveList(
+                    sanMoves = state.sanMoves,
+                    reviewPly = state.reviewPly,
+                    onSelectPly = viewModel::reviewAt,
+                )
+            }
         },
     ) {
         ChessBoard(

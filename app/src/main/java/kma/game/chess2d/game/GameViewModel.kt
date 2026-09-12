@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kma.game.chess2d.ai.Ai
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.Board
+import kma.game.chess2d.engine.CaptureTally
 import kma.game.chess2d.engine.Engine
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Piece
@@ -475,6 +476,13 @@ class GameViewModel(
         // (lượt ai, kết quả, Undo) vẫn là của thế hiện tại — xem lại không đổi ván.
         val shownBoard = if (review == null) board else replayOnFreshBoard(review + 1)
         val shownMove = if (review == null) playedMoves.lastOrNull() else playedMoves[review]
+        // Thống kê quân bị bắt tính lại từ danh sách nước đi, và tính đúng tới nước đang
+        // xem: xem lại giữa ván mà vẫn hiện hàng quân của thế cuối thì sai với bàn cờ.
+        val tally = CaptureTally.of(
+            startFen = Engine.START_FEN,
+            moves = playedMoves,
+            plies = review?.plus(1) ?: playedMoves.size,
+        )
         _uiState.value = GameUiState(
             pieces = if (review == null) currentPieces() else piecesOf(shownBoard),
             whiteToMove = board.whiteToMove,
@@ -496,6 +504,9 @@ class GameViewModel(
             soundCue = soundCue,
             sanMoves = sanMoves.toList(),
             reviewPly = review,
+            takenFromWhite = tally.takenFromWhite,
+            takenFromBlack = tally.takenFromBlack,
+            materialBalance = tally.materialBalance,
         )
     }
 
