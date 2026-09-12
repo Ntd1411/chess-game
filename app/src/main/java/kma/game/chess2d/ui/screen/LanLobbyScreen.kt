@@ -40,6 +40,9 @@ import kma.game.chess2d.net.DiscoveredRoom
  * Tên người chơi không còn ô nhập ở đây nữa: menu đã nhập một lần rồi, nhập lại ở
  * đây chỉ làm hai chỗ cùng sửa một giá trị. Ở đây chỉ hiện lại tên để người chơi
  * biết đối thủ sẽ thấy mình dưới tên nào.
+ *
+ * Đây là màn hình chính của app (mục 5.7): mở app lên là thấy phòng chơi ngay, còn
+ * menu chơi offline nằm sau một cú chạm.
  */
 @Composable
 fun LanLobbyScreen(
@@ -49,7 +52,7 @@ fun LanLobbyScreen(
     onJoin: (DiscoveredRoom) -> Unit,
     onManualAddressChange: (String) -> Unit,
     onManualJoin: () -> Unit,
-    onBack: () -> Unit,
+    onOpenMenu: () -> Unit,
     modifier: Modifier = Modifier,
     hosting: Boolean = false,
     hostPort: Int = 0,
@@ -148,8 +151,10 @@ fun LanLobbyScreen(
             }
         }
 
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.action_back))
+        // Sảnh là màn chính nên ở đây không có "Quay lại" nữa: nút này đi **xuống** menu để
+        // chơi offline (hai người một máy hoặc đấu máy), chứ không rời chế độ LAN.
+        OutlinedButton(onClick = onOpenMenu, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.action_menu))
         }
     }
 }

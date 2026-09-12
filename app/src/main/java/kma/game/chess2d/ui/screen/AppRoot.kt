@@ -23,17 +23,23 @@ import kma.game.chess2d.lan.LanViewModel
  * Bundle mà không cần viết Saver riêng. Các lụa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, MENU, GAME, LAN }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH }
 
 /**
- * Gốc cây giao diện: splash → menu → ván đấu.
+ * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
+ *
+ * Thứ tự này là yêu cầu của mục 5.7: lấy **phòng chơi làm trung tâm**. Mở app lên là
+ * vào thẳng sảnh, thấy ngay phòng của người khác trong mạng và mở được phòng của
+ * mình; menu chơi offline tụt xuống thành màn thứ cấp sau một cú chạm.
  *
  * Điều hướng tự viết bằng một biến state chứ không dùng Navigation Compose: app chỉ
  * có bốn màn hình, không có deep link và không có back stack sâu, nên thêm một thư
  * viện điều hướng chỉ tốn dung lượng.
  *
- * Phím back được xử lý ở từng màn hình: trước đây back từ trong phòng LAN thoát
- * luôn app, làm người chơi rời phòng ngoài ý muốn.
+ * Phím back được xử lý **riêng từng màn**: ván đấu về menu, menu về sảnh, sảnh đang
+ * rảnh thì để hệ thống thoát app như bình thường, còn sảnh đang mở phòng thì back
+ * là huỷ phòng. Trước đây back từ trong phòng LAN thoát luôn app, làm người chơi
+ * rời phòng ngoài ý muốn.
  */
 @Composable
 fun AppRoot(modifier: Modifier = Modifier) {
@@ -45,28 +51,40 @@ fun AppRoot(modifier: Modifier = Modifier) {
 
     when (screen) {
         Screen.SPLASH -> SplashScreen(
-            onDone = { screen = Screen.MENU },
+            onDone = { screen = Screen.LOBBY },
             modifier = modifier,
         )
 
-        Screen.MENU -> MenuScreen(
-            name = playerName,
-            onNameChange = { playerName = it },
-            difficulty = difficulty,
-            onDifficultyChange = { difficulty = it },
-            onPlayTwoPlayers = {
-                mode = GameMode.TWO_PLAYERS
-                screen = Screen.GAME
-            },
-            onPlayComputer = {
-                mode = GameMode.VS_COMPUTER
-                screen = Screen.GAME
-            },
-            onPlayLan = { screen = Screen.LAN },
+        // Sảnh là màn chính: không đăng ký BackHandler ở đây để back lúc rảnh vẫn thoát app.
+        // Riêng lúc đang mở phòng hoặc đang trong ván, [LanRoute] tự chặn back của nó.
+        Screen.LOBBY -> LanRoute(
+            playerName = playerName,
+            onOpenMenu = { screen = Screen.MENU },
             modifier = modifier,
         )
 
-        Screen.GAME -> {
+        Screen.MENU -> {
+            // Back ở menu là về sảnh, vì sảnh mới là màn chính.
+            BackHandler { screen = Screen.LOBBY }
+            MenuScreen(
+                name = playerName,
+                onNameChange = { playerName = it },
+                difficulty = difficulty,
+                onDifficultyChange = { difficulty = it },
+                onPlayTwoPlayers = {
+                    mode = GameMode.TWO_PLAYERS
+                    screen = Screen.MATCH
+                },
+                onPlayComputer = {
+                    mode = GameMode.VS_COMPUTER
+                    screen = Screen.MATCH
+                },
+                onPlayLan = { screen = Screen.LOBBY },
+                modifier = modifier,
+            )
+        }
+
+        Screen.MATCH -> {
             BackHandler { screen = Screen.MENU }
             GameScreen(
                 playerName = playerName,
@@ -76,26 +94,20 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 modifier = modifier,
             )
         }
-
-        Screen.LAN -> LanRoute(
-            playerName = playerName,
-            onExit = { screen = Screen.MENU },
-            modifier = modifier,
-        )
     }
 }
 
 /**
- * Nhánh LAN: sảnh chờ hoặc bàn cờ, tùy pha của phiên.
+ * Nhánh sảnh phòng: sảnh, sảnh đang mở phòng, hoặc bàn cờ — tùy pha của phiên.
  *
- * [LanViewModel] được tạo ở đây chứ không ở [AppRoot], nên rời hẳn chế độ LAN là huỷ
- * luôn ViewModel — tức là socket và coroutine quét mạng đều đóng theo, không để sót
- * một phiên chạy ngầm sau lưng menu.
+ * [LanViewModel] được tạo ở đây chứ không ở [AppRoot], nên rời hẳn sảnh (sang menu hay
+ * ván offline) là huỷ luôn ViewModel — tức là socket và coroutine quét mạng đều đóng
+ * theo, không để sót một phiên chạy ngầm sau lưng menu.
  */
 @Composable
 private fun LanRoute(
     playerName: String,
-    onExit: () -> Unit,
+    onOpenMenu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: LanViewModel = viewModel()
@@ -113,7 +125,8 @@ private fun LanRoute(
 
     when (state.phase) {
         LanPhase.LOBBY -> {
-            BackHandler(onBack = onExit)
+            // Cố tình không có BackHandler: sảnh đang rảnh là màn gốc, back ở đây phải thoát
+            // app đúng như người dùng Android nào cũng chờ đợi.
             LanLobbyScreen(
                 state = state.lobby,
                 localAddresses = state.localAddresses,
@@ -121,7 +134,7 @@ private fun LanRoute(
                 onJoin = viewModel::join,
                 onManualAddressChange = viewModel::setManualAddress,
                 onManualJoin = viewModel::joinManual,
-                onBack = onExit,
+                onOpenMenu = onOpenMenu,
                 modifier = modifier,
             )
         }
@@ -138,7 +151,7 @@ private fun LanRoute(
                 onJoin = viewModel::join,
                 onManualAddressChange = viewModel::setManualAddress,
                 onManualJoin = viewModel::joinManual,
-                onBack = onExit,
+                onOpenMenu = onOpenMenu,
                 modifier = modifier,
                 hosting = true,
                 hostPort = state.hostPort,
