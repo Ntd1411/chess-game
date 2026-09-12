@@ -1,0 +1,15 @@
+# Câu đố cờ đóng gói sẵn trong app (mục 7.3).
+#
+# Mỗi dòng là một câu đố: <tên>|<FEN>|<các nước giải viết kiểu UCI, cách nhau bằng dấu cách>
+# Dòng trống và dòng bắt đầu bằng dấu # bị bỏ qua.
+#
+# Dùng file văn bản thay vì JSON để không phải thêm thư viện giải mã nào vào :app.
+# Toàn bộ nước ở đây đều được engine duyệt lại trong test JVM, nên một câu đố viết
+# sai FEN hay sai nước sẽ làm test đỏ ngay chứ không đợi tới lúc chạy trên máy.
+# Nội dung câu đố tự soạn, không lấy từ bộ dự liệu bên ngoài nên không vướng license.
+
+Chiếu hết hàng cuối|6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1|a1a8
+Hậu vào hàng tám|6k1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1|e1e8
+Ăn xe đối phương|r5k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1|a1a8
+Phong cấp thành hậu|8/P6k/8/8/8/8/8/7K w - - 0 1|a7a8q
+Xe lên hàng tám|6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1|e1e8
