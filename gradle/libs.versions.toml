@@ -1,7 +1,7 @@
 [versions]
 agp = "9.3.2"
-# Kotlin cho cac module JVM thuan (:engine, :ai, :net) va plugin Compose Compiler.
-# :app khong dung kotlin-android - AGP 9 da co built-in Kotlin.
+# Kotlin cho các module JVM thuần (:engine, :ai, :net) và plugin Compose Compiler.
+# :app không dùng kotlin-android — AGP 9 đã có Kotlin sẵn bên trong.
 kotlin = "2.2.20"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -14,6 +14,8 @@ composeBom = "2025.09.00"
 lifecycle = "2.9.4"
 coroutines = "1.10.2"
 serialization = "1.9.0"
+# DataStore Preferences: lưu ván offline đang chơi (mục 7.1).
+datastore = "1.1.7"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -38,6 +40,8 @@ lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-ru
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
