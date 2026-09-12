@@ -12,12 +12,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
@@ -26,6 +28,10 @@ import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.GameUiState
 import kma.game.chess2d.game.GameViewModel
+import kma.game.chess2d.game.SoundCue
+import kma.game.chess2d.settings.AppSettings
+import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.sound.SoundEffects
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,6 +67,8 @@ fun GameScreen(
     // chạy khi lựa chọn đổi, chứ không chạy lại mỗi lần vẽ lại màn hình.
     LaunchedEffect(mode) { viewModel.setMode(mode) }
     LaunchedEffect(difficulty) { viewModel.setDifficulty(difficulty) }
+
+    MatchSounds(state.soundCue)
 
     val actions = buildList {
         add(
@@ -145,6 +153,38 @@ fun GameScreen(
             pending = pending,
             onChosen = viewModel::onPromotionChosen,
             onDismiss = viewModel::onPromotionDismissed,
+        )
+    }
+}
+
+/**
+ * Phát tiếng và rung theo nước đi gần nhất.
+ *
+ * Đặt thành composable riêng để [SoundEffects] sống đúng bằng thời gian bàn cờ ở trên
+ * màn hình: rời bàn cờ là trả lại bộ nhớ âm thanh, không để nó treo lại.
+ *
+ * Không phát tiếng cho cue đã có sẵn ở lần vẽ đầu tiên: xoay máy hay quay lại ván
+ * đang dở không phải là vừa đi một nước, nghe tiếng lúc đó sẽ rất vô duyên.
+ */
+@Composable
+private fun MatchSounds(cue: SoundCue?) {
+    val context = LocalContext.current
+    val effects = remember(context) { SoundEffects(context) }
+    DisposableEffect(effects) { onDispose { effects.release() } }
+
+    val store = remember(context) { SettingsStore(context.applicationContext) }
+    // Đọc cài đặt từ đĩa cần một nhịp; trong nhịp đó cứ coi như mặc định.
+    val settings by store.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+
+    var lastSerial by remember { mutableStateOf(cue?.serial ?: 0) }
+    LaunchedEffect(cue?.serial) {
+        val current = cue ?: return@LaunchedEffect
+        if (current.serial == lastSerial) return@LaunchedEffect
+        lastSerial = current.serial
+        effects.play(
+            sound = current.sound,
+            soundEnabled = settings.soundEnabled,
+            hapticEnabled = settings.hapticEnabled,
         )
     }
 }

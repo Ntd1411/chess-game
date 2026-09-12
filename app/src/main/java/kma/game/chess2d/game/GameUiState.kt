@@ -27,6 +27,24 @@ data class PendingPromotion(
     val options: List<Move>,
 )
 
+/**
+ * Tiếng cần phát cho nước vừa đi.
+ *
+ * Bốn tiếng theo mục 7.1: đi thường, ăn quân, chiếu, và hết ván. Phân loại nằm ở
+ * ViewModel vì chỉ nơi đó biết nước đi thật sự là gì; giao diện chỉ việc phát.
+ */
+enum class MoveSound { MOVE, CAPTURE, CHECK, GAME_END }
+
+/**
+ * Một lần yêu cầu phát tiếng.
+ *
+ * Cần [serial] vì hai nước đi liền nhau có thể cùng loại tiếng; nếu chỉ so sánh
+ * [sound] thì giao diện sẽ tưởng không có gì mới và lặng thinh. Ngược lại, những
+ * lần vẽ lại không liên quan (chọn quân, máy bắt đầu nghĩ) giữ nguyên [serial]
+ * nên không phát lại tiếng cũ.
+ */
+data class SoundCue(val serial: Int, val sound: MoveSound)
+
 /** Chế độ chơi. LAN ở Phase 4 sẽ thêm một giá trị nữa vào đây. */
 enum class GameMode {
     /** Hai người trên cùng máy. */
@@ -45,6 +63,7 @@ enum class GameMode {
  * lúc search đang đi thử hàng triệu nước ở Phase 3.
  *
  * @param aiThinking máy đang nghĩ. Trong lúc này bàn cờ không nhận chạm và nút Đi lại bị khóa.
+ * @param soundCue tiếng cần phát cho nước đi gần nhất, `null` khi chưa đi nước nào.
  */
 data class GameUiState(
     val pieces: List<PieceOnBoard> = emptyList(),
@@ -60,4 +79,5 @@ data class GameUiState(
     val mode: GameMode = GameMode.TWO_PLAYERS,
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val aiThinking: Boolean = false,
+    val soundCue: SoundCue? = null,
 )

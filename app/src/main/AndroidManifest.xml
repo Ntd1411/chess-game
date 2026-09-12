@@ -2,13 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Choi qua LAN: mo socket TCP va gui/nhan beacon UDP trong mang noi bo.
-         Khong xin quyen vi tri: tu Android 10, quyen vi tri chi can khi doc
-         danh sach mang Wi-Fi lan can, con viec noi hai may trong cung mang
-         thi khong can. -->
+    <!-- Chơi qua LAN: mở socket TCP và gửi/nhận beacon UDP trong mạng nội bộ.
+         Không xin quyền vị trí: từ Android 10, quyền vị trí chỉ cần khi đọc
+         danh sách mạng Wi-Fi lân cận, còn việc nối hai máy trong cùng mạng
+         thì không cần. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Rung nhẹ mỗi khi đặt quân (mục 7.1). Là quyền thường, hệ thống cấp ngay
+         lúc cài nên không cần hỏi người chơi lúc chạy. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"

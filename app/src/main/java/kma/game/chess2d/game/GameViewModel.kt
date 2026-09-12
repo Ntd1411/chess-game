@@ -80,6 +80,12 @@ class GameViewModel(
     private var aiJob: Job? = null
     private var aiThinking = false
 
+    /** Tiếng cần phát cho nước đi gần nhất. */
+    private var soundCue: SoundCue? = null
+
+    /** Đếm số lần yêu cầu phát tiếng, để hai tiếng giống nhau liền nhau vẫn khác cue. */
+    private var soundSerial = 0
+
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
@@ -241,11 +247,11 @@ class GameViewModel(
      * Ba điểm đáng chú ý, đây cũng là ba cái bẫy được ghi ở mục 5.4:
      *
      * 1. Nghĩ trên [Dispatchers.Default], KHÔNG trên main thread. Search cấp Khó chạy
-     *    tới 5 giây, đủ để Android dỡng hẳn ANR nếu chặn main thread.
+     *    tới 5 giây, đủ để Android báo ANR nếu chặn main thread.
      * 2. Máy nghĩ trên một BẢN SAO của bàn cờ. Search đi và hoàn nguyên hàng triệu
      *    nước; nếu dùng chung bàn cờ với giao diện thì UI sẽ đọc phải những thế cờ
      *    nửa vời đang thử dở.
-     * 3. Bản sao được dụng bằng cách đi lại cả ván chứ không phải copy từ FEN: có
+     * 3. Bản sao được dựng bằng cách đi lại cả ván chứ không phải copy từ FEN: có
      *    vậy AI mới thấy được lịch sử lặp thế để tính luật hòa ba lần lặp.
      */
     private fun maybeStartAiTurn() {
@@ -331,7 +337,28 @@ class GameViewModel(
         }
 
         playedMoves.add(move)
+        noteSound(move)
         saveMoves()
+    }
+
+    /**
+     * Chọn tiếng cho nước vừa đi.
+     *
+     * Thứ tự ưu tiên theo mức "quan trọng" với người chơi: hết ván đè lên chiếu, chiếu
+     * đè lên ăn quân. Một nước vừa ăn quân vừa chiếu hết thì chỉ nên nghe một tiếng,
+     * và tiếng đáng nghe là tiếng kết thúc ván.
+     *
+     * Gọi ngay trong [applyMove] vì lúc này mới còn biết nước đi là gì; [publish] chỉ
+     * thấy bàn cờ sau nước đi nên không phân biệt được ăn quân hay không.
+     */
+    private fun noteSound(move: Move) {
+        val sound = when {
+            Rules.isGameOver(board) -> MoveSound.GAME_END
+            board.isInCheck() -> MoveSound.CHECK
+            move.isCapture || move.isEnPassant -> MoveSound.CAPTURE
+            else -> MoveSound.MOVE
+        }
+        soundCue = SoundCue(++soundSerial, sound)
     }
 
     /**
@@ -366,6 +393,8 @@ class GameViewModel(
         }
         selectedSquare = Squares.NONE
         pendingPromotion = null
+        // Ván mới thì không còn nước nào để phát tiếng, kể cả tiếng của ván trước.
+        soundCue = null
     }
 
     private fun saveMoves() {
@@ -390,6 +419,7 @@ class GameViewModel(
             mode = mode,
             difficulty = difficulty,
             aiThinking = aiThinking,
+            soundCue = soundCue,
         )
     }
 
