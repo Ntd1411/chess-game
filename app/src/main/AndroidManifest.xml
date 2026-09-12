@@ -19,12 +19,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Chess">
-        <!-- Khoa huong doc (muc 5.7 A0). Khai bao trong manifest chu khong goi
-             setRequestedOrientation trong code: goi trong code thi man splash
-             nhay mot nhip ngang truoc khi bi khoa.
-             Luu y: tu Android 16, he thong BO QUA yeu cau nay tren man hinh rong
-             (tablet, may gap, desktop mode) voi app targetSdk du moi - nen van
-             khong duoc viet code gia dinh chieu cao > chieu rong. -->
+        <!-- Khoá hướng dọc (mục 5.7). Khai báo ngay trong manifest chứ không gọi
+             setRequestedOrientation trong code: gọi trong code thì màn hình
+             khởi động vẫn nhấp một nhịp ngang trước khi bị khoá lại.
+             Lưu ý: từ Android 16, hệ thống bỏ qua yêu cầu này trên màn hình rộng
+             (tablet, máy gập, chế độ desktop), nên vẫn không được viết code giả
+             định chiều cao luôn lớn hơn chiều rộng. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
