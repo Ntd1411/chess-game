@@ -170,6 +170,18 @@ abstract class LanEndpoint(
      */
     private fun emitDisconnected(reason: String, canRetry: Boolean = true) {
         if (peerLeft) return
+        // Khách vào phòng rồi biến mất mà không kịp gửi Bye (tắt ứng dụng, mất Wi-Fi,
+        // bấm rời ngay): với host, một kết nối đứt khi chưa đi nước nào thì không có gì
+        // để nối lại. Coi như đối thủ đã rời phòng để giao diện về pha chờ người vào và
+        // beacon báo phòng trống, thay vì để người mở phòng ngồi chờ một máy đã đi rồi.
+        if (isReferee && withGame { game.ply } == 0) {
+            peerLeft = true
+            withGame { resetRoom() }
+            channel?.close()
+            channel = null
+            emit(LanEvent.OpponentLeft(reason))
+            return
+        }
         emit(LanEvent.Disconnected(reason, canRetry = canRetry && !closedByUser))
     }
 
@@ -233,7 +245,7 @@ abstract class LanEndpoint(
         if (!state.value.opponentOffersRematch) return@withGame
         updateState { it.copy(opponentOffersRematch = false) }
         if (accepted && isReferee) {
-            // Trọng tài dụng ván mới rồi mới trả lời, để gói trả lời mang luôn ván mới.
+            // Trọng tài dựng ván mới rồi mới trả lời, để gói trả lời mang luôn ván mới.
             startNextGame()
             send(NetMessage.RematchResponse(true, currentSync()))
         } else {
@@ -431,7 +443,7 @@ abstract class LanEndpoint(
                 updateState { it.copy(waitingRematchReply = false) }
                 when {
                     !message.accepted -> Unit
-                    // Trọng tài nhận đồng ý: tự dụng ván mới rồi thông báo cho khách.
+                    // Trọng tài nhận đồng ý: tự dựng ván mới rồi thông báo cho khách.
                     isReferee -> {
                         startNextGame()
                         send(NetMessage.Sync(currentSync()))
@@ -495,6 +507,10 @@ abstract class LanEndpoint(
         emit(LanEvent.OpponentLeft(reason))
         if (isReferee) resetRoom()
         channel?.close()
+        // Xóa luôn kênh ở đây chứ không chờ khối finally của [pump]: beacon của host lấy
+        // `channel != null` làm cờ "đang có ván", nên chậm một nhịp là người khác vẫn
+        // thấy phòng đầy và bị từ chối bằng ROOM_BUSY.
+        channel = null
     }
 
     /**
@@ -554,7 +570,7 @@ abstract class LanEndpoint(
         send(NetMessage.Flagged(gameId, flagged, times))
     }
 
-    /** Dụng ván mới. Đổi màu hai bên để không ai giữ Trắng mãi. Chỉ trọng tài được gọi. */
+    /** Dựng ván mới. Đổi màu hai bên để không ai giữ Trắng mãi. Chỉ trọng tài được gọi. */
     protected fun startNextGame() {
         gameId += 1
         clock?.start(System.currentTimeMillis())
