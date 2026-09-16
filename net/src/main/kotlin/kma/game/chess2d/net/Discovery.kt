@@ -44,7 +44,7 @@ data class DiscoveredRoom(
  * và bằng client dòng lệnh trên PC, không cần hai điện thoại thật.
  *
  * @param beacon là hàm chứ không phải giá trị, để cờ `busy` đổi được ngay khi có khách
- *        vào mà không phải dụng lại advertiser.
+ *        vào mà không phải dựng lại advertiser.
  * @param targets để null để tự dò địa chỉ broadcast; test truyền 127.0.0.1 vào đây.
  */
 class RoomAdvertiser(
@@ -74,7 +74,7 @@ class RoomAdvertiser(
  *
  * Phòng không có thông điệp "tắt phòng": host có thể hết pin hoặc ra khỏi vùng phủ
  * sóng. Vì vậy danh sách được dọn theo thời gian: quá [LanTiming.ROOM_STALE_MILLIS]
- * không nghe thấy gì thì phòng tự rạc khỏi danh sách.
+ * không nghe thấy gì thì phòng tự rơi khỏi danh sách.
  *
  * @param now tách ra để test kiểm tra được việc dọn phòng nguội mà không phải chờ thật.
  */
