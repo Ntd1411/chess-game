@@ -82,6 +82,10 @@ fun LanGameScreen(
     // (2 giây) — không nội suy thì người chơi thấy đồng hồ đứng im rồi nhảy từng cục.
     val clock = rememberTickingClock(state)
 
+    // Bàn cờ LAN dùng chung đường phát tiếng với bàn cờ offline; cue được suy ra từ số
+    // nước đã đi vì ván LAN không đi qua `GameViewModel`.
+    MatchSounds(rememberMatchCue(state.ply, state.status, state.finished))
+
     val actions = buildList {
         add(
             MatchAction(

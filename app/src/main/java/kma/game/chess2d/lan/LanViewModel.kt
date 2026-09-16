@@ -539,6 +539,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
                 youPlayWhite = state.youPlayWhite,
                 whiteToMove = state.whiteToMove,
                 yourTurn = state.yourTurn,
+                ply = state.ply,
                 status = state.status,
                 finished = state.finished,
                 outcome = state.outcome,

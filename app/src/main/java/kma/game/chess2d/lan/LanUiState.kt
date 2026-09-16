@@ -110,6 +110,8 @@ data class LanUiState(
     val youPlayWhite: Boolean = true,
     val whiteToMove: Boolean = true,
     val yourTurn: Boolean = false,
+    /** Số nước đã đi. Màn hình dùng nó để biết khi nào cần phát tiếng và rung. */
+    val ply: Int = 0,
     val status: GameStatus = GameStatus.ONGOING,
     val finished: Boolean = false,
     val outcome: LanOutcome? = null,
