@@ -278,7 +278,15 @@ abstract class LanEndpoint(
 
     protected fun onConnected(opponentName: String) {
         updateState {
-            it.copy(connected = true, opponentName = opponentName, timeControl = timeControl)
+            it.copy(
+                connected = true,
+                opponentName = opponentName,
+                // Chỉ host được ghi thể thức vào trạng thái. Khách đã nhận thể thức thật
+                // từ `Welcome` (xem [adoptHostClock]); ghi đè bằng thể thức của chính
+                // khách — luôn là UNLIMITED — chính là lý do máy thứ hai vào phòng bấm
+                // giờ mà không thấy đồng hồ nào.
+                timeControl = if (isReferee) timeControl else it.timeControl,
+            )
         }
         // Đồng hồ chỉ chạy từ lúc có đối thủ: thời gian ngồi chờ trong sảnh không được
         // trừ của ai.
