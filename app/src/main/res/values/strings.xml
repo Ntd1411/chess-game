@@ -139,6 +139,9 @@
     <string name="time_control_unlimited">Không giới hạn</string>
     <string name="time_control_blitz">Cờ nhanh 5 phút</string>
     <string name="time_control_rapid">Cờ tiêu chuẩn 10+5</string>
+    <string name="time_control_unlimited_short">Tự do</string>
+    <string name="time_control_blitz_short">5 phút</string>
+    <string name="time_control_rapid_short">10+5</string>
     <string name="lan_clock">Còn %1$s</string>
     <string name="lan_outcome_timeout">%1$s hết giờ</string>
 

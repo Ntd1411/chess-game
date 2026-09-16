@@ -6,18 +6,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -120,18 +123,29 @@ fun LanLobbyScreen(
             }
         }
 
-        Text(
-            text = stringResource(R.string.lan_rooms_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-
-        // Quét chạy liên tục suốt lúc ở sảnh, nên thanh tiến trình luôn hiện: nó trả lời
-        // câu "app treo hay đang tìm?" mà danh sách trống không trả lời được.
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        Text(
-            text = stringResource(R.string.lan_scanning, state.rooms.size),
-            style = MaterialTheme.typography.bodySmall,
-        )
+        // Một hàng duy nhất cho tiêu đề danh sách và dấu hiệu đang quét: trước đây một
+        // thanh tiến trình ngang cả màn hình cộng một dòng chữ riêng chiếm ba tầng, khiến
+        // sảnh trông rất rối. Vòng xoay nhỏ đủ trả lời câu "app treo hay đang tìm?".
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.lan_rooms_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f),
+            )
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+            )
+            Text(
+                text = stringResource(R.string.lan_scanning, state.rooms.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         if (state.rooms.isEmpty()) {
             EmptyRoomsHint()
@@ -220,11 +234,19 @@ private fun YourRoomCard(
                     )
                 }
             }
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            Text(
-                text = stringResource(R.string.lan_room_waiting),
-                style = MaterialTheme.typography.bodySmall,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                )
+                Text(
+                    text = stringResource(R.string.lan_room_waiting),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.lan_cancel_room))
             }
@@ -232,33 +254,60 @@ private fun YourRoomCard(
     }
 }
 
-/** Ba thể thức thời gian, chọn một. */
+/**
+ * Ba thể thức thời gian, chọn một.
+ *
+ * Dùng một dải nút liền (segmented) với nhãn ngắn chứ không phải ba chip rời: ba
+ * nhãn dài đủ ("Cờ tiêu chuẩn 10+5"...) xếp cạnh nhau thì tràn ngang màn hình điện
+ * thoại và bị bẻ xuống dòng trông rất xấu. Dải nút chia đều chiều ngang nên luôn
+ * vừa một hàng, còn câu đầy đủ của thể thức đang chọn được ghi ngay bên dưới.
+ */
 @Composable
 private fun TimeControlPicker(selected: TimeControl, onSelect: (TimeControl) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = stringResource(R.string.lan_time_control),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (control in TimeControl.entries) {
-                key(control) {
-                    FilterChip(
-                        selected = control == selected,
-                        onClick = { onSelect(control) },
-                        label = { Text(stringResource(timeControlLabel(control))) },
-                    )
-                }
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            TimeControl.entries.forEachIndexed { index, control ->
+                SegmentedButton(
+                    selected = control == selected,
+                    onClick = { onSelect(control) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = TimeControl.entries.size,
+                    ),
+                    label = {
+                        Text(
+                            text = stringResource(timeControlShortLabel(control)),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
             }
         }
+        Text(
+            text = stringResource(timeControlLabel(selected)),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
-/** Nhãn tiếng Việt của từng thể thức. */
+/** Nhãn tiếng Việt đầy đủ của từng thể thức. */
 internal fun timeControlLabel(control: TimeControl): Int = when (control) {
     TimeControl.UNLIMITED -> R.string.time_control_unlimited
     TimeControl.BLITZ -> R.string.time_control_blitz
     TimeControl.RAPID -> R.string.time_control_rapid
+}
+
+/** Nhãn ngắn, dùng cho dải nút chọn thể thức. */
+private fun timeControlShortLabel(control: TimeControl): Int = when (control) {
+    TimeControl.UNLIMITED -> R.string.time_control_unlimited_short
+    TimeControl.BLITZ -> R.string.time_control_blitz_short
+    TimeControl.RAPID -> R.string.time_control_rapid_short
 }
 
 /**
