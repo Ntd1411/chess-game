@@ -200,11 +200,24 @@ class GameViewModel(
         publish()
     }
 
+    /**
+     * Đổi chế độ chơi.
+     *
+     * Đổi chế độ là **bắt đầu một ván khác**, nên bàn cờ được dọn sạch. Trước đây
+     * chỉ đổi biến [mode] mà giữ nguyên dãy nước đã đi, nên ván đấu máy đang dở bị mang
+     * sang chế độ hai người và ngược lại — hai chế độ trông như lẫn vào nhau.
+     *
+     * ViewModel này dùng chung cho cả hai chế độ vì nó gắn vào Activity, nên dọn ở đây
+     * là chỗ duy nhất chắc chắn chạy đúng một lần cho mỗi lần đổi chế độ.
+     */
     fun setMode(newMode: GameMode) {
         if (mode == newMode) return
         cancelAiTurn()
         mode = newMode
         savedState[KEY_MODE] = newMode.name
+        ai.newGame()
+        resetBoard()
+        saveMoves()
         publish()
         maybeStartAiTurn()
     }
