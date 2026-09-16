@@ -70,6 +70,17 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     private val roomSource: RoomSource = LanRoomSource()
     private val mirror = BoardMirror()
 
+    /**
+     * Mã phòng do chính máy này mở, `null` khi không mở phòng nào.
+     *
+     * Beacon là broadcast nên máy mở phòng cũng nghe thấy beacon của chính nó, và
+     * phòng đó hiện ra ở cuối danh sách. Bấm vào chỉ có thể lỗi: máy tự nối vào
+     * ServerSocket của mình, host thấy "đã có ván" rồi từ chối. Lọc theo mã phòng chứ
+     * không lọc theo địa chỉ vì địa chỉ nhận được có thể là IP của một interface khác
+     * cùng máy.
+     */
+    private var hostedRoomId: String? = null
+
     private var scanJob: Job? = null
     private var sessionJob: Job? = null
     private var endpoint: LanEndpoint? = null
@@ -107,7 +118,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
         scanJob = viewModelScope.launch {
             launch { roomSource.discover() }
             roomSource.rooms.collect { rooms ->
-                _uiState.update { it.copy(lobby = it.lobby.copy(rooms = rooms)) }
+                _uiState.update { it.copy(lobby = it.lobby.copy(rooms = arrangeRooms(rooms))) }
             }
         }
     }
@@ -151,6 +162,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
             localName = currentName(),
             timeControl = _uiState.value.lobby.timeControl,
         )
+        hostedRoomId = host.roomId
         startSession(host, LanPhase.HOSTING) {
             host.run { port ->
                 _uiState.update { it.copy(hostPort = port) }
@@ -169,6 +181,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     fun cancelHosting() {
         if (_uiState.value.phase != LanPhase.HOSTING) return
         val job = sessionJob
+        hostedRoomId = null
         endpoint = null
         reconnect = null
         sessionJob = null
@@ -267,6 +280,7 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     fun leave() {
         val leaving = endpoint
         val job = sessionJob
+        hostedRoomId = null
         endpoint = null
         reconnect = null
         sessionJob = null
@@ -555,6 +569,19 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
             flipped = !youPlayWhite,
         )
     }
+
+    /**
+     * Dọn danh sách phòng trước khi đưa lên sảnh: bỏ phòng của chính mình và **cố định
+     * thứ tự**.
+     *
+     * Beacon về mỗi giây một lần cho mỗi phòng, và trước đây phòng vừa nghe thấy được
+     * đẩy xuống cuối danh sách, nên có ba bốn phòng là danh sách nhảy liên tục và
+     * không ai bấm nổi vào phòng mình muốn. Sắp theo tên rồi theo mã phòng thì thứ tự
+     * chỉ đổi khi có phòng mới xuất hiện hoặc phòng cũ tắt.
+     */
+    private fun arrangeRooms(rooms: List<RoomInfo>): List<RoomInfo> = rooms
+        .filterNot { it.roomId == hostedRoomId }
+        .sortedWith(compareBy({ it.hostName.lowercase() }, { it.roomId }))
 
     private fun currentName(): String =
         _uiState.value.lobby.localName.trim().ifEmpty { defaultLocalName() }
