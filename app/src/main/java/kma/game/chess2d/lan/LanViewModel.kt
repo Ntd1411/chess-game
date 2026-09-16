@@ -540,6 +540,8 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
                 whiteToMove = state.whiteToMove,
                 yourTurn = state.yourTurn,
                 ply = state.ply,
+                startFen = state.startFen,
+                moves = state.moves,
                 status = state.status,
                 finished = state.finished,
                 outcome = state.outcome,

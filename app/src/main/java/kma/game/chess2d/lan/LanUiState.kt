@@ -1,5 +1,6 @@
 package kma.game.chess2d.lan
 
+import kma.game.chess2d.engine.Engine
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.PendingPromotion
@@ -112,6 +113,10 @@ data class LanUiState(
     val yourTurn: Boolean = false,
     /** Số nước đã đi. Màn hình dùng nó để biết khi nào cần phát tiếng và rung. */
     val ply: Int = 0,
+    /** Thế cờ đầu ván, cần cho việc xuất PGN ngay trong ván LAN. */
+    val startFen: String = Engine.START_FEN,
+    /** Dãy nước đã đi dạng thô, cũng để xuất PGN. */
+    val moves: List<Int> = emptyList(),
     val status: GameStatus = GameStatus.ONGOING,
     val finished: Boolean = false,
     val outcome: LanOutcome? = null,

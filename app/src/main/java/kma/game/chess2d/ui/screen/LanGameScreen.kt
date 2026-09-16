@@ -1,5 +1,8 @@
 package kma.game.chess2d.ui.screen
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -30,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
+import kma.game.chess2d.engine.Pgn
 import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
 import kma.game.chess2d.lan.LanUiState
@@ -39,6 +44,9 @@ import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.delay
 
 /**
@@ -117,6 +125,16 @@ fun LanGameScreen(
                 label = stringResource(R.string.lan_action_sync),
                 enabled = state.connected,
                 onClick = onRequestSync,
+            ),
+        )
+        add(
+            // Ván LAN cũng xuất được PGN ngay trong ván, không phải chờ ván xong rồi vào
+            // lịch sử mới xuất được.
+            MatchAction(
+                icon = Icons.Filled.Share,
+                label = stringResource(R.string.history_export_pgn),
+                enabled = state.moves.isNotEmpty(),
+                onClick = { exportLanPgn(context, state) },
             ),
         )
         add(
@@ -215,6 +233,60 @@ fun LanGameScreen(
             onDismiss = onPromotionDismissed,
         )
     }
+}
+
+/**
+ * Xuất ván LAN đang chơi thành PGN rồi đẩy sang ứng dụng khác.
+ *
+ * Dùng lại đúng đường của màn lịch sử: chia sẻ chuỗi văn bản nên không phải xin
+ * quyền lưu trữ, người chơi tự chọn lưu vào đâu hay gửi cho ai.
+ *
+ * Kết quả ghi theo tình trạng hiện tại: ván chưa xong thì là `*`, đúng chuẩn PGN cho
+ * một ván đang dở.
+ */
+private fun exportLanPgn(context: Context, state: LanUiState) {
+    val result = when {
+        !state.finished -> Pgn.RESULT_UNKNOWN
+        state.outcome == LanOutcome.DRAW_AGREED -> "1/2-1/2"
+        state.outcome == LanOutcome.RESIGNATION ->
+            if (state.resignedByWhite == true) "0-1" else "1-0"
+
+        state.outcome == LanOutcome.TIMEOUT ->
+            if (state.flaggedWhite == true) "0-1" else "1-0"
+        // Chiếu hết: bên đến lượt là bên thua.
+        state.status == GameStatus.CHECKMATE -> if (state.whiteToMove) "0-1" else "1-0"
+        else -> "1/2-1/2"
+    }
+
+    val white = if (state.youPlayWhite) state.lobby.localName else state.opponentName
+    val black = if (state.youPlayWhite) state.opponentName else state.lobby.localName
+    val pgn = runCatching {
+        Pgn.export(
+            Pgn.Game(
+                event = "Chess 2D",
+                site = "LAN",
+                date = SimpleDateFormat("yyyy.MM.dd", Locale.US).format(Date()),
+                white = white.ifBlank { "White" },
+                black = black.ifBlank { "Black" },
+                result = result,
+                startFen = state.startFen,
+                uciMoves = state.moves.map { Move(it).toUci() },
+            ),
+        )
+    }.getOrNull()
+
+    if (pgn == null) {
+        Toast.makeText(context, R.string.history_export_failed, Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, pgn)
+    }
+    context.startActivity(
+        Intent.createChooser(send, context.getString(R.string.history_export_chooser)),
+    )
 }
 
 /** Ô thông báo. Nút thử lại nằm ngay cạnh lời báo lỗi, không xếp vào hàng nút của ván. */
