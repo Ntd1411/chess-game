@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,11 +33,13 @@ import kma.game.chess2d.engine.Move
 import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
 import kma.game.chess2d.lan.LanUiState
+import kma.game.chess2d.net.ClockTimes
 import kma.game.chess2d.net.LanOutcome
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
+import kotlinx.coroutines.delay
 
 /**
  * Bàn cờ của một phiên LAN, dựng trên [MatchScaffold] giống hệt hai chế độ offline.
@@ -74,6 +77,10 @@ fun LanGameScreen(
     val appearance by appearanceStore.settings.collectAsStateWithLifecycle(
         initialValue = AppSettings(),
     )
+
+    // Đồng hồ hiển thị được nội suy ở đây, vì host chỉ gửi con số mới mỗi nhịp ping
+    // (2 giây) — không nội suy thì người chơi thấy đồng hồ đứng im rồi nhảy từng cục.
+    val clock = rememberTickingClock(state)
 
     val actions = buildList {
         add(
@@ -122,12 +129,12 @@ fun LanGameScreen(
     MatchScaffold(
         opponent = MatchPlayer(
             name = state.opponentName.ifEmpty { stringResource(R.string.match_waiting_opponent) },
-            subtitle = opponentSubtitle(state),
+            subtitle = opponentSubtitle(state, clock),
             active = state.connected && !state.finished && !state.yourTurn,
         ),
         you = MatchPlayer(
             name = state.lobby.localName,
-            subtitle = youSubtitle(state),
+            subtitle = youSubtitle(state, clock),
             active = state.connected && !state.finished && state.yourTurn,
         ),
         actions = actions,
@@ -311,32 +318,63 @@ private fun headline(state: LanUiState): String {
  * đối thủ còn bao nhiêu phút, không phải mạng nhanh hay chậm.
  */
 @Composable
-private fun opponentSubtitle(state: LanUiState): String = when {
+private fun opponentSubtitle(state: LanUiState, clock: ClockTimes?): String = when {
     !state.connected -> ""
-    state.timeControl.limited -> clockLabel(state, forYou = false)
+    state.timeControl.limited -> clockLabel(state, clock, forYou = false)
     state.latencyMillis >= 0 -> stringResource(R.string.lan_latency, state.latencyMillis)
     else -> ""
 }
 
 /** Phụ đề của mình: đang cầm quân bên nào, kèm thời gian còn lại khi có bấm giờ. */
 @Composable
-private fun youSubtitle(state: LanUiState): String {
+private fun youSubtitle(state: LanUiState, clock: ClockTimes?): String {
     val side = stringResource(if (state.youPlayWhite) R.string.side_white else R.string.side_black)
     val mine = stringResource(R.string.match_side, side)
     if (!state.timeControl.limited) return mine
-    return "$mine · " + clockLabel(state, forYou = true)
+    return "$mine · " + clockLabel(state, clock, forYou = true)
 }
 
 /**
- * Con số thời gian của một bên.
+ * Đồng hồ để hiển thị: con số mới nhất của host, trừ dần theo thời gian thực cho
+ * bên đang đến lượt.
  *
- * Lấy trực tiếp số do host gửi, không tự trừ dần ở đây: máy khách tự đếm thì sau
- * vài phút hai bên sẽ thấy hai con số khác nhau, mà chỉ số của host mới có giá trị
- * phân định thắng thua.
+ * Đây chỉ là phép nội suy để mắt người thấy giây trôi; mỗi lần host gửi số mới thì
+ * mốc đếm được đặt lại, nên hai máy không thể trôi xa nhau. Việc phân định hết giờ
+ * vẫn hoàn toàn thuộc về đồng hồ duy nhất của host (mục 7.2).
  */
 @Composable
-private fun clockLabel(state: LanUiState, forYou: Boolean): String {
-    val times = state.clock
+private fun rememberTickingClock(state: LanUiState): ClockTimes? {
+    val times = state.clock ?: return null
+    if (!state.timeControl.limited) return times
+    val running = state.connected && !state.finished
+    // Mốc đếm: đặt lại mỗi khi host gửi con số mới hoặc khi lượt đi đổi bên.
+    val anchor = remember(times, state.whiteToMove, running) { System.currentTimeMillis() }
+    var now by remember(times, state.whiteToMove, running) { mutableStateOf(anchor) }
+    LaunchedEffect(times, state.whiteToMove, running) {
+        if (!running) return@LaunchedEffect
+        while (true) {
+            delay(TICK_MILLIS)
+            now = System.currentTimeMillis()
+        }
+    }
+    if (!running) return times
+    val elapsed = (now - anchor).coerceAtLeast(0L)
+    return if (state.whiteToMove) {
+        times.copy(whiteMillis = (times.whiteMillis - elapsed).coerceAtLeast(0L))
+    } else {
+        times.copy(blackMillis = (times.blackMillis - elapsed).coerceAtLeast(0L))
+    }
+}
+
+/** Nhịp vẽ lại đồng hồ. 200 ms đủ mượt mà vẫn xa ngưỡng làm nóng máy. */
+private const val TICK_MILLIS: Long = 200
+
+/**
+ * Con số thời gian của một bên, lấy từ đồng hồ đã nội suy ở [rememberTickingClock].
+ */
+@Composable
+private fun clockLabel(state: LanUiState, clock: ClockTimes?, forYou: Boolean): String {
+    val times = clock ?: state.clock
     val white = if (forYou) state.youPlayWhite else !state.youPlayWhite
     val millis = when {
         times != null -> if (white) times.whiteMillis else times.blackMillis
