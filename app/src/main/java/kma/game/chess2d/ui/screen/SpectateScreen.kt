@@ -207,7 +207,8 @@ private fun SpectateMatchScreen(
         } else {
             statusLabel(game)
         },
-        modifier = modifier.gothicBackdrop(R.drawable.screen_ai_vs_ai),
+        modifier = modifier,
+        backdrop = R.drawable.screen_ai_vs_ai,
         belowBoard = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SpectateControlRow(

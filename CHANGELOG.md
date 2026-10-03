@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 23:27 GMT+7 — Nền screen_chess_battle và chừa inset cho khung ván đấu dùng chung
+- MatchScaffold dùng `gothicBackdrop` (mặc định screen_chess_battle, thêm tham số `backdrop`), nên GameScreen, CampaignBattleScreen và LanGameScreen cùng có nền gothic và chừa inset thanh hệ thống. SpectateScreen truyền `backdrop = screen_ai_vs_ai` thay vì tự gắn modifier để không vẽ nền hai lần
+- `:app:testDebugUnitTest` và `:app:assembleDebug` thành công
+
 ## 2026-10-03 23:14 GMT+7 — Nền gothic cho sảnh LAN, Lịch sử, Máy vs Máy; chữ mặc định đọc được trên nền tối
 - ui/art/GothicBackdrop.kt: Modifier `gothicBackdrop(res, dim)` vẽ ảnh nền cắt giữa (hàm thuần `centerCrop`) phủ tối, rồi mới chừa inset thanh trạng thái/điều hướng cho nội dung. Gắn vào LanLobbyScreen (screen_lan_lobby), HistoryScreen cả danh sách lẫn xem lại (screen_game_history), SpectateScreen cả bước chọn lẫn màn xem (screen_ai_vs_ai); các màn này trước đó chưa chừa inset. Không nạp trước ở splash để cache 64MB không bị đầy
 - Theme: ChessTheme đặt `LocalContentColor` = Parchment vì app không còn Surface/Scaffold gốc (mặc định là đen, chữ đặt thẳng trên nền tối không đọc được)

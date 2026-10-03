@@ -1,11 +1,11 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -23,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kma.game.chess2d.R
 import kma.game.chess2d.engine.Piece
+import kma.game.chess2d.ui.art.gothicBackdrop
 
 /**
  * Một người chơi trong khung ván đấu.
@@ -84,11 +86,12 @@ fun MatchScaffold(
     headline: String? = null,
     notice: (@Composable () -> Unit)? = null,
     belowBoard: (@Composable () -> Unit)? = null,
+    @DrawableRes backdrop: Int = R.drawable.screen_chess_battle,
     board: @Composable () -> Unit,
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .gothicBackdrop(backdrop)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
