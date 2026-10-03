@@ -14,6 +14,20 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 16:05 GMT+7 — Giai đoạn 1: dữ liệu 49 tầng + màn Tower Map
+- Thêm package `campaign/`: `Floor`/`NodeKind`/`FloorGoal`, `TowerCatalog` (sinh 49 tầng
+  theo 7 chương × 7 tầng, 6 tầng mốc 1/5/21/42/45/49 có cờ thoại, độ khó theo 3 lớp
+  bí ẩn, boss mạnh hơn một bậc), `validate`/`validateAll` chạy qua engine thật
+- Thêm `TowerProgress` (luật mở khóa: qua N mở N+1, không nhảy cóc, không lùi) và
+  `TowerProgressStore` (DataStore riêng `tower_progress`)
+- Thêm `TowerMapScreen` (nền `screen_tower_map`, node khóa/hiện tại phát sáng vàng/đã qua)
+  và `ui/theme/GothicColors`; nối `Screen.TOWER` vào `AppRoot`, thêm nút "Khám Phá Tháp Cờ"
+  vào `MenuScreen`; thêm string `tower_*` (chuỗi `???` phải escape thành `\?\?\?`)
+- Test mới: `TowerCatalogTest` (14) + `TowerProgressTest` (9) đều xanh;
+  `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+- Đánh dấu Giai đoạn 1 hoàn thành trong `docs/plan/completion-plan.md`
+- Chưa làm (đúng kế hoạch): chạm vào tầng chưa dẫn đến thoại/ván đấu — thuộc Giai đoạn 4
+
 ## 2026-10-03 15:39 GMT+7 — Giải đoạn 0: audit asset + vá build lỗi
 - Phát hiện bộ asset PNG đầy đủ cho gần hết 17 màn hình đã có sẵn trong
   `res/drawable/` (chưa commit) — ghi audit vào `docs/design/ui-screens.md`

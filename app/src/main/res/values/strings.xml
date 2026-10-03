@@ -180,4 +180,18 @@
     <string name="history_export_pgn">Xuất PGN</string>
     <string name="history_export_chooser">Chia sẻ ván dưới dạng PGN</string>
     <string name="history_export_failed">Không xuất được PGN cho ván này</string>
+
+    <!-- Chiến dịch Tháp Cờ: bản đồ 49 tầng -->
+    <string name="tower_open">Khám Phá Tháp Cờ</string>
+    <string name="tower_map_title">THÁP CỜ — TẦNG %1$d/%2$d</string>
+    <string name="tower_back">Quay lại</string>
+    <string name="tower_floor_label">Tầng %1$d</string>
+    <string name="tower_floor_locked_title">\?\?\?</string>
+    <string name="tower_status_locked">Chưa mở</string>
+    <string name="tower_kind_battle">Đấu cờ</string>
+    <string name="tower_kind_story">Cốt truyện</string>
+    <string name="tower_kind_treasure">Kho báu</string>
+    <string name="tower_kind_puzzle">Giải thế cờ</string>
+    <string name="tower_kind_boss">Trùm</string>
+    <string name="tower_kind_secret">Bí mật</string>
 </resources>

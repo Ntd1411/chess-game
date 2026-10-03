@@ -43,15 +43,20 @@ quyết ở `:ai:test`, không chặn tiến độ vì không phải lỗi logic
 bản đồ hiển thị đúng trạng thái khóa/mở.
 
 **Công việc:**
-- [ ] Định nghĩa data class `Floor` (số tầng, loại node: Battle/Story/Treasure/
+- [x] Định nghĩa data class `Floor` (số tầng, loại node: Battle/Story/Treasure/
       Puzzle/Boss/Secret, startFen hoặc puzzle tham chiếu, điều kiện thắng, cờ
       có/không thoại) — đặt cạnh `PuzzleCatalog` hoặc module mới `campaign/`
-- [ ] Viết file dữ liệu cho 49 tầng (có thể sinh tự động phần lớn bằng script/loop,
+      — **xong:** `app/.../campaign/Floor.kt` (`Floor`, `NodeKind`, `FloorGoal`)
+- [x] Viết file dữ liệu cho 49 tầng (có thể sinh tự động phần lớn bằng script/loop,
       chỉ 6 tầng mốc cần nội dung đặc biệt theo `story-bible.md`)
-- [ ] Viết hàm load + validate toàn bộ 49 tầng qua engine thật (giống cách
+      — **xong:** `TowerCatalog.build()` sinh theo quy luật 7 chương × 7 tầng
+- [x] Viết hàm load + validate toàn bộ 49 tầng qua engine thật (giống cách
       `PuzzleCatalog.validate()` đang làm)
-- [ ] Màn hình **Tower Map** (Compose): hiển thị node theo tiến độ, tầng chưa mở =
+      — **xong:** `TowerCatalog.validate()` / `validateAll()`
+- [x] Màn hình **Tower Map** (Compose): hiển thị node theo tiến độ, tầng chưa mở =
       khóa, tầng hiện tại = phát sáng
+      — **xong:** `TowerMapScreen.kt` + `TowerProgress` / `TowerProgressStore`;
+      mở từ nút "Khám Phá Tháp Cờ" ở menu. Chạm vào tầng chưa dẫn đi đâu (Giai đoạn 4)
 
 **Tự xác minh:**
 - Unit test: load đủ 49 tầng, không tầng nào thiếu dữ liệu bắt buộc
@@ -62,6 +67,10 @@ bản đồ hiển thị đúng trạng thái khóa/mở.
 
 **Hoàn thành khi:** 49/49 tầng load + validate pass bằng test tự động, Tower Map
 build không lỗi.
+
+**→ GIAI ĐOẠN 1: HOÀN THÀNH** (2026-10-03) — `TowerCatalogTest` (14 test) +
+`TowerProgressTest` (9 test) xanh, `:app:testDebugUnitTest` và `:app:assembleDebug`
+BUILD SUCCESSFUL.
 
 ---
 

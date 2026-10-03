@@ -20,11 +20,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
+import kma.game.chess2d.campaign.TowerCatalog
+import kma.game.chess2d.campaign.TowerProgress
+import kma.game.chess2d.campaign.TowerProgressStore
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.SavedGame
 import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
+import kma.game.chess2d.puzzle.PuzzleCatalog
 import kotlinx.coroutines.launch
 
 /**
@@ -34,7 +38,7 @@ import kotlinx.coroutines.launch
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -108,8 +112,15 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 },
                 onPlayLan = { screen = Screen.LOBBY },
                 onOpenHistory = { screen = Screen.HISTORY },
+                onOpenTower = { screen = Screen.TOWER },
                 modifier = modifier,
             )
+        }
+
+        Screen.TOWER -> {
+            // Bản đồ mở từ menu nên back ở đây là về menu.
+            BackHandler { screen = Screen.MENU }
+            TowerRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
         }
 
         Screen.HISTORY -> {
@@ -133,6 +144,31 @@ fun AppRoot(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * Nhánh chiến dịch: nạp 49 tầng và tiến độ rồi hiện bản đồ Tháp Cờ.
+ *
+ * Chạm vào tầng chưa dẫn tới đâu: thoại, ván đấu và màn thắng/thua được nối ở Giai đoạn 4
+ * của `docs/plan/completion-plan.md`. Giai đoạn 1 chỉ cần bản đồ hiển thị đúng trạng thái.
+ */
+@Composable
+private fun TowerRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    // Dùng applicationContext: store sống lâu hơn một lần vẽ, không được giữ Activity.
+    val floors = remember(context) {
+        TowerCatalog.build(PuzzleCatalog.load(context.applicationContext).size)
+    }
+    val store = remember(context) { TowerProgressStore(context.applicationContext) }
+    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+
+    TowerMapScreen(
+        floors = floors,
+        progress = progress,
+        onFloorClick = {},
+        onBack = onBack,
+        modifier = modifier,
+    )
 }
 
 /**

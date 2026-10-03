@@ -55,6 +55,7 @@ fun MenuScreen(
     onPlayComputer: () -> Unit,
     onPlayLan: () -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenTower: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -83,6 +84,10 @@ fun MenuScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        Button(onClick = onOpenTower, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.tower_open))
+        }
 
         Button(onClick = onPlayTwoPlayers, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.mode_two_players))
