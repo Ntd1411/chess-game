@@ -220,8 +220,9 @@ chạy thử trên emulator.
 **Mục tiêu:** Bản demo hoàn chỉnh, sẵn sàng nộp/chơi thật.
 
 **Công việc:**
-- [ ] Gắn nội dung thoại thật vào 6 tầng mốc (1, 5, 21, 42, 45, 49) theo
-      `story-bible.md`
+- [x] Gắn nội dung thoại thật vào 6 tầng mốc (1, 5, 21, 42, 45, 49) theo
+      `story-bible.md` — **xong** (`FloorDialogues`, làm từ Giai đoạn 4; đối chiếu lại với story-bible
+      ở Giai đoạn 6: đúng 6 tầng, đúng mạch Player #48 / Aria / Attempt #49)
 - [ ] Rà soát toàn bộ UI theo đúng art style gothic, chỉnh màu/font nếu lệch
 - [ ] Âm thanh: nhạc nền, SFX khi đi quân/ăn quân/chiếu hết
 - [ ] Build release/signed APK, cài lên thiết bị thật hoặc emulator ổn định

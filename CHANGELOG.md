@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 19:05 GMT+7 — Giai đoạn 6: đối chiếu thoại 6 tầng mốc, thử build release
+- Đối chiếu `FloorDialogues` với story-bible: đủ 6 tầng mốc (1, 5, 21, 42, 45, 49) + epilogue tầng 49, đúng mạch Player #48 / Aria / Attempt #49. Đánh dấu xong trong completion-plan
+- Thử `./gradlew :app:assembleRelease` qua MCP local hai lần nhưng connector báo server không phản hồi (nhiều khả năng build quá lâu so với giới hạn); chưa xác minh được. Cấu hình ký đã có sẵn trong app/build.gradle.kts (keystore.properties hoặc biến môi trường)
+
 ## 2026-10-03 18:41 GMT+7 — Giai đoạn 5 (phần 8): Pause Menu cho ván chiến dịch
 - PauseMenu.itemsForCampaign() + test; CampaignBattleScreen thêm nút Menu và PauseMenuOverlay (Tiếp tục / Khởi động lại = chơi lại tầng / Cài đặt / Rời trận = về bản đồ). Back trong ván mở Pause thay vì thoát ngay
 - LAN không thêm Pause: không thể tạm dừng đối thủ thật, `LanGameScreen` đã có Đầu hàng/Rời phòng
