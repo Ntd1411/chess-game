@@ -330,7 +330,7 @@ private fun opponentName(state: GameUiState): String = when (state.mode) {
 private fun timeoutLabel(state: GameUiState): String? {
     val timeout = state.timeout ?: return null
     if (timeout.drawn) return stringResource(R.string.status_timeout_draw)
-    // Bên hết giờ thua nên bên thắng là bên còn lại; tên lấy từ setup nếu có.
+    // Bên hết giờ thua nên bên thắng là bên còn lại.
     val winnerSide = stringResource(
         if (timeout.whiteFlagged) R.string.side_black else R.string.side_white,
     )

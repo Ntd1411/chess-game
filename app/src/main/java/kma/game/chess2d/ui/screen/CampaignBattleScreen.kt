@@ -1,16 +1,21 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -23,6 +28,8 @@ import kma.game.chess2d.campaign.Floor
 import kma.game.chess2d.campaign.FloorGoal
 import kma.game.chess2d.campaign.FloorResult
 import kma.game.chess2d.campaign.LossReason
+import kma.game.chess2d.game.PauseItem
+import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.puzzle.Puzzle
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
@@ -87,6 +94,13 @@ fun CampaignBattleRoute(
 
     MatchSounds(state.game.soundCue)
 
+    // Pause Menu mở/đóng là việc của màn hình; xoay máy không được làm nó tự đóng.
+    var showPause by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
+    // Back trong ván mở Pause thay vì thoát ngay (tránh lỡ tay rời trận). Đăng ký sau handler của
+    // TowerRoute nên được ưu tiên; khi Pause đang mở, Dialog tự xử lý Back thành "Tiếp tục".
+    BackHandler(enabled = !showPause) { showPause = true }
+
     val goal = floor.goal
     val headline = when (goal) {
         is FloorGoal.DefeatAi -> stringResource(R.string.campaign_goal_defeat)
@@ -129,6 +143,11 @@ fun CampaignBattleRoute(
                 label = stringResource(R.string.campaign_action_map),
                 onClick = onExit,
             ),
+            MatchAction(
+                icon = Icons.Filled.Menu,
+                label = stringResource(R.string.action_menu),
+                onClick = { showPause = true },
+            ),
         ),
         headline = headline,
         modifier = modifier,
@@ -162,6 +181,25 @@ fun CampaignBattleRoute(
             pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),
         )
+    }
+
+    if (showPause) {
+        PauseMenuOverlay(
+            items = PauseMenu.itemsForCampaign(),
+            onItem = { item ->
+                showPause = false
+                when (item) {
+                    PauseItem.RESUME -> Unit
+                    PauseItem.RESTART -> onRestart()
+                    PauseItem.SETTINGS -> showSettings = true
+                    PauseItem.LEAVE -> onExit()
+                }
+            },
+        )
+    }
+
+    if (showSettings) {
+        SettingsPanel(onDismiss = { showSettings = false })
     }
 
     state.game.pendingPromotion?.let { pending ->

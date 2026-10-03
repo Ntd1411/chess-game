@@ -39,4 +39,12 @@ class PauseMenuTest {
             assertEquals(mode.name, items.size, items.toSet().size)
         }
     }
+
+    @Test
+    fun `van chien dich co du bon muc theo dung thu tu spec`() {
+        assertEquals(
+            listOf(PauseItem.RESUME, PauseItem.RESTART, PauseItem.SETTINGS, PauseItem.LEAVE),
+            PauseMenu.itemsForCampaign(),
+        )
+    }
 }

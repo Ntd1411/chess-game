@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 18:41 GMT+7 — Giai đoạn 5 (phần 8): Pause Menu cho ván chiến dịch
+- PauseMenu.itemsForCampaign() + test; CampaignBattleScreen thêm nút Menu và PauseMenuOverlay (Tiếp tục / Khởi động lại = chơi lại tầng / Cài đặt / Rời trận = về bản đồ). Back trong ván mở Pause thay vì thoát ngay
+- LAN không thêm Pause: không thể tạm dừng đối thủ thật, `LanGameScreen` đã có Đầu hàng/Rời phòng
+- Sửa comment lỗi thời trong GameScreen.timeoutLabel. `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+
 ## 2026-10-03 18:20 GMT+7 — Giai đoạn 5 (phần 7): màn setup hai người cùng máy + đồng hồ cờ
 - Thêm ui/screen/LocalSetupScreen.kt: nhập tên Người chơi 1 (Trắng) / Người chơi 2 (Đen), chọn thời gian Không giới hạn/5/10/30 phút, nút BẮT ĐẦU. Ô tên trống dùng tên mặc định. Chưa làm mục bật/tắt gợi ý và hiệu ứng của spec vì đã có cài đặt hiển thị nước đi hợp lệ toàn cục và chưa có hệ thống hiệu ứng
 - AppRoot: thêm Screen.LOCAL_SETUP, menu "2 người cùng máy" đi qua setup rồi mới vào ván; GameScreen nhận `localStart` (token chống mở trùng khi xoay máy) và gọi `GameViewModel.startLocalGame`

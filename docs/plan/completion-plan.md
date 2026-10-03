@@ -200,10 +200,10 @@ chạy thử trên emulator.
       thanh, bộ màu/bộ quân, hiển thị nước đi hợp lệ, xóa dữ liệu, giới thiệu. **Không làm** (chưa có
       tính năng tương ứng): ngôn ngữ, thông báo, nhạc nền (Giai đoạn 6), chất lượng hiệu ứng,
       FPS, xác nhận nước đi
-- [~] **Pause Menu** overlay trong `GameScreen`
-      — **xong cho `GameScreen`** (đấu máy/2 người): `PauseMenu` + `PauseMenuOverlay`, nút Menu và Back
-      mở Pause. Mục Cài đặt mở `SettingsPanel`.
-      **Chưa làm:** màn đấu chiến dịch (`CampaignBattleScreen`) và LAN chưa có Pause
+- [x] **Pause Menu** overlay trong `GameScreen`
+      — **xong cho `GameScreen`** (đấu máy/2 người) **và `CampaignBattleScreen`**: `PauseMenu` + `PauseMenuOverlay`,
+      nút Menu và Back mở Pause. Mục Cài đặt mở `SettingsPanel`.
+      **LAN cố tình không có Pause** (không thể tạm dừng đối thủ thật; đã có Đầu hàng/Rời phòng)
 
 **Tự xác minh:**
 - Room migration test: schema mới không làm vỡ dữ liệu cũ (nếu đã có HistoryScreen

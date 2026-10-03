@@ -14,4 +14,11 @@ object PauseMenu {
     @Suppress("UNUSED_PARAMETER")
     fun itemsFor(mode: GameMode): List<PauseItem> =
         listOf(PauseItem.RESUME, PauseItem.RESTART, PauseItem.SETTINGS, PauseItem.LEAVE)
+
+    /**
+     * Mục cho ván chiến dịch (Tháp Cờ). Không phụ thuộc [GameMode] nên tách riêng: Khởi động lại là chơi lại
+     * tầng từ đầu, Rời trận là về bản đồ (không thắng không thua).
+     */
+    fun itemsForCampaign(): List<PauseItem> =
+        listOf(PauseItem.RESUME, PauseItem.RESTART, PauseItem.SETTINGS, PauseItem.LEAVE)
 }
