@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 23:14 GMT+7 — Nền gothic cho sảnh LAN, Lịch sử, Máy vs Máy; chữ mặc định đọc được trên nền tối
+- ui/art/GothicBackdrop.kt: Modifier `gothicBackdrop(res, dim)` vẽ ảnh nền cắt giữa (hàm thuần `centerCrop`) phủ tối, rồi mới chừa inset thanh trạng thái/điều hướng cho nội dung. Gắn vào LanLobbyScreen (screen_lan_lobby), HistoryScreen cả danh sách lẫn xem lại (screen_game_history), SpectateScreen cả bước chọn lẫn màn xem (screen_ai_vs_ai); các màn này trước đó chưa chừa inset. Không nạp trước ở splash để cache 64MB không bị đầy
+- Theme: ChessTheme đặt `LocalContentColor` = Parchment vì app không còn Surface/Scaffold gốc (mặc định là đen, chữ đặt thẳng trên nền tối không đọc được)
+- Thêm CenterCropTest (5 test). `:app:testDebugUnitTest` và `:app:assembleDebug` thành công
+
 ## 2026-10-03 22:46 GMT+7 — Bàn cờ gothic: ô marble, overlay phát sáng, quân ảnh làm mặc định
 - BoardPalette thêm GOTHIC (textured) làm mặc định: ChessBoard vẽ tile_marble_light/dark, overlay tile_selected/move/attack/check, viền vàng mảnh; chưa nạp xong thì dùng màu phẳng dự phòng. Các bộ màu cũ giữ nguyên cách vẽ
 - PieceTheme.IMAGE làm mặc định, quân Đen dùng piece_black_*_bright, quân nạp qua ArtCache (không còn painterResource 1254px) kèm quầng tối mờ phía sau

@@ -1,9 +1,11 @@
 package kma.game.chess2d.ui.theme
 
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -60,12 +62,19 @@ private val GothicTypography: Typography = Typography().let { base ->
     )
 }
 
-/** Theme của toàn app: luôn tối và luôn gothic. */
+/**
+ * Theme của toàn app: luôn tối và luôn gothic.
+ *
+ * App không còn Scaffold hay Surface gốc, nên `LocalContentColor` mặc định là đen: chữ đặt thẳng
+ * trên nền tối (không nằm trong Card/Button) sẽ không đọc được. Đặt sẵn màu giấy cổ ở đây để
+ * mọi chữ không tự chỉ định màu đều đọc được trên nền gothic.
+ */
 @Composable
 fun ChessTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = GothicColorScheme,
         typography = GothicTypography,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalContentColor provides GothicColors.Parchment, content = content)
+    }
 }

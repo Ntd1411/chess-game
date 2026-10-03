@@ -36,6 +36,7 @@ import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.spectate.SpectateViewModel
+import kma.game.chess2d.ui.art.gothicBackdrop
 import kma.game.chess2d.ui.board.ChessBoard
 
 /**
@@ -80,7 +81,7 @@ private fun SpectateSetupScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .gothicBackdrop(R.drawable.screen_ai_vs_ai)
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -206,7 +207,7 @@ private fun SpectateMatchScreen(
         } else {
             statusLabel(game)
         },
-        modifier = modifier,
+        modifier = modifier.gothicBackdrop(R.drawable.screen_ai_vs_ai),
         belowBoard = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SpectateControlRow(

@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,6 +42,7 @@ import kma.game.chess2d.history.MatchResult
 import kma.game.chess2d.history.MatchStats
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.ui.art.gothicBackdrop
 import kma.game.chess2d.ui.board.ChessBoard
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -81,7 +81,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .gothicBackdrop(R.drawable.screen_game_history)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -190,7 +190,7 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .gothicBackdrop(R.drawable.screen_game_history)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

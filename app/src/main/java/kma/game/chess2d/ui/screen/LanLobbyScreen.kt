@@ -3,7 +3,6 @@ package kma.game.chess2d.ui.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +38,7 @@ import kma.game.chess2d.R
 import kma.game.chess2d.lan.LanLobbyUiState
 import kma.game.chess2d.net.RoomInfo
 import kma.game.chess2d.net.TimeControl
+import kma.game.chess2d.ui.art.gothicBackdrop
 
 /**
  * Sảnh chờ LAN: mở phòng, hoặc chọn một phòng đã thấy trong mạng.
@@ -71,7 +71,7 @@ fun LanLobbyScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .gothicBackdrop(R.drawable.screen_lan_lobby)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
