@@ -327,4 +327,17 @@
     <string name="journal_history_title">Lịch sử gặp mặt</string>
     <string name="journal_first_met">Lần đầu gặp: %1$s</string>
     <string name="journal_times_met">Số lần đối đầu: %1$d</string>
+    <!-- Setup hai người cùng máy -->
+    <string name="local_setup_title">HAI NGƯỜI CÙNG MÁY</string>
+    <string name="local_setup_back">Quay lại</string>
+    <string name="local_setup_player_one">Người chơi 1 — quân Trắng</string>
+    <string name="local_setup_player_two">Người chơi 2 — quân Đen</string>
+    <string name="local_setup_name_hint">Tên (để trống dùng tên mặc định)</string>
+    <string name="local_setup_time">Thời gian mỗi bên</string>
+    <string name="local_setup_time_note">Đồng hồ chỉ chạy sau nước đi đầu tiên. Ván có giờ không cho Đi lại.</string>
+    <string name="local_setup_start">BẮT ĐẦU</string>
+    <string name="local_time_unlimited">Không giới hạn</string>
+    <string name="local_time_minutes">%1$d phút</string>
+    <string name="status_timeout_win">%1$s thắng — đối thủ hết giờ</string>
+    <string name="status_timeout_draw">Hòa — hết giờ nhưng đối thủ không đủ quân chiếu hết</string>
 </resources>

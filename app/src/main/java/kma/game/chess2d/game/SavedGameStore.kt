@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import java.io.IOException
@@ -25,12 +26,22 @@ import kotlinx.coroutines.flow.map
  * @param startFen thế cờ mở ván. Hiện luôn là thế chuẩn, nhưng giữ sẵn để sau này mở
  *        ván từ câu đố hoặc từ FEN nhập vào mà không phải đổi định dạng lưu.
  * @param uciMoves các nước đã đi, theo ký hiệu UCI ("e2e4", "e7e8q").
+ * @param whiteName tên người cầm Trắng trong ván hai người; rỗng là ván đấu máy hoặc bản lưu cũ.
+ * @param blackName tên người cầm Đen trong ván hai người.
+ * @param timeControl thời gian mỗi bên của ván hai người; bản lưu cũ không có thì là không giới hạn.
+ * @param whiteMillis giờ còn lại của Trắng lúc lưu, chỉ có ý nghĩa khi [timeControl] có giờ.
+ * @param blackMillis giờ còn lại của Đen lúc lưu.
  */
 data class SavedGame(
     val startFen: String,
     val uciMoves: List<String>,
     val mode: GameMode,
     val difficulty: Difficulty,
+    val whiteName: String = "",
+    val blackName: String = "",
+    val timeControl: LocalTimeControl = LocalTimeControl.UNLIMITED,
+    val whiteMillis: Long = 0L,
+    val blackMillis: Long = 0L,
 )
 
 /**
@@ -62,6 +73,11 @@ class SavedGameStore(private val context: Context) {
             prefs[KEY_MOVES] = game.uciMoves.joinToString(MOVE_SEPARATOR)
             prefs[KEY_MODE] = game.mode.name
             prefs[KEY_DIFFICULTY] = game.difficulty.name
+            prefs[KEY_WHITE_NAME] = game.whiteName
+            prefs[KEY_BLACK_NAME] = game.blackName
+            prefs[KEY_TIME_CONTROL] = game.timeControl.name
+            prefs[KEY_WHITE_MILLIS] = game.whiteMillis
+            prefs[KEY_BLACK_MILLIS] = game.blackMillis
         }
     }
 
@@ -91,6 +107,14 @@ class SavedGameStore(private val context: Context) {
             difficulty = this[KEY_DIFFICULTY]?.let { name ->
                 runCatching { Difficulty.valueOf(name) }.getOrNull()
             } ?: Difficulty.MEDIUM,
+            whiteName = this[KEY_WHITE_NAME].orEmpty(),
+            blackName = this[KEY_BLACK_NAME].orEmpty(),
+            // Bản lưu cũ (trước khi có đồng hồ) không có các khóa này: lùi về không giới hạn.
+            timeControl = this[KEY_TIME_CONTROL]?.let { name ->
+                runCatching { LocalTimeControl.valueOf(name) }.getOrNull()
+            } ?: LocalTimeControl.UNLIMITED,
+            whiteMillis = this[KEY_WHITE_MILLIS] ?: 0L,
+            blackMillis = this[KEY_BLACK_MILLIS] ?: 0L,
         )
     }
 
@@ -99,6 +123,11 @@ class SavedGameStore(private val context: Context) {
         val KEY_MOVES = stringPreferencesKey("uci_moves")
         val KEY_MODE = stringPreferencesKey("mode")
         val KEY_DIFFICULTY = stringPreferencesKey("difficulty")
+        val KEY_WHITE_NAME = stringPreferencesKey("white_name")
+        val KEY_BLACK_NAME = stringPreferencesKey("black_name")
+        val KEY_TIME_CONTROL = stringPreferencesKey("time_control")
+        val KEY_WHITE_MILLIS = longPreferencesKey("white_millis")
+        val KEY_BLACK_MILLIS = longPreferencesKey("black_millis")
 
         /** Nước đi UCI không bao giờ chứa dấu cách, nên nối bằng dấu cách là đủ an toàn. */
         const val MOVE_SEPARATOR = " "

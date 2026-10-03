@@ -190,7 +190,10 @@ chạy thử trên emulator.
       ở màn chọn đối thủ. **Xong màn hình Nhật ký** (`JournalScreen`, mở từ nút Nhật ký ở Sảnh):
       danh sách 5 nhân vật AI + trang chi tiết. **Không dựng** "bí mật đã phát hiện" vì chưa có
       hệ thống bí mật
-- [ ] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
+- [x] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
+      — **xong:** `LocalSetupScreen` (tên 2 bên, thời gian Không giới hạn/5/10/30 phút) + đồng hồ cờ
+      `LocalClock` (tạm dừng khi Pause/nền, khôi phục, hết giờ → `TimeoutRule`). Người chơi 1 luôn
+      cầm Trắng. **Không làm** bật/tắt gợi ý và hiệu ứng (đã có cài đặt toàn cục, chưa có hiệu ứng)
 - [x] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
       Khác)
       — **xong:** `SettingsPanel` 5 tab + `DataReset`. **Chỉ có cài đặt có tác dụng thật:** rung, âm

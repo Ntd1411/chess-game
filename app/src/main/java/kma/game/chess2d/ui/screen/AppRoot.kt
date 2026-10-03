@@ -31,6 +31,9 @@ import kma.game.chess2d.campaign.TowerProgress
 import kma.game.chess2d.campaign.TowerProgressStore
 import kma.game.chess2d.campaign.TowerStage
 import kma.game.chess2d.game.GameMode
+import kma.game.chess2d.game.LocalSetup
+import kma.game.chess2d.game.LocalStart
+import kma.game.chess2d.game.LocalTimeControl
 import kma.game.chess2d.game.SavedGame
 import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
@@ -55,7 +58,9 @@ import kotlinx.coroutines.withContext
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE, JOURNAL }
+private enum class Screen {
+    SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE, JOURNAL, LOCAL_SETUP,
+}
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -82,6 +87,12 @@ fun AppRoot(modifier: Modifier = Modifier) {
     var playerName by rememberSaveable { mutableStateOf(Build.MODEL ?: "Android") }
     // Ván sắp mở là ván cũ lưu trên đĩa, hay một ván mới từ menu.
     var resumeSaved by rememberSaveable { mutableStateOf(false) }
+    // Lựa chọn ở màn setup hai người. Token tăng mỗi lần bấm BẮT ĐẦU để GameViewModel phân biệt "mở ván
+    // mới" với "dựng lại màn hình khi xoay máy"; 0 là chưa có lần nào.
+    var localWhiteName by rememberSaveable { mutableStateOf("") }
+    var localBlackName by rememberSaveable { mutableStateOf("") }
+    var localTime by rememberSaveable { mutableStateOf(LocalTimeControl.UNLIMITED) }
+    var localToken by rememberSaveable { mutableIntStateOf(0) }
 
     when (screen) {
         Screen.SPLASH -> SplashScreen(
@@ -118,16 +129,30 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onOpenTower = { screen = Screen.TOWER },
                 // Người vs Máy đi qua màn chọn đối thủ: cấp độ do nhân vật được chọn quyết định.
                 onPlayComputer = { screen = Screen.AI_SELECT },
-                onPlayTwoPlayers = {
-                    mode = GameMode.TWO_PLAYERS
-                    resumeSaved = false
-                    screen = Screen.MATCH
-                },
+                onPlayTwoPlayers = { screen = Screen.LOCAL_SETUP },
                 onPlayLan = { screen = Screen.LOBBY },
                 onOpenSpectate = { screen = Screen.SPECTATE },
                 onOpenHistory = { screen = Screen.HISTORY },
                 onOpenProfile = { screen = Screen.PROFILE },
                 onOpenJournal = { screen = Screen.JOURNAL },
+                modifier = modifier,
+            )
+        }
+
+        Screen.LOCAL_SETUP -> {
+            BackHandler { screen = Screen.MENU }
+            LocalSetupScreen(
+                initialWhiteName = playerName,
+                onStart = { setup ->
+                    localWhiteName = setup.whiteName
+                    localBlackName = setup.blackName
+                    localTime = setup.time
+                    localToken++
+                    mode = GameMode.TWO_PLAYERS
+                    resumeSaved = false
+                    screen = Screen.MATCH
+                },
+                onBack = { screen = Screen.MENU },
                 modifier = modifier,
             )
         }
@@ -197,6 +222,12 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onExitToMenu = { screen = Screen.MENU },
                 modifier = modifier,
                 resume = resumeSaved,
+                // Chỉ ván hai người mở từ màn setup mới mang theo setup; đấu máy và tiếp tục ván cũ thì không.
+                localStart = if (mode == GameMode.TWO_PLAYERS && !resumeSaved && localToken > 0) {
+                    LocalStart(LocalSetup(localWhiteName, localBlackName, localTime), localToken)
+                } else {
+                    null
+                },
             )
         }
     }

@@ -1,6 +1,7 @@
 package kma.game.chess2d.game
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -18,6 +19,7 @@ import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.history.MatchHistoryDatabase
 import kma.game.chess2d.history.MatchRecord
 import kma.game.chess2d.history.MatchResult
+import kma.game.chess2d.net.ClockTimes
 import kma.game.chess2d.profile.MatchRecording
 import kma.game.chess2d.profile.ProfileDatabase
 import kma.game.chess2d.profile.ProfileRepository
@@ -26,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -122,6 +126,29 @@ class GameViewModel(
     private var mode = GameMode.TWO_PLAYERS
     private var difficulty = Difficulty.MEDIUM
 
+    /** Tên hai người và thể thức thời gian của ván hai người hiện tại. Đấu máy không dùng. */
+    private var setup = LocalSetup(whiteName = "", blackName = "")
+
+    /** Đồng hồ của ván hai người có giờ; `null` khi không giới hạn hoặc đang đấu máy. */
+    private var clock: LocalClock? = null
+
+    /** Khác `null` khi ván đã kết thúc vì hết giờ. */
+    private var timeout: TimeoutResult? = null
+
+    /** Màn hình đang yêu cầu dừng đồng hồ (mở Pause/Cài đặt, hoặc app xuống nền). */
+    private var clockPaused = false
+
+    /** Vòng cập nhật đồng hồ và phát hiện hết giờ. Chỉ chạy khi [clock] khác `null`. */
+    private var tickJob: Job? = null
+
+    private val _clockTimes = MutableStateFlow<ClockTimes?>(null)
+
+    /**
+     * Giờ còn lại đã làm tròn lên tới giây, `null` khi ván không bấm giờ. Tách khỏi [uiState] để
+     * mỗi giây đổi không phải dựng lại danh sách quân và thống kê quân bị bắt.
+     */
+    val clockTimes: StateFlow<ClockTimes?> = _clockTimes.asStateFlow()
+
     /** Lượt nghĩ đang chạy. Giữ lại để hủy được khi người chơi đổi ý. */
     private var aiJob: Job? = null
     private var aiThinking = false
@@ -145,11 +172,25 @@ class GameViewModel(
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     init {
-        resetBoard()
+        // Giờ và kết quả hết giờ phải đọc TRƯỚC khi dựng lại ván: lúc đi lại các nước cũ, saveMoves() ghi
+        // đè giờ bằng đồng hồ mới tinh vào savedState, mất sạch số liệu cần khôi phục.
+        val savedWhiteMillis = savedState.get<Long>(KEY_CLOCK_WHITE)
+        val savedBlackMillis = savedState.get<Long>(KEY_CLOCK_BLACK)
+        val savedTimeoutWhite = savedState.get<Boolean>(KEY_TIMEOUT_WHITE)
+        val savedTimeoutDrawn = savedState.get<Boolean>(KEY_TIMEOUT_DRAWN) ?: false
         mode = savedState.get<String>(KEY_MODE)?.let { runCatching { GameMode.valueOf(it) }.getOrNull() }
             ?: GameMode.TWO_PLAYERS
         difficulty = savedState.get<String>(KEY_DIFFICULTY)?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
             ?: Difficulty.MEDIUM
+        setup = LocalSetup(
+            whiteName = savedState.get<String>(KEY_WHITE_NAME).orEmpty(),
+            blackName = savedState.get<String>(KEY_BLACK_NAME).orEmpty(),
+            time = savedState.get<String>(KEY_TIME_CONTROL)
+                ?.let { runCatching { LocalTimeControl.valueOf(it) }.getOrNull() }
+                ?: LocalTimeControl.UNLIMITED,
+        )
+        // Sau khi mode và setup đã đúng: resetBoard() dựng đồng hồ theo chúng.
+        resetBoard()
         // Đi lại toàn bộ ván cũ nếu có. Các nước này đã từng hợp lệ nên không cần lọc lại.
         savedState.get<IntArray>(KEY_PLAYED_MOVES)?.let { raw ->
             replaying = true
@@ -158,6 +199,22 @@ class GameViewModel(
             } finally {
                 replaying = false
             }
+        }
+        if (savedTimeoutWhite != null && clock != null) {
+            // Ván đã kết thúc vì hết giờ trước khi tiến trình bị thu hồi: dựng lại kết quả, không ghi lịch sử lại.
+            // resetBoard() đã xoá hai khóa này khỏi savedState nên phải ghi lại, không thì lần thu hồi sau mất kết quả.
+            timeout = TimeoutResult(whiteFlagged = savedTimeoutWhite, drawn = savedTimeoutDrawn)
+            savedState[KEY_TIMEOUT_WHITE] = savedTimeoutWhite
+            savedState[KEY_TIMEOUT_DRAWN] = savedTimeoutDrawn
+            recordedInHistory = true
+            recordedInProfile = true
+            if (savedWhiteMillis != null && savedBlackMillis != null) {
+                restoreClock(savedWhiteMillis, savedBlackMillis)
+            } else {
+                stopClock()
+            }
+        } else if (savedWhiteMillis != null && savedBlackMillis != null) {
+            restoreClock(savedWhiteMillis, savedBlackMillis)
         }
         publish()
         // Vòng ghi đĩa chạy suốt đời ViewModel. Đặt trên [Dispatchers.IO] vì đây là I/O thật.
@@ -183,7 +240,7 @@ class GameViewModel(
         // Đang xem lại thì bàn cờ chỉ để ngắm: đi tại đây sẽ là đi từ thế cũ, không khớp
         // với thế hiện tại mà người chơi đang thấy.
         if (reviewPly != null) return
-        if (pendingPromotion != null || Rules.isGameOver(board)) return
+        if (pendingPromotion != null || gameFinished()) return
         // Không cho đi hộ máy, và không nhận chạm trong lúc máy đang nghĩ.
         if (isComputerTurn()) return
 
@@ -250,6 +307,47 @@ class GameViewModel(
         maybeStartAiTurn()
     }
 
+    /**
+     * Mở một ván hai người **mới** theo [newSetup]. Gọi khi người chơi bấm BẮT ĐẦU ở màn setup.
+     *
+     * Luôn dựng ván mới dù chế độ đang là hai người sẵn: [setMode] bỏ qua khi chế độ không đổi, nên nếu chỉ
+     * dựa vào nó thì ván dở trước đó sẽ bị dùng lại với tên và thời gian cũ.
+     *
+     * [token] chống mở trùng: màn hình dựng lại khi xoay máy sẽ gọi lại hàm này với cùng token, và token đã
+     * xử lý được nhớ trong [SavedStateHandle] nên lần gọi thứ hai bị bỏ qua.
+     */
+    fun startLocalGame(newSetup: LocalSetup, token: Int) {
+        if (savedState.get<Int>(KEY_START_TOKEN) == token) return
+        savedState[KEY_START_TOKEN] = token
+        cancelAiTurn()
+        reviewPly = null
+        mode = GameMode.TWO_PLAYERS
+        savedState[KEY_MODE] = mode.name
+        applySetup(newSetup)
+        ai.newGame()
+        resetBoard()
+        saveMoves()
+        publish()
+    }
+
+    /**
+     * Giao diện báo cần dừng hay chạy lại đồng hồ (mở/đóng Pause hay Cài đặt, app xuống nền/trở lại).
+     * Ván không bấm giờ thì không có gì thay đổi ngoài việc nhớ cờ này cho ván sau.
+     */
+    fun setClockPaused(paused: Boolean) {
+        if (clockPaused == paused) return
+        clockPaused = paused
+        val running = clock ?: return
+        val now = nowMillis()
+        if (paused) running.pause(now) else running.resume(now)
+        syncClock()
+        // Lưu giờ còn lại ngay: thoát app lúc đang dừng không được làm mất phần giờ đã trôi.
+        if (paused) {
+            persistClock()
+            requestSave()
+        }
+    }
+
     fun setDifficulty(newDifficulty: Difficulty) {
         if (difficulty == newDifficulty) return
         // Đổi cấp giữa lúc máy đang nghĩ thì bỏ lượt nghĩ đó và tính lại theo cấp mới.
@@ -282,15 +380,24 @@ class GameViewModel(
 
             cancelAiTurn()
             ai.newGame()
-            resetBoard()
+            // Chế độ, cấp độ và setup phải đặt TRƯỚC resetBoard(): nó dựng đồng hồ theo chúng.
             mode = game.mode
             savedState[KEY_MODE] = game.mode.name
             difficulty = game.difficulty
             savedState[KEY_DIFFICULTY] = game.difficulty.name
-            for (uci in game.uciMoves) {
-                val move = Engine.legalMoves(board).firstOrNull { it.toUci() == uci } ?: break
-                applyMove(move)
+            applySetup(LocalSetup(game.whiteName, game.blackName, game.timeControl))
+            resetBoard()
+            // Đi lại nước cũ không được chạy đồng hồ: giờ còn lại lấy từ bản lưu bên dưới.
+            replaying = true
+            try {
+                for (uci in game.uciMoves) {
+                    val move = Engine.legalMoves(board).firstOrNull { it.toUci() == uci } ?: break
+                    applyMove(move)
+                }
+            } finally {
+                replaying = false
             }
+            if (clock != null) restoreClock(game.whiteMillis, game.blackMillis)
             publish()
             maybeStartAiTurn()
         }
@@ -313,6 +420,9 @@ class GameViewModel(
     }
 
     fun undo() {
+        // Ván có giờ không cho Đi lại: hoàn nguyên một nước thì phải trả lại giờ đã trừ, và người chơi
+        // sẽ lợi dụng để đi lại miễn phí giờ. Giao diện cũng đã khóa nút này (xem canUndo trong publish).
+        if (clock != null) return
         cancelAiTurn()
         reviewPly = null
         if (!board.canUndo()) return
@@ -462,6 +572,8 @@ class GameViewModel(
         if (playedMoves.isEmpty()) firstMoveAtMillis = System.currentTimeMillis()
         playedMoves.add(move)
         sanMoves.add(san)
+        // Đi lại nước cũ (xoay máy, dựng lại từ đĩa) không phải nước mới: không được trừ giờ.
+        if (!replaying) advanceClock()
         noteSound(move)
         saveMoves()
         recordIfFinished()
@@ -490,20 +602,47 @@ class GameViewModel(
             GameStatus.ONGOING, GameStatus.CHECK -> return
         }
 
+        // Dựng lại một ván đã xong (khôi phục sau khi tiến trình bị thu hồi) không phải ván mới kết thúc: nó
+        // đã nằm trong lịch sử và Hồ sơ từ trước, ghi lại sẽ thành bản trùng.
+        if (replaying) {
+            recordedInHistory = true
+            recordedInProfile = true
+            return
+        }
+        insertHistory(result)
+        recordInProfile(result, byCheckmate = status == GameStatus.CHECKMATE)
+    }
+
+    /**
+     * Ghi một dòng vào lịch sử cho ván vừa kết thúc, dù kết thúc bằng chiếu hết, hòa hay hết giờ.
+     *
+     * Ván hai người lưu tên hai bên vào cột `opponent` (dạng "Tên 1 vs Tên 2") để lịch sử biết ai đã đấu với ai.
+     * Chạy trên [NonCancellable] vì người chơi hay thoát màn ngay sau khi ván kết thúc; hủy viewModelScope
+     * giữa chừng không được làm mất ván đã chơi.
+     */
+    private fun insertHistory(result: String) {
         recordedInHistory = true
         val record = MatchRecord(
             playedAtMillis = System.currentTimeMillis(),
             mode = mode.name,
             difficulty = if (mode == GameMode.VS_COMPUTER) difficulty.name else null,
+            opponent = if (mode == GameMode.TWO_PLAYERS) playersLabel() else "",
             startFen = Engine.START_FEN,
             moves = playedMoves.joinToString(" ") { it.toUci() },
             result = result,
         )
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { matches.insert(record) }
+            withContext(Dispatchers.IO + NonCancellable) { matches.insert(record) }
         }
-        recordInProfile(result, byCheckmate = status == GameStatus.CHECKMATE)
     }
+
+    /** "Tên Trắng vs Tên Đen", hoặc rỗng khi chưa có tên nào. */
+    private fun playersLabel(): String =
+        if (setup.whiteName.isBlank() && setup.blackName.isBlank()) {
+            ""
+        } else {
+            "${setup.whiteName} vs ${setup.blackName}"
+        }
 
     /**
      * Cộng ván vừa xong vào Hồ sơ (một lần cho mỗi ván, và chỉ với chế độ đấu máy).
@@ -551,15 +690,22 @@ class GameViewModel(
      * tục", và câu hỏi ở sảnh cũng không nên hiện nữa.
      */
     private fun requestSave() {
-        val finished = Rules.isGameOver(board)
+        val finished = gameFinished()
         val snapshot = if (finished || playedMoves.isEmpty()) {
             null
         } else {
+            val twoPlayers = mode == GameMode.TWO_PLAYERS
+            val times = clock?.snapshot(nowMillis())
             SavedGame(
                 startFen = Engine.START_FEN,
                 uciMoves = playedMoves.map { it.toUci() },
                 mode = mode,
                 difficulty = difficulty,
+                whiteName = if (twoPlayers) setup.whiteName else "",
+                blackName = if (twoPlayers) setup.blackName else "",
+                timeControl = if (twoPlayers) setup.time else LocalTimeControl.UNLIMITED,
+                whiteMillis = times?.whiteMillis ?: 0L,
+                blackMillis = times?.blackMillis ?: 0L,
             )
         }
         saveRequests.tryEmit(snapshot)
@@ -582,11 +728,152 @@ class GameViewModel(
         firstMoveAtMillis = null
         // Ván mới thì không còn nước nào để phát tiếng, kể cả tiếng của ván trước.
         soundCue = null
+        // Ván mới xóa kết quả hết giờ cũ và dựng đồng hồ mới theo chế độ và setup hiện tại.
+        timeout = null
+        savedState.remove<Boolean>(KEY_TIMEOUT_WHITE)
+        savedState.remove<Boolean>(KEY_TIMEOUT_DRAWN)
+        rebuildClock()
+    }
+
+    /** Đặt tên và thể thức thời gian cho ván hai người và nhớ vào [SavedStateHandle]. Chưa dựng đồng hồ. */
+    private fun applySetup(newSetup: LocalSetup) {
+        setup = newSetup
+        savedState[KEY_WHITE_NAME] = newSetup.whiteName
+        savedState[KEY_BLACK_NAME] = newSetup.blackName
+        savedState[KEY_TIME_CONTROL] = newSetup.time.name
     }
 
     private fun saveMoves() {
         savedState[KEY_PLAYED_MOVES] = IntArray(playedMoves.size) { playedMoves[it].raw }
+        persistClock()
         requestSave()
+    }
+
+    // ---- Đồng hồ ván hai người ----
+
+    /** Thời gian đơn điệu, không nhảy khi đổi giờ hệ thống. */
+    private fun nowMillis(): Long = SystemClock.elapsedRealtime()
+
+    /** Ván đã xong: chiếu hết, hòa theo luật, hoặc hết giờ. */
+    private fun gameFinished(): Boolean = timeout != null || Rules.isGameOver(board)
+
+    /**
+     * Dựng đồng hồ mới cho ván vừa reset: chỉ ván hai người có giờ mới có đồng hồ.
+     * Nếu màn hình đang yêu cầu dừng (ví dụ bấm Khởi động lại trong Pause Menu) thì đồng hồ mới cũng đang dừng.
+     */
+    private fun rebuildClock() {
+        tickJob?.cancel()
+        tickJob = null
+        clock = if (mode == GameMode.TWO_PLAYERS && setup.time.limited) {
+            LocalClock(setup.time.initialMillis).also { if (clockPaused) it.pause(nowMillis()) }
+        } else {
+            null
+        }
+        syncClock()
+        if (clock != null) startTicker()
+    }
+
+    /**
+     * Thay đồng hồ bằng bản khôi phục từ giờ còn lại đã lưu (đĩa hoặc savedState). Đồng hồ khôi phục bắt đầu
+     * ở trạng thái dừng, chỉ chạy lại nếu màn hình không yêu cầu dừng, để thời gian app bị tắt không bị tính.
+     */
+    private fun restoreClock(whiteMillis: Long, blackMillis: Long) {
+        if (clock == null) return
+        val restored = LocalClock.restore(
+            initialMillis = setup.time.initialMillis,
+            whiteMillis = whiteMillis,
+            blackMillis = blackMillis,
+            whiteToMove = board.whiteToMove,
+            started = playedMoves.isNotEmpty(),
+        )
+        if (gameFinished()) {
+            restored.stop(nowMillis())
+            // Ván đã xong thì không cần vòng cập nhật nữa.
+            tickJob?.cancel()
+            tickJob = null
+        } else if (!clockPaused) {
+            restored.resume(nowMillis())
+        }
+        clock = restored
+        persistClock()
+        syncClock()
+    }
+
+    /** Ghi nhận nước vừa đi: trừ giờ, chuyển bên, và dừng hẳn nếu nước đó kết thúc ván. */
+    private fun advanceClock() {
+        val running = clock ?: return
+        val now = nowMillis()
+        running.onMovePlayed(now)
+        if (Rules.isGameOver(board)) stopClock() else syncClock()
+    }
+
+    /** Dừng hẳn đồng hồ và vòng cập nhật (ván đã xong). Giờ còn lại vẫn hiện đúng con số cuối. */
+    private fun stopClock() {
+        clock?.stop(nowMillis())
+        tickJob?.cancel()
+        tickJob = null
+        syncClock()
+    }
+
+    private fun startTicker() {
+        tickJob?.cancel()
+        tickJob = viewModelScope.launch {
+            while (isActive) {
+                delay(TICK_MILLIS)
+                onTick()
+            }
+        }
+    }
+
+    private fun onTick() {
+        val running = clock ?: return
+        syncClock()
+        if (clockPaused || gameFinished()) return
+        val whiteFlagged = running.flaggedSide(nowMillis()) ?: return
+        onFlag(whiteFlagged)
+    }
+
+    /** Đẩy giờ còn lại (làm tròn lên tới giây) ra [clockTimes]; StateFlow tự bỏ qua nếu con số không đổi. */
+    private fun syncClock() {
+        _clockTimes.value = clock?.snapshot(nowMillis())?.let {
+            ClockTimes(
+                whiteMillis = ClockFormat.roundUpToSecond(it.whiteMillis),
+                blackMillis = ClockFormat.roundUpToSecond(it.blackMillis),
+            )
+        }
+    }
+
+    /** Ghi giờ còn lại vào [SavedStateHandle] để khôi phục được nếu tiến trình bị thu hồi. */
+    private fun persistClock() {
+        val times = clock?.snapshot(nowMillis())
+        if (times == null) {
+            savedState.remove<Long>(KEY_CLOCK_WHITE)
+            savedState.remove<Long>(KEY_CLOCK_BLACK)
+        } else {
+            savedState[KEY_CLOCK_WHITE] = times.whiteMillis
+            savedState[KEY_CLOCK_BLACK] = times.blackMillis
+        }
+    }
+
+    /**
+     * Một bên hết giờ: kết thúc ván, phát tiếng hết ván, ghi lịch sử và xoá bản lưu trên đĩa.
+     *
+     * Kết quả theo [TimeoutRule]: bên còn lại thắng, trừ khi không đủ quân để chiếu hết thì hòa.
+     */
+    private fun onFlag(whiteFlagged: Boolean) {
+        val result = TimeoutRule.resultForWhite(board, whiteFlagged)
+        val flagged = TimeoutResult(whiteFlagged = whiteFlagged, drawn = result == MatchResult.DRAW)
+        timeout = flagged
+        savedState[KEY_TIMEOUT_WHITE] = flagged.whiteFlagged
+        savedState[KEY_TIMEOUT_DRAWN] = flagged.drawn
+        stopClock()
+        selectedSquare = Squares.NONE
+        pendingPromotion = null
+        soundCue = SoundCue(++soundSerial, MoveSound.GAME_END)
+        if (!recordedInHistory) insertHistory(result)
+        // Ván đã xong nên requestSave() sẽ xoá bản lưu: không còn gì để "tiếp tục".
+        requestSave()
+        publish()
     }
 
     private fun publish() {
@@ -616,7 +903,7 @@ class GameViewModel(
             } else {
                 Squares.NONE
             },
-            canUndo = board.canUndo(),
+            canUndo = board.canUndo() && clock == null,
             pendingPromotion = pendingPromotion,
             mode = mode,
             difficulty = difficulty,
@@ -627,6 +914,10 @@ class GameViewModel(
             takenFromWhite = tally.takenFromWhite,
             takenFromBlack = tally.takenFromBlack,
             materialBalance = tally.materialBalance,
+            whiteName = if (mode == GameMode.TWO_PLAYERS) setup.whiteName else "",
+            blackName = if (mode == GameMode.TWO_PLAYERS) setup.blackName else "",
+            timeLimited = clock != null,
+            timeout = timeout,
         )
     }
 
@@ -646,7 +937,21 @@ class GameViewModel(
         const val KEY_MODE = "gameMode"
         const val KEY_DIFFICULTY = "difficulty"
         const val KEY_RESUMED = "resumedFromDisk"
+        const val KEY_START_TOKEN = "localStartToken"
+        const val KEY_WHITE_NAME = "localWhiteName"
+        const val KEY_BLACK_NAME = "localBlackName"
+        const val KEY_TIME_CONTROL = "localTimeControl"
+        const val KEY_CLOCK_WHITE = "clockWhiteMillis"
+        const val KEY_CLOCK_BLACK = "clockBlackMillis"
+        const val KEY_TIMEOUT_WHITE = "timeoutWhiteFlagged"
+        const val KEY_TIMEOUT_DRAWN = "timeoutDrawn"
         const val NO_PIECE_ID = -1
+
+        /**
+         * Nhịp cập nhật đồng hồ. 250 ms đủ dày để phát hiện hết giờ trễ không quá một phần tư giây, và con số
+         * hiển thị chỉ đổi mỗi giây nên giao diện không phải vẽ lại nhịp này.
+         */
+        const val TICK_MILLIS = 250L
 
         /**
          * Chờ lặng một nhịp rồi mới ghi đĩa.

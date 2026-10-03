@@ -26,12 +26,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.GameStatus
+import kma.game.chess2d.game.ClockFormat
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.GameUiState
 import kma.game.chess2d.game.GameViewModel
+import kma.game.chess2d.game.LocalStart
 import kma.game.chess2d.game.PauseItem
 import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.settings.AppSettings
@@ -49,6 +52,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  *
  * @param resume true khi người chơi vừa chọn "Tiếp tục" ở sảnh: ván lưu trên đĩa sẽ
  *        được đi lại từ đầu thay vì mở một bàn cờ mới.
+ * @param localStart yêu cầu mở ván hai người mới từ màn setup (tên + thời gian); `null` khi vào
+ *        ván theo cách khác (đấu máy, tiếp tục ván cũ).
  */
 @Composable
 fun GameScreen(
@@ -58,9 +63,11 @@ fun GameScreen(
     onExitToMenu: () -> Unit,
     modifier: Modifier = Modifier,
     resume: Boolean = false,
+    localStart: LocalStart? = null,
     viewModel: GameViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val clockTimes by viewModel.clockTimes.collectAsStateWithLifecycle()
     var showLevels by remember { mutableStateOf(false) }
     // Pause Menu mở/đóng là việc của màn hình; xoay máy không được làm nó tự đóng.
     var showPause by rememberSaveable { mutableStateOf(false) }
@@ -83,12 +90,25 @@ fun GameScreen(
     // độ của ván đó, và chính nó cũng chặn việc dựng lại lần thứ hai khi xoay máy.
     LaunchedEffect(resume) { if (resume) viewModel.resumeSavedGame() }
 
+    // Ván hai người mới từ màn setup. ViewModel nhớ token đã xử lý nên xoay máy không mở thêm ván mới.
+    LaunchedEffect(localStart) {
+        localStart?.let { viewModel.startLocalGame(it.setup, it.token) }
+    }
+
     // Đồng bộ lựa chọn từ menu vào ViewModel. Đặt trong LaunchedEffect để việc này chỉ
     // chạy khi lựa chọn đổi, chứ không chạy lại mỗi lần vẽ lại màn hình.
     LaunchedEffect(mode) { viewModel.setMode(mode) }
     LaunchedEffect(difficulty) { viewModel.setDifficulty(difficulty) }
 
     MatchSounds(state.soundCue)
+
+    // Đồng hồ dừng khi mở Pause/Cài đặt và khi app xuống nền hoặc rời màn, chạy lại khi quay về.
+    // Thời gian người chơi đang xem menu không được tính vào giờ của bất kỳ bên nào.
+    val overlayOpen = showPause || showSettings
+    LifecycleResumeEffect(overlayOpen) {
+        viewModel.setClockPaused(overlayOpen)
+        onPauseOrDispose { viewModel.setClockPaused(true) }
+    }
 
     // Back trong ván mở Pause thay vì thoát ngay (tránh lỡ tay rời trận). Khi Pause đang mở,
     // Dialog tự xử lý Back thành "Tiếp tục", nên handler này chỉ cần lo lúc Pause đang đóng.
@@ -138,26 +158,39 @@ fun GameScreen(
         )
     }
 
+    // Ván hai người có giờ: đồng hồ hiện ở hàng của từng bên. Đen ở hàng trên, Trắng ở hàng dưới.
+    val blackClock = clockTimes?.blackMillis
+    val whiteClock = clockTimes?.whiteMillis
+    val twoPlayers = state.mode == GameMode.TWO_PLAYERS
+
     MatchScaffold(
         opponent = MatchPlayer(
             name = opponentName(state),
             subtitle = opponentSubtitle(state),
             active = !state.whiteToMove,
+            clock = blackClock?.let { ClockFormat.mmss(it) },
+            clockLow = blackClock != null && blackClock <= LOW_CLOCK_MILLIS,
         ),
         you = MatchPlayer(
-            name = playerName.ifBlank { stringResource(R.string.match_player_one) },
+            name = if (twoPlayers && state.whiteName.isNotBlank()) {
+                state.whiteName
+            } else {
+                playerName.ifBlank { stringResource(R.string.match_player_one) }
+            },
             subtitle = stringResource(
                 R.string.match_side,
                 stringResource(R.string.side_white),
             ),
             active = state.whiteToMove,
+            clock = whiteClock?.let { ClockFormat.mmss(it) },
+            clockLow = whiteClock != null && whiteClock <= LOW_CLOCK_MILLIS,
         ),
         actions = actions,
         headline = state.reviewPly?.let {
             // Đang xem lại thì dòng trạng thái phải nói điều đó, không phải nói lượt ai:
             // bàn cờ đang không nhận đi, mà không nói thì người chơi tưởng app treo.
             stringResource(R.string.moves_reviewing, it + 1)
-        } ?: statusLabel(state),
+        } ?: timeoutLabel(state) ?: statusLabel(state),
         modifier = modifier,
         belowBoard = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -281,11 +314,27 @@ internal fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
     Difficulty.HARD -> R.string.difficulty_hard
 }
 
-/** Tên đối thủ theo chế độ: máy, hay người thứ hai ngồi cùng máy. */
+/** Còn dưới mức này (30 giây) thì đồng hồ đổi sang màu cảnh báo. */
+private const val LOW_CLOCK_MILLIS = 30_000L
+
+/** Tên đối thủ theo chế độ: máy, hay người thứ hai ngồi cùng máy (tên nhập ở màn setup nếu có). */
 @Composable
 private fun opponentName(state: GameUiState): String = when (state.mode) {
     GameMode.VS_COMPUTER -> stringResource(R.string.match_computer)
-    GameMode.TWO_PLAYERS -> stringResource(R.string.match_player_two)
+    GameMode.TWO_PLAYERS ->
+        state.blackName.ifBlank { stringResource(R.string.match_player_two) }
+}
+
+/** Dòng trạng thái khi ván kết thúc vì hết giờ; `null` nếu ván không kết thúc theo cách đó. */
+@Composable
+private fun timeoutLabel(state: GameUiState): String? {
+    val timeout = state.timeout ?: return null
+    if (timeout.drawn) return stringResource(R.string.status_timeout_draw)
+    // Bên hết giờ thua nên bên thắng là bên còn lại; tên lấy từ setup nếu có.
+    val winnerSide = stringResource(
+        if (timeout.whiteFlagged) R.string.side_black else R.string.side_white,
+    )
+    return stringResource(R.string.status_timeout_win, winnerSide)
 }
 
 /** Phụ đề của đối thủ: máy đang tính, hoặc cấp độ đang chọn, hoặc bên quân. */

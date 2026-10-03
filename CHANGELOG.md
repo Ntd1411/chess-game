@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 18:20 GMT+7 — Giai đoạn 5 (phần 7): màn setup hai người cùng máy + đồng hồ cờ
+- Thêm ui/screen/LocalSetupScreen.kt: nhập tên Người chơi 1 (Trắng) / Người chơi 2 (Đen), chọn thời gian Không giới hạn/5/10/30 phút, nút BẮT ĐẦU. Ô tên trống dùng tên mặc định. Chưa làm mục bật/tắt gợi ý và hiệu ứng của spec vì đã có cài đặt hiển thị nước đi hợp lệ toàn cục và chưa có hệ thống hiệu ứng
+- AppRoot: thêm Screen.LOCAL_SETUP, menu "2 người cùng máy" đi qua setup rồi mới vào ván; GameScreen nhận `localStart` (token chống mở trùng khi xoay máy) và gọi `GameViewModel.startLocalGame`
+- GameScreen/MatchScaffold: hiện tên hai bên, đồng hồ mm:ss ở hàng từng bên (đổi màu khi dưới 30 giây), dòng kết quả hết giờ. Đồng hồ tạm dừng khi mở Pause/Cài đặt, khi app xuống nền và khi rời màn
+- Gom phần đã viết dở trước đó nhưng chưa commit: LocalSetup/LocalTimeControl/LocalClock/TimeoutRule, GameViewModel (đồng hồ, khôi phục, hết giờ, khóa Đi lại khi có giờ, ghi tên hai bên vào lịch sử), SavedGameStore lưu tên/thời gian/giờ còn lại
+- Sửa LocalClockTest: `mmss(5 phút - 1ms)` phải là 05:00 vì làm tròn lên (kỳ vọng cũ 04:59 sai). Thêm string `local_*`, `status_timeout_*`. `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+
 ## 2026-10-03 17:58 GMT+7 — Giai đoạn 5 (phần 6): màn hình Nhật ký nhân vật
 - Thêm profile/Journal.kt (thuần): suy trạng thái ✓ đã gặp / ? chưa rõ / khóa cho từng nhân vật, dùng chung `isUnlocked` với màn chọn đối thủ để không mâu thuẫn. ProfileRepository thêm Flow `journal` (id → bản ghi gặp)
 - Thêm ui/screen/JournalScreen.kt: danh sách nhân vật và trang chi tiết. Nhân vật chưa gặp bị che tên/ảnh. Trang đã gặp có câu thoại, độ khó, phong cách, tính cách, lịch sử gặp. Chưa có "bí mật đã phát hiện" vì chưa có hệ thống bí mật

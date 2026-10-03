@@ -55,6 +55,14 @@ enum class GameMode {
 }
 
 /**
+ * Ván kết thúc vì hết giờ.
+ *
+ * @param whiteFlagged `true` nếu Trắng là bên hết giờ.
+ * @param drawn bên còn lại không đủ quân để chiếu hết nên ván hòa ([TimeoutRule]).
+ */
+data class TimeoutResult(val whiteFlagged: Boolean, val drawn: Boolean)
+
+/**
  * Toàn bộ những gì giao diện cần để vẽ một khung hình.
  *
  * Đây là ranh giới module được nói ở mục 2.3: bên trong engine là bàn cờ mutable
@@ -70,6 +78,11 @@ enum class GameMode {
  * @param takenFromWhite quân Trắng đã mất, theo thứ tự bị bắt.
  * @param takenFromBlack quân Đen đã mất, theo thứ tự bị bắt.
  * @param materialBalance chênh lệch vật chất theo góc nhìn Trắng; dương là Trắng hơn.
+ * @param whiteName tên người cầm Trắng trong ván hai người; rỗng khi đấu máy.
+ * @param blackName tên người cầm Đen trong ván hai người; rỗng khi đấu máy.
+ * @param timeLimited ván có bấm giờ. Giờ còn lại đi riêng qua `GameViewModel.clockTimes` để mỗi giây
+ *        đổi không phải dựng lại cả khung hình.
+ * @param timeout khác `null` khi ván đã kết thúc vì hết giờ.
  */
 data class GameUiState(
     val pieces: List<PieceOnBoard> = emptyList(),
@@ -91,4 +104,8 @@ data class GameUiState(
     val takenFromWhite: List<Byte> = emptyList(),
     val takenFromBlack: List<Byte> = emptyList(),
     val materialBalance: Int = 0,
+    val whiteName: String = "",
+    val blackName: String = "",
+    val timeLimited: Boolean = false,
+    val timeout: TimeoutResult? = null,
 )

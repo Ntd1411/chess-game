@@ -125,7 +125,7 @@ SPLASH → MAIN LOBBY
 | Character Journal | Chưa có | cần bảng Room mới cho NPC đã gặp |
 | Inventory | Chưa có | chưa rõ nội dung |
 | LAN Multiplayer | Đã có `LanLobbyScreen.kt` / `LanGameScreen.kt` | chỉnh UI theo mockup |
-| Local Multiplayer setup | Chưa có | hiện vào thẳng Battle |
+| Local Multiplayer setup | Đã có `LocalSetupScreen.kt` | tên 2 bên + thời gian; chưa có bật/tắt gợi ý/hiệu ứng |
 | AI vs AI (spectate) | Chưa có | tận dụng `ai` module cho cả 2 bên, thêm control tốc độ/pause |
 | Settings | Đã có `SettingsStore` | cần UI tabs đầy đủ hơn |
 | Pause Menu | Chưa có | overlay trong `GameScreen` |

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,12 +31,16 @@ import kma.game.chess2d.engine.Piece
  * @param subtitle dòng phụ đề đổi theo chế độ: LAN hiện độ trễ, đấu máy hiện
  *        "đang tính…", hai người một máy hiện bên Trắng/Đen.
  * @param active đang tới lượt bên này.
+ * @param clock giờ còn lại dạng `mm:ss`; `null` là ván không bấm giờ nên không vẽ đồng hồ.
+ * @param clockLow giờ sắp hết: đồng hồ đổi sang màu cảnh báo.
  */
 data class MatchPlayer(
     val name: String,
     val subtitle: String = "",
     val piece: Byte = Piece.NONE,
     val active: Boolean = false,
+    val clock: String? = null,
+    val clockLow: Boolean = false,
 )
 
 /**
@@ -122,7 +127,7 @@ private fun PlayerRow(player: MatchPlayer) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PlayerAvatar(name = player.name, piece = player.piece, active = player.active)
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = player.name,
                 style = MaterialTheme.typography.bodyLarge,
@@ -137,6 +142,19 @@ private fun PlayerRow(player: MatchPlayer) {
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+        player.clock?.let { clock ->
+            Text(
+                text = clock,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = if (player.active) FontWeight.Bold else FontWeight.Normal,
+                color = when {
+                    player.clockLow -> MaterialTheme.colorScheme.error
+                    player.active -> MaterialTheme.colorScheme.onSurface
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                maxLines = 1,
+            )
         }
     }
 }
