@@ -68,6 +68,7 @@ fun MenuScreen(
     onPlayLan: () -> Unit,
     onOpenSpectate: () -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenProfile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -85,14 +86,24 @@ fun MenuScreen(
         Column(
             modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
         ) {
-            LobbyHeader(name = name, onOpenSettings = { showSettings = true })
+            LobbyHeader(
+                name = name,
+                onOpenProfile = onOpenProfile,
+                onOpenSettings = { showSettings = true },
+            )
 
-            // Nhân vật chiếm phần còn lại giữa màn hình; Fit để không bao giờ bị cắt đầu/chân.
+            // Nhân vật chiếm phần còn lại giữa màn hình, Fit để không bao giờ bị cắt đầu/chân.
+            // Chạm vào nhân vật mở Hồ sơ.
+            val profileLabel = stringResource(R.string.profile_open)
             Image(
                 painter = painterResource(R.drawable.char_protagonist_full_body),
-                contentDescription = null,
+                contentDescription = profileLabel,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.weight(1f).fillMaxWidth().padding(8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .clickable(onClick = onOpenProfile),
             )
 
             Column(
@@ -143,22 +154,28 @@ fun MenuScreen(
     }
 }
 
-/** Hàng trên cùng: avatar và tên người chơi bên trái, nút cài đặt bên phải. */
+/** Hàng trên cùng: avatar và tên người chơi bên trái (chạm để mở Hồ sơ), nút cài đặt bên phải. */
 @Composable
-private fun LobbyHeader(name: String, onOpenSettings: () -> Unit) {
+private fun LobbyHeader(name: String, onOpenProfile: () -> Unit, onOpenSettings: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        PlayerAvatar(name = name, size = 48.dp)
-        Text(
-            text = name.ifBlank { stringResource(R.string.match_player_one) },
-            style = MaterialTheme.typography.titleMedium,
-            color = GothicColors.Parchment,
-            maxLines = 1,
-            modifier = Modifier.weight(1f),
-        )
+        Row(
+            modifier = Modifier.weight(1f).clip(CircleShape).clickable(onClick = onOpenProfile),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            PlayerAvatar(name = name, size = 48.dp)
+            Text(
+                text = name.ifBlank { stringResource(R.string.match_player_one) },
+                style = MaterialTheme.typography.titleMedium,
+                color = GothicColors.Parchment,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+        }
         Image(
             painter = painterResource(R.drawable.icon_settings),
             contentDescription = stringResource(R.string.lobby_settings),

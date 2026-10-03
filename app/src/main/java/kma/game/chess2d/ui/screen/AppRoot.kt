@@ -37,6 +37,7 @@ import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
 import kma.game.chess2d.opponent.AiCharacter
 import kma.game.chess2d.profile.MatchRecording
+import kma.game.chess2d.profile.PlayerStats
 import kma.game.chess2d.profile.ProfileDatabase
 import kma.game.chess2d.profile.ProfileRepository
 import kma.game.chess2d.puzzle.PuzzleCatalog
@@ -51,7 +52,7 @@ import kotlinx.coroutines.withContext
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -122,6 +123,17 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onPlayLan = { screen = Screen.LOBBY },
                 onOpenSpectate = { screen = Screen.SPECTATE },
                 onOpenHistory = { screen = Screen.HISTORY },
+                onOpenProfile = { screen = Screen.PROFILE },
+                modifier = modifier,
+            )
+        }
+
+        Screen.PROFILE -> {
+            // Hồ sơ mở từ menu nên back ở đây là về menu.
+            BackHandler { screen = Screen.MENU }
+            ProfileRoute(
+                name = playerName,
+                onBack = { screen = Screen.MENU },
                 modifier = modifier,
             )
         }
@@ -177,6 +189,17 @@ fun AppRoot(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * Nhánh Hồ sơ: đọc thống kê từ Room (tự cập nhật qua Flow) và hiển thị.
+ */
+@Composable
+private fun ProfileRoute(name: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
+    val stats by profile.stats.collectAsStateWithLifecycle(initialValue = PlayerStats())
+    ProfileScreen(name = name, stats = stats, onBack = onBack, modifier = modifier)
 }
 
 /**

@@ -178,11 +178,13 @@ chạy thử trên emulator.
 **Mục tiêu:** Hoàn thiện các màn còn lại, không ảnh hưởng luồng chính.
 
 **Công việc:**
-- [~] **Character/Profile**: bảng Room mới lưu stats (thắng/thua/tầng cao nhất/
+- [x] **Character/Profile**: bảng Room mới lưu stats (thắng/thua/tầng cao nhất/
       checkmate/thời gian chơi)
       — **xong phần dữ liệu:** `profile/PlayerStats.kt` + `ProfileDatabase` (DB riêng, không cần
       migration). Đã ghi được tầng cao nhất, thắng/thua/hòa/checkmate/thời gian chơi (đấu máy,
-      LAN, chiến dịch; qua `MatchRecording`). **Còn thiếu:** màn hình Profile
+      LAN, chiến dịch; qua `MatchRecording`). **Xong màn hình Profile** (`ProfileScreen`, mở từ
+      avatar/nhân vật ở Sảnh): chỉ có phần Thông tin, **không dựng** tab Trang phục/Kỹ năng/Ký ức
+      vì chưa có hệ thống tương ứng
 - [~] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
       — **xong phần dữ liệu:** `JournalEntry` + `Journal.stateOf`; ghi đã gặp khi bấm BẮT ĐẦU
       ở màn chọn đối thủ. **Còn thiếu:** màn hình Nhật ký (chỉ mới có 5 nhân vật AI)

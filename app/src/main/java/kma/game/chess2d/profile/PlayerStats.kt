@@ -32,10 +32,21 @@ data class PlayerStats(
     val totalGames: Int get() = wins + losses + draws
 
     /**
-     * Cấp của người chơi: mỗi [GAMES_PER_LEVEL] điểm tiến triển (thắng + tầng đã vượt) lên
-     * một cấp, bắt đầu từ cấp 1. Thua và hòa không trừ điểm.
+     * Điểm tiến triển: số thắng cộng số tầng đã vượt. Thua và hòa không trừ điểm.
      */
-    val level: Int get() = 1 + (wins + highestFloor) / GAMES_PER_LEVEL
+    val progressPoints: Int get() = wins + highestFloor
+
+    /**
+     * Cấp của người chơi: mỗi [GAMES_PER_LEVEL] điểm tiến triển ([progressPoints]) lên một cấp,
+     * bắt đầu từ cấp 1.
+     */
+    val level: Int get() = 1 + progressPoints / GAMES_PER_LEVEL
+
+    /** Điểm đã tích trong cấp hiện tại, luôn trong `0 until GAMES_PER_LEVEL`. */
+    val pointsIntoLevel: Int get() = progressPoints % GAMES_PER_LEVEL
+
+    /** Tỉ lệ thắng theo phần trăm (làm tròn xuống), `null` khi chưa chơi ván nào. */
+    val winRatePercent: Int? get() = if (totalGames == 0) null else wins * 100 / totalGames
 
     /** Cộng một ván đã xong. [result] là một trong các hằng của [MatchResult]. */
     fun withMatch(result: String, byCheckmate: Boolean, seconds: Long): PlayerStats {

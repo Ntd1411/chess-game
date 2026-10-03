@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:49 GMT+7 — Giai đoạn 5 (phần 5): màn hình Hồ sơ (Profile)
+- Thêm ui/screen/ProfileScreen.kt: ảnh nhân vật giữa, tên + cấp, thanh tiến độ lên cấp, bảng thống kê (thắng/thua/hòa, tổng ván, tỉ lệ thắng, chiếu hết, tầng cao nhất x/49, thời gian chơi). Chỉ có phần Thông tin, chưa dựng tab Trang phục/Kỹ năng/Ký ức vì chưa có hệ thống đằng sau
+- PlayerStats: thêm `progressPoints`, `pointsIntoLevel`, `winRatePercent`; thêm profile/PlayTime.kt (tách giờ/phút/giây và chọn đơn vị hiển thị)
+- Sảnh: chạm avatar/tên hoặc nhân vật để mở Hồ sơ; AppRoot thêm Screen.PROFILE + ProfileRoute (đọc Room qua Flow), back về menu
+- Thêm 20 string `profile_*`; test ProfileDisplayTest (12); `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+
 ## 2026-10-03 17:42 GMT+7 — AGENTS.md: commit message theo Conventional Commits
 - Quy tắc 5 bổ sung: bắt buộc mở đầu bằng type (`feat:` `fix:` `docs:` `refactor:` `test:` `chore:` `style:` `perf:`), tiêu đề mô tả chính xác, các `-m` sau đủ chi tiết để hiểu thay đổi mà không cần xem code; ví dụ trong file đổi sang dạng `feat: ...`
 
