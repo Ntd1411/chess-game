@@ -2,5 +2,6 @@
     <style name="Theme.Chess" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/gothic_ink</item>
     </style>
 </resources>

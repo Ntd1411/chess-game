@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 22:39 GMT+7 — Thêm 35 asset gothic bổ sung, nền theme gothic cố định và bộ nạp ảnh ArtCache
+- Đổi tên 35 ảnh trong asset_adding theo thời gian lưu khớp thứ tự prompt rồi chuyển vào res/drawable (screen_splash_background, ui_logo_tower_of_chess, ui_emblem_chess_tower, ic_launcher_art_*, ui_menu_button_*_wide(+_pressed), piece_black_*_bright, tile_*_overlay, tile_marble_light/dark, icon_* thanh chức năng và tiền tệ, ui_avatar_frame, screen_lan_lobby, screen_game_history, screen_ai_vs_ai)
+- Theme gothic cố định (bỏ dynamic color), themes.xml nền tối chống nháy trắng lúc khởi động, MainActivity bỏ Scaffold, thêm ui/art/ArtCache (giải mã downsample có cache). Chưa nối vào các màn hình. `:app:testDebugUnitTest` và `:app:assembleDebug` đều thành công
+
 ## 2026-10-03 19:05 GMT+7 — Giai đoạn 6: đối chiếu thoại 6 tầng mốc, thử build release
 - Đối chiếu `FloorDialogues` với story-bible: đủ 6 tầng mốc (1, 5, 21, 42, 45, 49) + epilogue tầng 49, đúng mạch Player #48 / Aria / Attempt #49. Đánh dấu xong trong completion-plan
 - Thử `./gradlew :app:assembleRelease` qua MCP local hai lần nhưng connector báo server không phản hồi (nhiều khả năng build quá lâu so với giới hạn); chưa xác minh được. Cấu hình ký đã có sẵn trong app/build.gradle.kts (keystore.properties hoặc biến môi trường)

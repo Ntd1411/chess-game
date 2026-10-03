@@ -1,46 +1,71 @@
 package kma.game.chess2d.ui.theme
 
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 
 /**
- * Bộ màu của toàn app: theo nền sáng/tối của hệ thống, và lấy màu nhấn từ hình nền
- * máy khi Android còn hỗ trợ (mục 7.2).
+ * Bảng màu Material cố định theo phong cách gothic.
  *
- * **Không áp bộ màu này cho ô bàn cờ.** Màu ô nằm riêng trong
- * <code>BoardColors</code> với giá trị cố định, vì hai lý do: ô sáng và ô tối phải
- * giữ đủ độ tương phản để nhìn ra bàn cờ (màu lấy từ hình nền có thể ra hai sắc gần
- * nhau), và người chơi cờ vốn quen một bảng màu bàn cờ ổn định chứ không muốn bàn cờ
- * đổi màu theo ảnh nền. Bộ màu bàn cờ được đổi bằng một lựa chọn riêng, không phải
- * bằng dynamic color.
- *
- * @param darkTheme mặc định theo cài đặt hệ thống, nên đổi nền tối ở thanh cài đặt
- *        nhanh là app đổi theo ngay, không cần công tắc riêng trong app.
- * @param dynamicColor tắt được để xem giao diện với bộ màu gốc; từ Android 11 trở
- *        xuống thì tham số này không có tác dụng vì hệ thống chưa có màu động.
+ * Không còn theo dynamic color hay sáng/tối của hệ thống: trước đây dialog, thẻ và nút
+ * đổi màu theo từng máy nên các màn không thống nhất với phần ảnh nền. Giờ mọi thành phần
+ * Material (Button, Card, AlertDialog, TextField, Chip, Switch...) tự ăn theo bảng này.
  */
+private val GothicColorScheme = darkColorScheme(
+    primary = GothicColors.Blood,
+    onPrimary = GothicColors.Gold,
+    primaryContainer = GothicColors.Blood,
+    onPrimaryContainer = GothicColors.Parchment,
+    secondary = GothicColors.Gold,
+    onSecondary = GothicColors.Ink,
+    secondaryContainer = GothicColors.Blood,
+    onSecondaryContainer = GothicColors.Gold,
+    tertiary = GothicColors.Parchment,
+    onTertiary = GothicColors.Ink,
+    background = GothicColors.Ink,
+    onBackground = GothicColors.Parchment,
+    surface = GothicColors.Panel,
+    onSurface = GothicColors.Parchment,
+    surfaceVariant = GothicColors.PanelHigh,
+    onSurfaceVariant = GothicColors.Parchment.copy(alpha = 0.78f),
+    surfaceTint = Color.Transparent,
+    surfaceContainerLowest = GothicColors.Ink,
+    surfaceContainerLow = GothicColors.Panel,
+    surfaceContainer = GothicColors.Panel,
+    surfaceContainerHigh = GothicColors.PanelHigh,
+    surfaceContainerHighest = GothicColors.PanelHigh,
+    outline = GothicColors.Gold.copy(alpha = 0.7f),
+    outlineVariant = GothicColors.Gold.copy(alpha = 0.3f),
+    error = GothicColors.Alert,
+    onError = GothicColors.Ink,
+)
+
+/** Tiêu đề dùng font serif cho cảm giác sách cổ; chữ thân giữ sans để dễ đọc. */
+private val GothicTypography: Typography = Typography().let { base ->
+    fun androidx.compose.ui.text.TextStyle.serif() =
+        copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold)
+    base.copy(
+        displayLarge = base.displayLarge.serif(),
+        displayMedium = base.displayMedium.serif(),
+        displaySmall = base.displaySmall.serif(),
+        headlineLarge = base.headlineLarge.serif(),
+        headlineMedium = base.headlineMedium.serif(),
+        headlineSmall = base.headlineSmall.serif(),
+        titleLarge = base.titleLarge.serif(),
+        titleMedium = base.titleMedium.serif(),
+    )
+}
+
+/** Theme của toàn app: luôn tối và luôn gothic. */
 @Composable
-fun ChessTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> darkColorScheme()
-        else -> lightColorScheme()
-    }
-
-    MaterialTheme(colorScheme = colorScheme, content = content)
+fun ChessTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = GothicColorScheme,
+        typography = GothicTypography,
+        content = content,
+    )
 }

@@ -1,7 +1,9 @@
 <resources>
-    <!-- App theme chi lam nen cho Compose (mau sac do Material3 trong Compose quyet dinh). -->
-    <style name="Theme.Chess" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- App theme chi lam nen cho Compose (mau sac do Material3 trong Compose quyet dinh).
+         Luon toi: nen cua so la mau muc cua gothic de khoi nhay trang luc khoi dong. -->
+    <style name="Theme.Chess" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/gothic_ink</item>
     </style>
 </resources>
