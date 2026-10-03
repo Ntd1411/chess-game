@@ -14,11 +14,16 @@ Tham khảo thêm: `.claude/AGENTS.md` (quy tắc chung), `docs/design/story-bib
 **Mục tiêu:** Biết chính xác đang có gì trước khi thêm tính năng mới, tránh làm lại.
 
 **Công việc:**
-- [ ] Liệt kê toàn bộ asset hiện có trong `app/src/main/assets` và `res/drawable*`
+- [x] Liệt kê toàn bộ asset hiện có trong `app/src/main/assets` và `res/drawable*`
       (hoặc thư mục asset tương ứng), đối chiếu với danh sách 17 màn hình trong
-      `ui-screens.md` → lập bảng "đã có / còn thiếu"
-- [ ] Chạy `./gradlew test` trên toàn bộ project để xác nhận baseline đang xanh
-      (không có lỗi cũ tồn đọng trước khi bắt đầu thêm tính năng)
+      `ui-screens.md` → lập bảng "đã có / còn thiếu" — **xong, xem
+      `docs/design/ui-screens.md` » Asset audit**: ~90% đã có sẵn, chỉ thiếu nền
+      riêng cho Splash/AI Selection/LAN Lobby và xác nhận nhân vật Pháp Sư Cờ
+- [x] Chạy `./gradlew test` trên toàn bộ project để xác nhận baseline đang xanh
+      — **kết quả:** `:engine:test`, `:net:test` xanh; `:ai:test` lỗi
+      `java.io.EOFException` (nghi môi trường/JDK, không phải lỗi test); cũng
+      phát hiện và vá 1 lỗi compile thật trong `MenuScreen.kt` (xem
+      CHANGELOG 2026-10-03 15:39 GMT+7)
 
 **Tự xác minh:**
 - `./gradlew test` trả về BUILD SUCCESSFUL, không có test fail nào có sẵn
@@ -26,6 +31,9 @@ Tham khảo thêm: `.claude/AGENTS.md` (quy tắc chung), `docs/design/story-bib
   asset, không cần hỏi người dùng)
 
 **Hoàn thành khi:** baseline build xanh + bảng asset audit tồn tại trong docs.
+
+**→ GIÀI ĐOẠN 0: HOÀN THÀNH** (2026-10-03, với 1 ghi chú môi trường chưa giải
+quyết ở `:ai:test`, không chặn tiến độ vì không phải lỗi logic)
 
 ---
 

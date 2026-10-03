@@ -7,6 +7,41 @@ generate thêm phần còn thiếu.
 Có mockup ảnh tham khảo (do người dùng cung cấp, không lưu trong repo này — hỏi lại
 nếu cần xem).
 
+## Asset audit (cập nhật 2026-10-03)
+
+Đã rà soát `app/src/main/res/drawable/` — **phần lớn asset cần cho 17 màn hình đã có
+sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit kèm fix
+`pieceThemeLabel`). Chi tiết:
+
+**Đã có đầy đủ:**
+- `screen_main_menu`, `screen_floor_select`, `screen_tower_map`, `screen_chess_battle`,
+  `screen_dialogue_background`, `screen_character_journal`, `screen_victory`,
+  `screen_defeat`, `screen_settings`, `screen_memory_inventory` — nền cho đúng 10/10
+  màn chính
+- `screen_normal_ending` + `screen_true_ending` — **khớp rất tốt với twist cốt
+  truyện** (false reveal / true reveal) — nên dùng cho 2 kết thúc khác nhau ở
+  tầng 49 thay vì 1 màn Victory chung chung
+- Bộ quân cờ đầy đủ 12 ảnh (`piece_white/black_*`), ô cờ (`tile_*`), hiệu ứng
+  (`fx_*`), icon menu (`icon_*`), khung/nút UI (`ui_*`), vật phẩm (`item_*`)
+- Nhân vật chính đủ biểu cảm: `char_protagonist_portrait/full_body/determined/
+  victory/defeat/sad/shocked`
+- AI: `char_chess_queen` (→ Nữ Hoàng Máu), `char_knight_guardian` (→ Hiệp Sĩ Bóng
+  Đêm), `char_mysterious_chess_king` (→ Vua Hắc Ám), `char_shadow_opponent` (có
+  thể dùng cho nhân vật khóa "???"), `char_tower_keeper` (NPC giữ tháp — có thể
+  dùng cho Pháp Sư Cờ hoặc 1 NPC dẫn chuyện riêng)
+
+**Thiếu / cần quyết định:**
+- Không có art riêng cho Splash Screen — có thể dùng lại `screen_tower_map` hoặc
+  `screen_main_menu` làm nền + overlay logo thay vì tạo mới
+- Không có nền riêng cho AI Character Selection — có thể dùng `screen_chess_battle`
+  làm backdrop mờ + `ui_character_frame` cho khung nhân vật
+- Không có nền riêng cho LAN Lobby / Local Multiplayer setup — có thể dùng
+  `ui_main_panel` trên nền `screen_main_menu`
+- Chưa rõ asset nào dành riêng cho "Pháp Sư Cờ" — tạm gán `char_tower_keeper`,
+  cần xác nhận lại khi làm màn AI Selection
+
+---
+
 ## 17 màn hình
 
 1. **Splash Screen** — logo, loading bar, animation nhẹ (logo hiện dần, ánh sáng đỏ
