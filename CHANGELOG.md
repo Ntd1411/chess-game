@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:22 GMT+7 — Giai đoạn 5 (phần 2): Pause Menu trong GameScreen
+- Thêm game/PauseMenu.kt (luật chọn mục theo chế độ: ẩn Cài đặt khi 2 người), ui/screen/PauseMenuOverlay.kt (Dialog gothic: Tiếp tục / Khởi động lại / Cài đặt / Rời trận) + 5 string `pause_*`
+- GameScreen: nút Home đổi thành nút Menu mở Pause; Back trong ván mở Pause thay vì thoát ngay; mục Cài đặt mở hộp chọn cấp máy (chỉ khi đấu máy)
+- Thêm test PauseMenuTest (4)
+
 ## 2026-10-03 17:15 GMT+7 — Giai đoạn 5 (phần 1): tầng dữ liệu Hồ sơ + Nhật ký (Room), chưa có màn hình
 - Thêm profile/PlayerStats.kt (thống kê + luật cộng thắng/thua/hòa/checkmate/thời gian/tầng cao nhất/cấp), Journal.kt (trạng thái ✓/?/🔒 dùng chung điều kiện mở với AiCharacter), ProfileDatabase.kt (Room DB riêng `profile.db`, không đụng `match-history.db`) + ProfileRepository (ghi trong giao dịch)
 - Nối AppRoot: vượt tầng → recordFloorCleared; bấm BẮT ĐẦU ở màn chọn đối thủ → recordMet (đều NonCancellable)

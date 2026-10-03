@@ -1,12 +1,13 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -31,6 +32,8 @@ import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.GameUiState
 import kma.game.chess2d.game.GameViewModel
+import kma.game.chess2d.game.PauseItem
+import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.board.ChessBoard
@@ -59,6 +62,8 @@ fun GameScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showLevels by remember { mutableStateOf(false) }
+    // Pause Menu mở/đóng là việc của màn hình; xoay máy không được làm nó tự đóng.
+    var showPause by rememberSaveable { mutableStateOf(false) }
     // Bộ màu bàn và bộ quân đọc thẳng từ cài đặt: đây là sở thích của người chơi, không
     // phải trạng thái của ván, nên không đi qua ViewModel.
     val appearanceContext = LocalContext.current
@@ -83,6 +88,10 @@ fun GameScreen(
     LaunchedEffect(difficulty) { viewModel.setDifficulty(difficulty) }
 
     MatchSounds(state.soundCue)
+
+    // Back trong ván mở Pause thay vì thoát ngay (tránh lỡ tay rời trận). Khi Pause đang mở,
+    // Dialog tự xử lý Back thành "Tiếp tục", nên handler này chỉ cần lo lúc Pause đang đóng.
+    BackHandler(enabled = !showPause) { showPause = true }
 
     val actions = buildList {
         add(
@@ -121,9 +130,9 @@ fun GameScreen(
         )
         add(
             MatchAction(
-                icon = Icons.Filled.Home,
+                icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
-                onClick = onExitToMenu,
+                onClick = { showPause = true },
             ),
         )
     }
@@ -181,6 +190,21 @@ fun GameScreen(
             palette = appearance.boardPalette,
             pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    if (showPause) {
+        PauseMenuOverlay(
+            items = PauseMenu.itemsFor(state.mode),
+            onItem = { item ->
+                showPause = false
+                when (item) {
+                    PauseItem.RESUME -> Unit
+                    PauseItem.RESTART -> viewModel.newGame()
+                    PauseItem.SETTINGS -> showLevels = true
+                    PauseItem.LEAVE -> onExitToMenu()
+                }
+            },
         )
     }
 

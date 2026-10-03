@@ -274,4 +274,10 @@
     <!-- Sảnh chính -->
     <string name="lobby_settings">Cài đặt</string>
     <string name="lobby_close">Đóng</string>
+    <!-- Pause Menu -->
+    <string name="pause_title">Tạm dừng</string>
+    <string name="pause_resume">Tiếp tục</string>
+    <string name="pause_restart">Khởi động lại</string>
+    <string name="pause_settings">Cài đặt</string>
+    <string name="pause_leave">Rời trận</string>
 </resources>

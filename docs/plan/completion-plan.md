@@ -189,7 +189,10 @@ chạy thử trên emulator.
 - [ ] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
 - [ ] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
       Khác)
-- [ ] **Pause Menu** overlay trong `GameScreen`
+- [~] **Pause Menu** overlay trong `GameScreen`
+      — **xong cho `GameScreen`** (đấu máy/2 người): `PauseMenu` + `PauseMenuOverlay`, nút Menu và Back
+      mở Pause. Mục Cài đặt tạm mở hộp chọn cấp máy, sẽ trỏ sang Settings đầy đủ khi có.
+      **Chưa làm:** màn đấu chiến dịch (`CampaignBattleScreen`) và LAN chưa có Pause
 
 **Tự xác minh:**
 - Room migration test: schema mới không làm vỡ dữ liệu cũ (nếu đã có HistoryScreen
