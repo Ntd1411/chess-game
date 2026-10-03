@@ -37,6 +37,25 @@ phụ) lên trên bộ khung chess app đã hoàn chỉnh (engine, AI, LAN đề
    xem `docs/design/ui-screens.md` trước khi code màn hình mới.
 4. Mode "Máy vs Máy" = mode xem/spectate đã quyết định dùng, không cần làm thêm mode
    xem riêng.
+5. **Commit message phải viết bằng tiếng Anh, theo Conventional Commits, mô tả đầy đủ và chi tiết.**
+   Cấu trúc bắt buộc:
+   - Bắt đầu bằng một type rõ ràng: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`,
+     `style:` hoặc `perf:`. Có thể thêm scope trong ngoặc nếu hữu ích, vd. `feat(profile): ...`.
+   - `-m` đầu tiên là tiêu đề ngắn gọn (một dòng, thể mệnh lệnh), mô tả chính xác thay đổi,
+     vd. `feat: record match stats in player profile`.
+   - Các `-m` tiếp theo, mỗi `-m` là một đoạn mô tả một nhóm thay đổi, lý do hoặc hành vi
+     quan trọng (vd. từng module, từng file chính, test đã thêm). Message phải đủ chi tiết
+     để người khác hiểu những gì đã đổi mà không cần xem code ngay. **Không gộp toàn bộ nội
+     dung vào một dòng.**
+   - Công cụ MCP local chặn các ký tự điều khiển, nên trong command **tuyệt đối không
+     dùng** `;`, `&&`, `|`, `>`, `<` hay xuống dòng trực tiếp. Mỗi đoạn dùng một cặp
+     `-m "..."` riêng, câu văn thay `;` bằng dấu chấm hoặc dấu phẩy. Cũng tránh ngoặc
+     và ký tự đặc biệt không cần thiết trong nội dung.
+   - Ví dụ đúng:
+     `git commit -m "feat: record match stats in player profile" -m "Add MatchRecording with pure rules for which modes count and how play time is measured." -m "Wire recordMatch into GameViewModel, LanViewModel and TowerRoute so each finished match is counted exactly once." -m "Add MatchRecordingTest covering mode filtering, elapsed time clamping and campaign outcomes."`
+   - Nếu command commit bị MCP từ chối, **không tự đổi sang commit message sai dạng**
+     (vd. tiếng Việt không dấu, gộp một dòng) để lách. Hãy đưa nguyên câu lệnh đúng dạng
+     cho người dùng tự chạy.
 
 ## Tài liệu chi tiết (đọc khi cần, không đọc mặc định)
 

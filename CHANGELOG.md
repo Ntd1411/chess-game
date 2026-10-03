@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:42 GMT+7 — AGENTS.md: commit message theo Conventional Commits
+- Quy tắc 5 bổ sung: bắt buộc mở đầu bằng type (`feat:` `fix:` `docs:` `refactor:` `test:` `chore:` `style:` `perf:`), tiêu đề mô tả chính xác, các `-m` sau đủ chi tiết để hiểu thay đổi mà không cần xem code; ví dụ trong file đổi sang dạng `feat: ...`
+
+## 2026-10-03 17:40 GMT+7 — AGENTS.md: thêm quy tắc viết commit message
+- Thêm quy tắc 5 vào `.claude/AGENTS.md`: commit message bằng tiếng Anh, `-m` đầu là tiêu đề ngắn, nhiều `-m` sau cho từng nhóm thay đổi, cấm `;` `&&` `|` `>` `<` và xuống dòng trực tiếp
+- Nếu MCP từ chối command commit thì đưa nguyên câu lệnh đúng dạng cho người dùng tự chạy, không tự đổi sang message sai dạng
+
 ## 2026-10-03 17:31 GMT+7 — Giai đoạn 5 (phần 4): ghi thắng/thua/hòa/checkmate/thời gian chơi vào Hồ sơ
 - Thêm profile/MatchRecording.kt (luật thuần): chế độ nào tính vào Hồ sơ (chỉ đấu máy; 2 người cùng máy và Máy vs Máy không tính), đo giây chơi (cắt trần 3 giờ/ván), kết quả ván chiến dịch (chỉ tầng đánh bại máy mới tính checkmate)
 - GameViewModel (đấu máy): gọi `recordMatch` khi ván kết thúc, mỗi ván đúng 1 lần (Undo rồi thắng lại không cộng 2 lần; xoay máy sau khi ván xong không cộng lại nhờ cờ `replaying`)
