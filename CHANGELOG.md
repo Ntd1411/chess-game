@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 16:57 GMT+7 — Giai đoạn 4: nối trọn luồng Tower Map → Thoại → Ván đấu → Thắng/Thua
+- Thêm campaign/FloorDialogue.kt (thoại 6 tầng mốc + đoạn kết tầng 49), TowerFlow.kt (luật chuyển màn), CampaignMatch.kt (luật thắng/thua theo mục tiêu tầng), CampaignViewModel.kt
+- Thêm DialogueScreen, VictoryScreen/DefeatScreen (FloorResultScreens.kt), CampaignBattleScreen.kt; viết lại TowerRoute trong AppRoot để chạy cả luồng
+- Thêm string chiến dịch; thêm test CampaignMatchTest (12) và TowerFlowTest (12)
+
 ## 2026-10-03 16:32 GMT+7 — Giai đoạn 3: Main Lobby mới + màn Chọn đối thủ AI
 - Thêm `opponent/AiCharacter.kt`: 5 nhân vật AI (Pháp Sư Cờ, Hiệp Sĩ Bóng Đêm, Nữ Hoàng Máu,
   Vua Hắc Ám, nhân vật ẩn `???`). Sức mạnh **chỉ** đến từ `Difficulty` (Dễ/Vừa/Khó/Khó); số sao

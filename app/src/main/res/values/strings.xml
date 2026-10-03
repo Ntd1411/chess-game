@@ -195,6 +195,31 @@
     <string name="tower_kind_boss">Trùm</string>
     <string name="tower_kind_secret">Bí mật</string>
 
+    <!-- Chiến dịch: ván đấu, thoại, thắng/thua -->
+    <string name="campaign_goal_defeat">Chiếu hết đối thủ để qua tầng</string>
+    <string name="campaign_goal_puzzle">Tìm nước đi đúng</string>
+    <string name="campaign_goal_puzzle_mistakes">Tìm nước đi đúng · sai %1$d lần</string>
+    <string name="campaign_goal_survive">Sống sót %1$d/%2$d nước</string>
+    <string name="campaign_action_restart">Chơi lại</string>
+    <string name="campaign_action_map">Bản đồ</string>
+    <string name="dialogue_skip">Bỏ qua</string>
+    <string name="dialogue_next">Tiếp ▶</string>
+    <string name="dialogue_continue">Tiếp tục ▶</string>
+    <string name="victory_title">CHIẾN THẮNG</string>
+    <string name="victory_sub_floor">Bạn đã vượt qua tầng %1$d: %2$s</string>
+    <string name="victory_sub_treasure">Kho báu đã được mở.</string>
+    <string name="victory_sub_story">Bạn đã nghe trọn lời Aria.</string>
+    <string name="victory_tower_cleared">Bạn đã chinh phục Tháp Cờ.</string>
+    <string name="victory_unlocked">Tầng %1$d đã mở</string>
+    <string name="victory_next">Lên tầng %1$d</string>
+    <string name="result_to_map">Về bản đồ</string>
+    <string name="defeat_title">THẤT BẠI</string>
+    <string name="defeat_floor">Bạn chưa qua được tầng %1$d</string>
+    <string name="defeat_reason_checkmate">Quân Vua của bạn đã bị chiếu hết.</string>
+    <string name="defeat_reason_draw">Ván cờ hòa, mà tầng này đòi phải thắng.</string>
+    <string name="defeat_encourage">Mỗi lần thử là một lần nhớ thêm. Đừng bỏ cuộc.</string>
+    <string name="defeat_retry">Thử lại</string>
+
     <!-- Máy vs Máy: hai AI tự đấu, người chơi ngồi xem -->
     <string name="spectate_open">Máy vs Máy</string>
     <string name="spectate_setup_title">MÁY VS MÁY</string>

@@ -147,11 +147,14 @@ Compose preview nhiều kích thước, currency và 3 icon lối tắt ở Lobb
 (thoại nếu có) → đánh cờ → thắng/thua → quay lại bản đồ hoặc sang tầng kế.
 
 **Công việc:**
-- [ ] Màn **Dialogue** đơn giản (box thoại + nút tiếp tục), chỉ kích hoạt ở 6 tầng
+- [x] Màn **Dialogue** đơn giản (box thoại + nút tiếp tục), chỉ kích hoạt ở 6 tầng
       mốc theo `story-bible.md`
-- [ ] Màn **Victory**/**Defeat** riêng, nhận tham số (phần thưởng, tầng tiếp theo)
-- [ ] Nối toàn bộ luồng: Tower Map → (Dialogue) → Chess Battle → Victory/Defeat →
+      — **xong:** `DialogueScreen` + `FloorDialogues`
+- [x] Màn **Victory**/**Defeat** riêng, nhận tham số (phần thưởng, tầng tiếp theo)
+      — **xong:** `FloorResultScreens.kt`; chưa có tiền tệ nên phần thưởng duy nhất là mở tầng kế
+- [x] Nối toàn bộ luồng: Tower Map → (Dialogue) → Chess Battle → Victory/Defeat →
       quay lại Tower Map với tiến độ cập nhật
+      — **xong:** `TowerFlow` + `TowerRoute` + `CampaignMatch`/`CampaignViewModel`
 
 **Tự xác minh:**
 - Integration test (không cần UI thật): giả lập "thắng tầng N" → kiểm tra tầng N+1
@@ -163,6 +166,10 @@ Compose preview nhiều kích thước, currency và 3 icon lối tắt ở Lobb
 
 **Hoàn thành khi:** luồng chính chạy hết không crash qua test tự động + agent tự
 chạy thử trên emulator.
+
+**→ GIAI ĐOẠN 4: CODE + TEST XONG MỘT PHẦN (2026-10-03).** `CampaignMatchTest` (12) và
+`TowerFlowTest` (12, duyệt cả 49 tầng: thắng N mở N+1, không tầng nào kẹt) xanh;
+`:app:assembleDebug` thành công. **Chưa làm:** Compose navigation test (chưa có thư viện test UI) và chạy thử emulator 3 tầng mẫu (MCP local không cho chạy `adb`).
 
 ---
 

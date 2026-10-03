@@ -8,6 +8,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,9 +21,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
+import kma.game.chess2d.campaign.FloorDialogues
+import kma.game.chess2d.campaign.LossReason
 import kma.game.chess2d.campaign.TowerCatalog
+import kma.game.chess2d.campaign.TowerFlow
 import kma.game.chess2d.campaign.TowerProgress
 import kma.game.chess2d.campaign.TowerProgressStore
+import kma.game.chess2d.campaign.TowerStage
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.SavedGame
 import kma.game.chess2d.game.SavedGameStore
@@ -30,7 +35,9 @@ import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
 import kma.game.chess2d.opponent.AiCharacter
 import kma.game.chess2d.puzzle.PuzzleCatalog
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Các màn hình cấp cao của app.
@@ -137,7 +144,11 @@ fun AppRoot(modifier: Modifier = Modifier) {
         Screen.TOWER -> {
             // Bản đồ mở từ menu nên back ở đây là về menu.
             BackHandler { screen = Screen.MENU }
-            TowerRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
+            TowerRoute(
+                playerName = playerName,
+                onBack = { screen = Screen.MENU },
+                modifier = modifier,
+            )
         }
 
         Screen.HISTORY -> {
@@ -185,28 +196,117 @@ private fun AiSelectRoute(
 }
 
 /**
- * Nhánh chiến dịch: nạp 49 tầng và tiến độ rồi hiện bản đồ Tháp Cờ.
+ * Nhánh chiến dịch: nạp 49 tầng và tiến độ rồi đi theo luồng
+ * Tower Map → (Thoại) → Ván đấu → (Thoại kết) → Chiến thắng/Thất bại → quay lại bản đồ.
  *
- * Chạm vào tầng chưa dẫn tới đâu: thoại, ván đấu và màn thắng/thua được nối ở Giai đoạn 4
- * của `docs/plan/completion-plan.md`. Giai đoạn 1 chỉ cần bản đồ hiển thị đúng trạng thái.
+ * Luật chuyển màn nằm ở [TowerFlow] (thuần, có test); ở đây chỉ giữ màn đang hiện, tầng
+ * đang chơi và lượt chơi bằng `rememberSaveable` để xoay máy không đẩy người chơi về bản đồ.
+ * Tiến độ chỉ được ghi khi vào màn Chiến thắng, nên bỏ dở giữa ván không mở khóa tầng nào.
  */
 @Composable
-private fun TowerRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     // Dùng applicationContext: store sống lâu hơn một lần vẽ, không được giữ Activity.
-    val floors = remember(context) {
-        TowerCatalog.build(PuzzleCatalog.load(context.applicationContext).size)
-    }
+    val puzzles = remember(context) { PuzzleCatalog.load(context.applicationContext) }
+    val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
     val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
 
-    TowerMapScreen(
-        floors = floors,
-        progress = progress,
-        onFloorClick = {},
-        onBack = onBack,
-        modifier = modifier,
-    )
+    var stage by rememberSaveable { mutableStateOf(TowerStage.MAP) }
+    var floorNumber by rememberSaveable { mutableIntStateOf(1) }
+    var attempt by rememberSaveable { mutableIntStateOf(0) }
+    var lossReason by rememberSaveable { mutableStateOf(LossReason.CHECKMATE) }
+    val floor = floors[floorNumber - 1]
+
+    when (stage) {
+        TowerStage.MAP -> {
+            // Bản đồ mở từ menu nên back ở đây là về menu.
+            BackHandler(onBack = onBack)
+            TowerMapScreen(
+                floors = floors,
+                progress = progress,
+                onFloorClick = { picked ->
+                    floorNumber = picked.number
+                    // Lượt mới mỗi lần vào tầng để vào lại tầng cũ luôn là ván mới.
+                    attempt++
+                    stage = TowerFlow.onSelect(picked)
+                },
+                onBack = onBack,
+                modifier = modifier,
+            )
+        }
+
+        TowerStage.INTRO -> {
+            BackHandler { stage = TowerStage.MAP }
+            DialogueScreen(
+                lines = FloorDialogues.intro(floor.number),
+                onFinished = { stage = TowerFlow.afterIntro(floor) },
+                modifier = modifier,
+            )
+        }
+
+        TowerStage.BATTLE -> {
+            BackHandler { stage = TowerStage.MAP }
+            CampaignBattleRoute(
+                floor = floor,
+                attempt = attempt,
+                puzzles = puzzles,
+                playerName = playerName,
+                onWon = { stage = TowerFlow.afterWin(floor) },
+                onLost = { reason ->
+                    lossReason = reason
+                    stage = TowerStage.DEFEAT
+                },
+                onRestart = { attempt++ },
+                onExit = { stage = TowerStage.MAP },
+                modifier = modifier,
+            )
+        }
+
+        TowerStage.EPILOGUE -> {
+            BackHandler { stage = TowerStage.VICTORY }
+            DialogueScreen(
+                lines = FloorDialogues.epilogue(floor.number),
+                onFinished = { stage = TowerStage.VICTORY },
+                modifier = modifier,
+            )
+        }
+
+        TowerStage.VICTORY -> {
+            // NonCancellable: rời màn ngay sau khi thắng không được làm mất lần ghi tiến độ.
+            LaunchedEffect(floor.number) {
+                withContext(NonCancellable) { store.markCleared(floor.number) }
+            }
+            BackHandler { stage = TowerStage.MAP }
+            VictoryScreen(
+                floor = floor,
+                nextFloor = TowerFlow.nextFloor(floors, floor),
+                onNext = {
+                    TowerFlow.nextFloor(floors, floor)?.let { next ->
+                        floorNumber = next.number
+                        attempt++
+                        stage = TowerFlow.onSelect(next)
+                    }
+                },
+                onMap = { stage = TowerStage.MAP },
+                modifier = modifier,
+            )
+        }
+
+        TowerStage.DEFEAT -> {
+            BackHandler { stage = TowerStage.MAP }
+            DefeatScreen(
+                floor = floor,
+                reason = lossReason,
+                onRetry = {
+                    attempt++
+                    stage = TowerStage.BATTLE
+                },
+                onMap = { stage = TowerStage.MAP },
+                modifier = modifier,
+            )
+        }
+    }
 }
 
 /**
