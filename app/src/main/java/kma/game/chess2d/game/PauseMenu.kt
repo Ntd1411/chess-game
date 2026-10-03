@@ -7,15 +7,11 @@ enum class PauseItem { RESUME, RESTART, SETTINGS, LEAVE }
 object PauseMenu {
 
     /**
-     * Danh sách mục hiện ra theo chế độ chơi.
-     *
-     * [PauseItem.SETTINGS] hiện chỉ mở hộp chọn cấp máy, nên chỉ có nghĩa khi đấu máy; ở chế độ
-     * hai người thì ẩn hẳn thay vì để một nút không làm gì (cùng nguyên tắc với nút Đổi cấp).
+     * Danh sách mục hiện ra. Hiện giống nhau ở mọi chế độ: Cài đặt mở bảng Cài đặt chung (âm
+     * thanh, giao diện bàn cờ, nước đi hợp lệ), có nghĩa với cả đấu máy lẫn hai người.
+     * Giữ tham số [mode] để sau này mục nào chỉ hợp một chế độ thì ẩn được ở đúng một chỗ.
      */
-    fun itemsFor(mode: GameMode): List<PauseItem> = buildList {
-        add(PauseItem.RESUME)
-        add(PauseItem.RESTART)
-        if (mode == GameMode.VS_COMPUTER) add(PauseItem.SETTINGS)
-        add(PauseItem.LEAVE)
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun itemsFor(mode: GameMode): List<PauseItem> =
+        listOf(PauseItem.RESUME, PauseItem.RESTART, PauseItem.SETTINGS, PauseItem.LEAVE)
 }

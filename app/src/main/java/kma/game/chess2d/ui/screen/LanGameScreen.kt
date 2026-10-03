@@ -176,7 +176,7 @@ fun LanGameScreen(
         ChessBoard(
             pieces = state.board.pieces,
             selectedSquare = state.board.selectedSquare,
-            legalTargets = state.board.legalTargets,
+            legalTargets = if (appearance.showLegalMoves) state.board.legalTargets else emptySet(),
             lastMoveFrom = state.board.lastMoveFrom,
             lastMoveTo = state.board.lastMoveTo,
             checkedKingSquare = state.board.checkedKingSquare,

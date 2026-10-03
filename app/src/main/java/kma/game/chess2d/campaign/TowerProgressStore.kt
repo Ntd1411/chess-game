@@ -39,6 +39,11 @@ class TowerProgressStore(private val context: Context) {
         }
     }
 
+    /** Xóa toàn bộ tiến độ chiến dịch (dùng cho "Xóa dữ liệu" trong Cài đặt). */
+    suspend fun clear() {
+        context.towerDataStore.edit { it.clear() }
+    }
+
     private companion object {
         val KEY_CLEARED = intPreferencesKey("cleared_up_to")
     }

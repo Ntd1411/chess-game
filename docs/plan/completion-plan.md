@@ -187,11 +187,15 @@ chạy thử trên emulator.
       — **xong phần dữ liệu:** `JournalEntry` + `Journal.stateOf`; ghi đã gặp khi bấm BẮT ĐẦU
       ở màn chọn đối thủ. **Còn thiếu:** màn hình Nhật ký (chỉ mới có 5 nhân vật AI)
 - [ ] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
-- [ ] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
+- [x] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
       Khác)
+      — **xong:** `SettingsPanel` 5 tab + `DataReset`. **Chỉ có cài đặt có tác dụng thật:** rung, âm
+      thanh, bộ màu/bộ quân, hiển thị nước đi hợp lệ, xóa dữ liệu, giới thiệu. **Không làm** (chưa có
+      tính năng tương ứng): ngôn ngữ, thông báo, nhạc nền (Giai đoạn 6), chất lượng hiệu ứng,
+      FPS, xác nhận nước đi
 - [~] **Pause Menu** overlay trong `GameScreen`
       — **xong cho `GameScreen`** (đấu máy/2 người): `PauseMenu` + `PauseMenuOverlay`, nút Menu và Back
-      mở Pause. Mục Cài đặt tạm mở hộp chọn cấp máy, sẽ trỏ sang Settings đầy đủ khi có.
+      mở Pause. Mục Cài đặt mở `SettingsPanel`.
       **Chưa làm:** màn đấu chiến dịch (`CampaignBattleScreen`) và LAN chưa có Pause
 
 **Tự xác minh:**

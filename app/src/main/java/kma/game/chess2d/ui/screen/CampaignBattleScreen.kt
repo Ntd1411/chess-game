@@ -152,7 +152,7 @@ fun CampaignBattleRoute(
         ChessBoard(
             pieces = state.game.pieces,
             selectedSquare = state.game.selectedSquare,
-            legalTargets = state.game.legalTargets,
+            legalTargets = if (appearance.showLegalMoves) state.game.legalTargets else emptySet(),
             lastMoveFrom = state.game.lastMoveFrom,
             lastMoveTo = state.game.lastMoveTo,
             checkedKingSquare = state.game.checkedKingSquare,

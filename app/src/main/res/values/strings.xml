@@ -280,4 +280,18 @@
     <string name="pause_restart">Khởi động lại</string>
     <string name="pause_settings">Cài đặt</string>
     <string name="pause_leave">Rời trận</string>
+    <!-- Settings theo tab -->
+    <string name="settings_tab_general">Chung</string>
+    <string name="settings_tab_sound">Âm thanh</string>
+    <string name="settings_tab_visual">Hình ảnh</string>
+    <string name="settings_tab_controls">Điều khiển</string>
+    <string name="settings_tab_other">Khác</string>
+    <string name="settings_legal_moves">Hiển thị nước đi hợp lệ</string>
+    <string name="settings_data">Dữ liệu</string>
+    <string name="settings_reset_data">Xóa dữ liệu</string>
+    <string name="settings_reset_title">Xóa toàn bộ dữ liệu?</string>
+    <string name="settings_reset_text">Sẽ xóa cài đặt, tiến độ Tháp Cờ, lịch sử ván đấu, ván đang dở, Hồ sơ và Nhật ký. Không thể hoàn tác.</string>
+    <string name="settings_reset_confirm">Xóa hết</string>
+    <string name="settings_credits_title">Giới thiệu</string>
+    <string name="settings_credits_text">Chess 2D — Tháp Cờ. Game cờ vua Android viết bằng Kotlin và Jetpack Compose.</string>
 </resources>

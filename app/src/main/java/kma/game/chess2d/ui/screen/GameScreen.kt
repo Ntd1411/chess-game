@@ -64,6 +64,7 @@ fun GameScreen(
     var showLevels by remember { mutableStateOf(false) }
     // Pause Menu mở/đóng là việc của màn hình; xoay máy không được làm nó tự đóng.
     var showPause by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     // Bộ màu bàn và bộ quân đọc thẳng từ cài đặt: đây là sở thích của người chơi, không
     // phải trạng thái của ván, nên không đi qua ViewModel.
     val appearanceContext = LocalContext.current
@@ -181,7 +182,7 @@ fun GameScreen(
         ChessBoard(
             pieces = state.pieces,
             selectedSquare = state.selectedSquare,
-            legalTargets = state.legalTargets,
+            legalTargets = if (appearance.showLegalMoves) state.legalTargets else emptySet(),
             lastMoveFrom = state.lastMoveFrom,
             lastMoveTo = state.lastMoveTo,
             checkedKingSquare = state.checkedKingSquare,
@@ -201,11 +202,16 @@ fun GameScreen(
                 when (item) {
                     PauseItem.RESUME -> Unit
                     PauseItem.RESTART -> viewModel.newGame()
-                    PauseItem.SETTINGS -> showLevels = true
+                    PauseItem.SETTINGS -> showSettings = true
                     PauseItem.LEAVE -> onExitToMenu()
                 }
             },
         )
+    }
+
+    if (showSettings) {
+        // Không truyền tên: đổi tên giữa ván không có tác dụng, tên nhập ở Sảnh.
+        SettingsPanel(onDismiss = { showSettings = false })
     }
 
     if (showLevels) {

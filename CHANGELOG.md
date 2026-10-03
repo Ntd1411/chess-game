@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:35 GMT+7 — Giai đoạn 5 (phần 3): Cài đặt dạng tab
+- Thêm ui/screen/SettingsPanel.kt (Dialog toàn màn, 5 tab Chung/Âm thanh/Hình ảnh/Điều khiển/Khác) dùng chung cho Sảnh và Pause; settings/DataReset.kt (Xóa dữ liệu có xác nhận: cài đặt, tiến độ Tháp, ván dở, lịch sử, Hồ sơ, Nhật ký)
+- SettingsStore nhận DataStore (test được trên JVM), thêm `showLegalMoves` + `resetToDefaults`; nối công tắc này vào bàn cờ GameScreen/CampaignBattle/LAN; TowerProgressStore.clear()
+- MenuScreen: gỡ SettingsDialog cũ (chuyển sang SettingsPanel); Pause → Cài đặt mở SettingsPanel, mục này hiện ở mọi chế độ
+- Test: SettingsStoreTest (8), PauseMenuTest cập nhật (4)
+
 ## 2026-10-03 17:22 GMT+7 — Giai đoạn 5 (phần 2): Pause Menu trong GameScreen
 - Thêm game/PauseMenu.kt (luật chọn mục theo chế độ: ẩn Cài đặt khi 2 người), ui/screen/PauseMenuOverlay.kt (Dialog gothic: Tiếp tục / Khởi động lại / Cài đặt / Rời trận) + 5 string `pause_*`
 - GameScreen: nút Home đổi thành nút Menu mở Pause; Back trong ván mở Pause thay vì thoát ngay; mục Cài đặt mở hộp chọn cấp máy (chỉ khi đấu máy)
