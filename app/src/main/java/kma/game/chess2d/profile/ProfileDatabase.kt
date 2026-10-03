@@ -82,6 +82,10 @@ class ProfileRepository(private val db: ProfileDatabase) {
     /** Tập id nhân vật đã gặp. */
     val metIds: Flow<Set<String>> = dao.observeJournal().map { list -> list.map { it.npcId }.toSet() }
 
+    /** Các bản ghi đã gặp (kèm lần đầu và số lần gặp), khóa theo id nhân vật. */
+    val journal: Flow<Map<String, JournalEntry>> =
+        dao.observeJournal().map { list -> list.associateBy { it.npcId } }
+
     /** Ghi một ván đã xong. */
     suspend fun recordMatch(result: String, byCheckmate: Boolean, seconds: Long) =
         updateStats { it.withMatch(result, byCheckmate, seconds) }

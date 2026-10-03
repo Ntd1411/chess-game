@@ -22,4 +22,31 @@ object Journal {
         character.isUnlocked(clearedUpTo) -> JournalState.UNKNOWN
         else -> JournalState.LOCKED
     }
+
+    /**
+     * Một trang Nhật ký: nhân vật, trạng thái và lịch sử gặp (chỉ có khi [JournalState.MET]).
+     */
+    data class Page(
+        val character: AiCharacter,
+        val state: JournalState,
+        val entry: JournalEntry?,
+    )
+
+    /**
+     * Dựng toàn bộ trang Nhật ký theo đúng thứ tự [characters].
+     *
+     * [entries] là bản ghi đã gặp, khóa theo id nhân vật. Chỉ nhân vật đã gặp mới kèm [Page.entry],
+     * nhân vật chưa gặp không có lịch sử để lộ.
+     */
+    fun pages(
+        characters: List<AiCharacter>,
+        entries: Map<String, JournalEntry>,
+        clearedUpTo: Int,
+    ): List<Page> = characters.map { character ->
+        val state = stateOf(character, entries.keys, clearedUpTo)
+        Page(character, state, entry = if (state == JournalState.MET) entries[character.id] else null)
+    }
+
+    /** Số nhân vật đã gặp trong [pages]. */
+    fun metCount(pages: List<Page>): Int = pages.count { it.state == JournalState.MET }
 }

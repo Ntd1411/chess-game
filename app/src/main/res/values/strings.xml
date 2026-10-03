@@ -315,4 +315,16 @@
     <string name="profile_time_hm">%1$d giờ %2$d phút</string>
     <string name="profile_time_m">%1$d phút</string>
     <string name="profile_time_s">%1$d giây</string>
+    <!-- Nhật ký nhân vật -->
+    <string name="journal_open">Mở nhật ký</string>
+    <string name="journal_title">NHẬT KÝ</string>
+    <string name="journal_back">Quay lại</string>
+    <string name="journal_progress">Đã gặp %1$d/%2$d nhân vật</string>
+    <string name="journal_state_met">Đã gặp</string>
+    <string name="journal_state_unknown">Chưa rõ</string>
+    <string name="journal_state_locked">Khóa</string>
+    <string name="journal_unknown_hint">Chưa từng đối đầu. Hãy thách đấu nhân vật này ở chế độ Người vs Máy để ghi vào nhật ký.</string>
+    <string name="journal_history_title">Lịch sử gặp mặt</string>
+    <string name="journal_first_met">Lần đầu gặp: %1$s</string>
+    <string name="journal_times_met">Số lần đối đầu: %1$d</string>
 </resources>

@@ -36,6 +36,9 @@ import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
 import kma.game.chess2d.opponent.AiCharacter
+import kma.game.chess2d.opponent.AiCharacters
+import kma.game.chess2d.profile.Journal
+import kma.game.chess2d.profile.JournalEntry
 import kma.game.chess2d.profile.MatchRecording
 import kma.game.chess2d.profile.PlayerStats
 import kma.game.chess2d.profile.ProfileDatabase
@@ -52,7 +55,7 @@ import kotlinx.coroutines.withContext
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE, JOURNAL }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -124,8 +127,16 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onOpenSpectate = { screen = Screen.SPECTATE },
                 onOpenHistory = { screen = Screen.HISTORY },
                 onOpenProfile = { screen = Screen.PROFILE },
+                onOpenJournal = { screen = Screen.JOURNAL },
                 modifier = modifier,
             )
+        }
+
+        Screen.JOURNAL -> {
+            // Nhật ký mở từ menu nên back ở đây là về menu. Back khi đang xem một trang chi tiết
+            // do chính JournalScreen xử lý (về danh sách) và được ưu tiên vì đăng ký sau.
+            BackHandler { screen = Screen.MENU }
+            JournalRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
         }
 
         Screen.PROFILE -> {
@@ -200,6 +211,23 @@ private fun ProfileRoute(name: String, onBack: () -> Unit, modifier: Modifier = 
     val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
     val stats by profile.stats.collectAsStateWithLifecycle(initialValue = PlayerStats())
     ProfileScreen(name = name, stats = stats, onBack = onBack, modifier = modifier)
+}
+
+/**
+ * Nhánh Nhật ký: ghép bản ghi đã gặp (Room, tự cập nhật qua Flow) với tiến độ Tháp Cờ để suy ra
+ * trạng thái từng nhân vật rồi hiển thị.
+ */
+@Composable
+private fun JournalRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val store = remember(context) { TowerProgressStore(context.applicationContext) }
+    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
+    val entries by profile.journal.collectAsStateWithLifecycle(initialValue = emptyMap<String, JournalEntry>())
+    val pages = remember(entries, progress.clearedUpTo) {
+        Journal.pages(AiCharacters.all, entries, progress.clearedUpTo)
+    }
+    JournalScreen(pages = pages, onBack = onBack, modifier = modifier)
 }
 
 /**

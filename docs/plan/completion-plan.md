@@ -185,9 +185,11 @@ chạy thử trên emulator.
       LAN, chiến dịch; qua `MatchRecording`). **Xong màn hình Profile** (`ProfileScreen`, mở từ
       avatar/nhân vật ở Sảnh): chỉ có phần Thông tin, **không dựng** tab Trang phục/Kỹ năng/Ký ức
       vì chưa có hệ thống tương ứng
-- [~] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
-      — **xong phần dữ liệu:** `JournalEntry` + `Journal.stateOf`; ghi đã gặp khi bấm BẮT ĐẦU
-      ở màn chọn đối thủ. **Còn thiếu:** màn hình Nhật ký (chỉ mới có 5 nhân vật AI)
+- [x] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
+      — **xong:** `JournalEntry` + `Journal.stateOf`/`Journal.pages`; ghi đã gặp khi bấm BẮT ĐẦU
+      ở màn chọn đối thủ. **Xong màn hình Nhật ký** (`JournalScreen`, mở từ nút Nhật ký ở Sảnh):
+      danh sách 5 nhân vật AI + trang chi tiết. **Không dựng** "bí mật đã phát hiện" vì chưa có
+      hệ thống bí mật
 - [ ] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
 - [x] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
       Khác)

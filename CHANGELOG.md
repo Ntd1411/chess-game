@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:58 GMT+7 — Giai đoạn 5 (phần 6): màn hình Nhật ký nhân vật
+- Thêm profile/Journal.kt (thuần): suy trạng thái ✓ đã gặp / ? chưa rõ / khóa cho từng nhân vật, dùng chung `isUnlocked` với màn chọn đối thủ để không mâu thuẫn. ProfileRepository thêm Flow `journal` (id → bản ghi gặp)
+- Thêm ui/screen/JournalScreen.kt: danh sách nhân vật và trang chi tiết. Nhân vật chưa gặp bị che tên/ảnh. Trang đã gặp có câu thoại, độ khó, phong cách, tính cách, lịch sử gặp. Chưa có "bí mật đã phát hiện" vì chưa có hệ thống bí mật
+- AppRoot thêm Screen.JOURNAL + JournalRoute (Room + tiến độ Tháp), back về menu. MenuScreen thêm `onOpenJournal` và nút Nhật ký cạnh Lịch sử
+- Thêm string `journal_*`, test JournalPagesTest. `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+
 ## 2026-10-03 17:49 GMT+7 — Giai đoạn 5 (phần 5): màn hình Hồ sơ (Profile)
 - Thêm ui/screen/ProfileScreen.kt: ảnh nhân vật giữa, tên + cấp, thanh tiến độ lên cấp, bảng thống kê (thắng/thua/hòa, tổng ván, tỉ lệ thắng, chiếu hết, tầng cao nhất x/49, thời gian chơi). Chỉ có phần Thông tin, chưa dựng tab Trang phục/Kỹ năng/Ký ức vì chưa có hệ thống đằng sau
 - PlayerStats: thêm `progressPoints`, `pointsIntoLevel`, `winRatePercent`; thêm profile/PlayTime.kt (tách giờ/phút/giây và chọn đơn vị hiển thị)

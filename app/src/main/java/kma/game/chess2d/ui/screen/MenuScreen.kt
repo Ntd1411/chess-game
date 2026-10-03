@@ -55,8 +55,8 @@ internal object LobbyLayout {
  * máy, LAN và Máy vs Máy là ba chế độ phụ. Cấp độ máy không còn chọn ở đây mà chọn ở màn
  * Chọn đối thủ AI. Tên người chơi, âm thanh và giao diện bàn cờ nằm trong hộp thoại Cài đặt.
  *
- * Chưa có ba lối tắt Nhật ký/Túi đồ/Thành tựu: các màn đó thuộc Giai đoạn 5, và một nút
- * bấm không dẫn đi đâu là ngõ cụt.
+ * Lối tắt Nhật ký nằm cạnh Lịch sử ở cuối. Túi đồ và Thành tựu chưa có vì các màn đó chưa làm,
+ * và một nút bấm không dẫn đi đâu là ngõ cụt.
  */
 @Composable
 fun MenuScreen(
@@ -69,6 +69,7 @@ fun MenuScreen(
     onOpenSpectate: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenProfile: () -> Unit,
+    onOpenJournal: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -135,11 +136,19 @@ fun MenuScreen(
                         modifier = Modifier.weight(1f),
                     )
                 }
-                TextButton(onClick = onOpenHistory, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.history_open),
-                        color = GothicColors.Parchment,
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = onOpenJournal, modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.journal_open),
+                            color = GothicColors.Parchment,
+                        )
+                    }
+                    TextButton(onClick = onOpenHistory, modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.history_open),
+                            color = GothicColors.Parchment,
+                        )
+                    }
                 }
             }
         }
