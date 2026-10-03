@@ -124,6 +124,7 @@
 
     <!-- Công tắc âm thanh và rung ở menu -->
     <string name="settings_title">Âm thanh và rung</string>
+    <string name="settings_music">Nhạc nền</string>
     <string name="settings_sound">Tiếng đặt quân</string>
     <string name="settings_haptic">Rung khi đi</string>
 

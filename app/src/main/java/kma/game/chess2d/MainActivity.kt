@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import kma.game.chess2d.ui.screen.AppRoot
+import kma.game.chess2d.ui.screen.MusicHost
 import kma.game.chess2d.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +24,9 @@ class MainActivity : ComponentActivity() {
             ChessTheme {
                 // Không còn Scaffold: nó cộng thêm padding inset trong khi nhiều màn tự xử lý inset,
                 // gây cộng đôi và lộ dải nền hệ thống. AppRoot tự lo inset cho từng màn.
-                AppRoot(modifier = Modifier.fillMaxSize())
+                MusicHost {
+                    AppRoot(modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }

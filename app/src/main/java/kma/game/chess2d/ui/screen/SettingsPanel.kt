@@ -65,7 +65,7 @@ enum class SettingsTab(@param:StringRes val label: Int) {
  * Là [Dialog] chứ không phải một màn riêng của [AppRoot]: mở từ trong ván đấu thì ván vẫn nằm
  * nguyên bên dưới, không bị rời khỏi composition.
  *
- * Chỉ có những cài đặt **thật sự có tác dụng** trong app. Ngôn ngữ, thông báo, nhạc nền, chất
+ * Chỉ có những cài đặt **thật sự có tác dụng** trong app. Ngôn ngữ, thông báo, chất
  * lượng hiệu ứng, FPS và xác nhận nước đi trong spec chưa có tính năng tương ứng nên chưa đưa
  * vào, tránh công tắc không làm gì.
  *
@@ -146,11 +146,18 @@ fun SettingsPanel(
                             )
                         }
 
-                        SettingsTab.SOUND -> SettingSwitch(
-                            label = stringResource(R.string.settings_sound),
-                            checked = settings.soundEnabled,
-                            onCheckedChange = { scope.launch { store.setSoundEnabled(it) } },
-                        )
+                        SettingsTab.SOUND -> {
+                            SettingSwitch(
+                                label = stringResource(R.string.settings_music),
+                                checked = settings.musicEnabled,
+                                onCheckedChange = { scope.launch { store.setMusicEnabled(it) } },
+                            )
+                            SettingSwitch(
+                                label = stringResource(R.string.settings_sound),
+                                checked = settings.soundEnabled,
+                                onCheckedChange = { scope.launch { store.setSoundEnabled(it) } },
+                            )
+                        }
 
                         SettingsTab.VISUAL -> {
                             SectionLabel(stringResource(R.string.settings_board_palette))

@@ -50,6 +50,7 @@ class SettingsStoreTest {
     fun `mac dinh bat am thanh rung va nuoc di hop le`() {
         val d = AppSettings()
         assertTrue(d.soundEnabled)
+        assertTrue(d.musicEnabled)
         assertTrue(d.hapticEnabled)
         assertTrue(d.showLegalMoves)
     }
@@ -57,6 +58,7 @@ class SettingsStoreTest {
     @Test
     fun `doi tung gia tri roi doc lai dung`() = withStore { store, _ ->
         store.setSoundEnabled(false)
+        store.setMusicEnabled(false)
         store.setHapticEnabled(false)
         store.setShowLegalMoves(false)
         store.setBoardPalette(BoardPalette.WOOD)
@@ -64,6 +66,7 @@ class SettingsStoreTest {
 
         val s = store.settings.first()
         assertFalse(s.soundEnabled)
+        assertFalse(s.musicEnabled)
         assertFalse(s.hapticEnabled)
         assertFalse(s.showLegalMoves)
         assertEquals(BoardPalette.WOOD, s.boardPalette)
@@ -112,6 +115,14 @@ class SettingsStoreTest {
         store.setBoardPalette(BoardPalette.SLATE)
         store.resetToDefaults()
         assertEquals(AppSettings(), store.settings.first())
+    }
+
+    @Test
+    fun `tat nhac nen khong dong den tieng dat quan`() = withStore { store, _ ->
+        store.setMusicEnabled(false)
+        val s = store.settings.first()
+        assertFalse(s.musicEnabled)
+        assertTrue(s.soundEnabled)
     }
 
     @Test

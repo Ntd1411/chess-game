@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-04 02:05 GMT+7 — Nhạc nền theo màn hình, công tắc Nhạc nền và nối file âm thanh wav
+- Thêm `MusicPlayer` (MediaPlayer, phát lặp, tạm dừng khi app xuống nền) và `MusicTrack`/`MusicPlan` chọn nhạc menu, chiến đấu, trùm, thắng, thua
+- Thêm `MusicHost` ở gốc `MainActivity` và `PlayMusic` trong `AppRoot`, `TowerRoute`, `LanRoute` để mỗi màn khai báo bản nhạc
+- Thêm công tắc Nhạc nền (`musicEnabled`) vào `SettingsStore` và tab Âm thanh của `SettingsPanel`
+- Thêm 9 file wav vào `res/raw`, `SoundEffects` nhận cả đuôi wav và ogg
+- Thêm `MusicPlanTest` và test nhạc nền trong `SettingsStoreTest`
+
 ## 2026-10-03 23:27 GMT+7 — Nền screen_chess_battle và chừa inset cho khung ván đấu dùng chung
 - MatchScaffold dùng `gothicBackdrop` (mặc định screen_chess_battle, thêm tham số `backdrop`), nên GameScreen, CampaignBattleScreen và LanGameScreen cùng có nền gothic và chừa inset thanh hệ thống. SpectateScreen truyền `backdrop = screen_ai_vs_ai` thay vì tự gắn modifier để không vẽ nền hai lần
 - `:app:testDebugUnitTest` và `:app:assembleDebug` thành công

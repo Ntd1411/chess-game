@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.map
  */
 data class AppSettings(
     val soundEnabled: Boolean = true,
+    val musicEnabled: Boolean = true,
     val hapticEnabled: Boolean = true,
     val boardPalette: BoardPalette = BoardPalette.GOTHIC,
     val pieceTheme: PieceTheme = PieceTheme.IMAGE,
@@ -54,6 +55,7 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
         .map { prefs ->
             AppSettings(
                 soundEnabled = prefs[KEY_SOUND] ?: true,
+                musicEnabled = prefs[KEY_MUSIC] ?: true,
                 hapticEnabled = prefs[KEY_HAPTIC] ?: true,
                 boardPalette = paletteOf(prefs[KEY_PALETTE]),
                 pieceTheme = pieceThemeOf(prefs[KEY_PIECES]),
@@ -63,6 +65,10 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setSoundEnabled(enabled: Boolean) {
         dataStore.edit { it[KEY_SOUND] = enabled }
+    }
+
+    suspend fun setMusicEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_MUSIC] = enabled }
     }
 
     suspend fun setHapticEnabled(enabled: Boolean) {
@@ -88,6 +94,7 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
 
     private companion object {
         val KEY_SOUND = booleanPreferencesKey("sound_enabled")
+        val KEY_MUSIC = booleanPreferencesKey("music_enabled")
         val KEY_HAPTIC = booleanPreferencesKey("haptic_enabled")
         val KEY_PALETTE = stringPreferencesKey("board_palette")
         val KEY_PIECES = stringPreferencesKey("piece_theme")

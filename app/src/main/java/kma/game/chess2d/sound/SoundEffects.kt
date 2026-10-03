@@ -20,8 +20,8 @@ import kotlin.math.sin
  *
  * Có hai đường phát tiếng, xếp theo thứ tự ưu tiên:
  *
- * 1. Tệp trong `res/raw` (`move.ogg`, `capture.ogg`, `check.ogg`, `game_end.ogg`), tìm
- *    theo **tên** chứ không tham chiếu thẳng `R.raw.*`, để chưa thêm asset thì app vẫn
+ * 1. Tệp trong `res/raw` (`move`, `capture`, `check`, `game_end`; đuôi `.wav` hay `.ogg` đều được),
+ *    tìm theo **tên** chứ không tham chiếu thẳng `R.raw.*`, để chưa thêm asset thì app vẫn
  *    biên dịch được. Nạp bằng [SoundPool] vì các tiếng này rất ngắn và phải kêu ngay.
  * 2. Không có tệp nào thì **tự sinh** một tiếng bằng [AudioTrack]. Đây không phải cho
  *    vui: bản đang chạy không kèm asset âm thanh, nên nếu chỉ dựa vào `res/raw` thì
@@ -212,7 +212,7 @@ class SoundEffects(context: Context) {
          * Tên tệp mong đợi trong `res/raw`.
          *
          * Giữ thành một chỗ duy nhất để người thêm asset biết chính xác phải đặt tên gì:
-         * `move.ogg`, `capture.ogg`, `check.ogg`, `game_end.ogg`.
+         * `move`, `capture`, `check`, `game_end` (đuôi `.wav` hoặc `.ogg`).
          */
         fun resourceNameOf(sound: MoveSound): String = when (sound) {
             MoveSound.MOVE -> "move"

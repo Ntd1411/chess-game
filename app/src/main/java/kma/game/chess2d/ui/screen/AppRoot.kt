@@ -47,6 +47,8 @@ import kma.game.chess2d.profile.PlayerStats
 import kma.game.chess2d.profile.ProfileDatabase
 import kma.game.chess2d.profile.ProfileRepository
 import kma.game.chess2d.puzzle.PuzzleCatalog
+import kma.game.chess2d.sound.MusicPlan
+import kma.game.chess2d.sound.MusicTrack
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,6 +95,10 @@ fun AppRoot(modifier: Modifier = Modifier) {
     var localBlackName by rememberSaveable { mutableStateOf("") }
     var localTime by rememberSaveable { mutableStateOf(LocalTimeControl.UNLIMITED) }
     var localToken by rememberSaveable { mutableIntStateOf(0) }
+
+    // Sảnh LAN và Tháp Cờ tự chọn nhạc theo pha/chặng bên trong nhánh của chúng; các màn còn lại
+    // chỉ phụ thuộc vào màn đang hiện.
+    if (screen != Screen.LOBBY && screen != Screen.TOWER) PlayMusic(musicFor(screen))
 
     when (screen) {
         Screen.SPLASH -> SplashScreen(
@@ -233,6 +239,20 @@ fun AppRoot(modifier: Modifier = Modifier) {
 }
 
 /**
+ * Nhạc theo màn hình cho các màn không tự chọn nhạc.
+ *
+ * Splash im lặng. Các màn menu/phụ dùng chung nhạc menu để đi qua lại giữa chúng không làm nhạc
+ * khởi động lại; ván đấu và màn xem Máy vs Máy dùng nhạc chiến đấu. [Screen.LOBBY] và
+ * [Screen.TOWER] do nhánh của chúng quyết định nên không đi qua đây.
+ */
+private fun musicFor(screen: Screen): MusicTrack? = when (screen) {
+    Screen.SPLASH -> null
+    Screen.MATCH, Screen.SPECTATE -> MusicTrack.BATTLE
+    Screen.MENU, Screen.HISTORY, Screen.AI_SELECT, Screen.PROFILE, Screen.JOURNAL,
+    Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER -> MusicTrack.MENU
+}
+
+/**
  * Nhánh Hồ sơ: đọc thống kê từ Room (tự cập nhật qua Flow) và hiển thị.
  */
 @Composable
@@ -313,6 +333,8 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
     var attemptStartedAt by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
     val scope = rememberCoroutineScope()
     val floor = floors[floorNumber - 1]
+
+    PlayMusic(MusicPlan.forTowerStage(stage, floor.kind))
 
     /** Mở lượt chơi mới: đổi khóa ván và đặt lại đồng hồ đo thời gian. */
     fun newAttempt() {
@@ -500,6 +522,8 @@ private fun LanRoute(
     LaunchedEffect(state.phase) {
         if (state.phase == LanPhase.SESSION) viewModel.stopScan() else viewModel.startScan()
     }
+
+    PlayMusic(if (state.phase == LanPhase.SESSION) MusicTrack.BATTLE else MusicTrack.MENU)
 
     when (state.phase) {
         LanPhase.LOBBY -> {
