@@ -63,19 +63,19 @@ private enum class Screen {
 }
 
 /**
- * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
+ * Gốc cây giao diện: splash → menu chính → (sảnh LAN / các chế độ khác) → ván đấu.
  *
- * Thứ tự này là yêu cầu của mục 5.7: lấy **phòng chơi làm trung tâm**. Mở app lên là
- * vào thẳng sảnh, thấy ngay phòng của người khác trong mạng và mở được phòng của
- * mình; menu chơi offline tụt xuống thành màn thứ cấp sau một cú chạm.
+ * Theo `ui-screens.md` (SPLASH → MAIN LOBBY): sau splash người chơi vào **menu chính**,
+ * từ đó mới chọn Khám phá Tháp, Người vs Máy, 2 người, LAN, Máy vs Máy... Sảnh LAN chỉ
+ * là một nhánh mở từ nút LAN ở menu.
  *
  * Điều hướng tự viết bằng một biến state chứ không dùng Navigation Compose: app chỉ
  * có bốn màn hình, không có deep link và không có back stack sâu, nên thêm một thư
  * viện điều hướng chỉ tốn dung lượng.
  *
- * Phím back được xử lý **riêng từng màn**: ván đấu về menu, menu về sảnh, sảnh đang
- * rảnh thì để hệ thống thoát app như bình thường, còn sảnh đang mở phòng thì back
- * là huỷ phòng. Trước đây back từ trong phòng LAN thoát luôn app, làm người chơi
+ * Phím back được xử lý **riêng từng màn**: ván đấu và các màn phụ về menu, menu là màn
+ * gốc nên để hệ thống thoát app, sảnh LAN đang rảnh về menu, còn sảnh đang mở phòng
+ * thì back là huỷ phòng. Trước đây back từ trong phòng LAN thoát luôn app, làm người chơi
  * rời phòng ngoài ý muốn.
  */
 @Composable
@@ -96,33 +96,23 @@ fun AppRoot(modifier: Modifier = Modifier) {
 
     when (screen) {
         Screen.SPLASH -> SplashScreen(
-            onDone = { screen = Screen.LOBBY },
+            onDone = { screen = Screen.MENU },
             modifier = modifier,
         )
 
-        // Sảnh là màn chính: không đăng ký BackHandler ở đây để back lúc rảnh vẫn thoát app.
-        // Riêng lúc đang mở phòng hoặc đang trong ván, [LanRoute] tự chặn back của nó.
         Screen.LOBBY -> {
+            // Sảnh LAN mở từ menu nên back lúc rảnh là về menu. Đăng ký trước [LanRoute] để các
+            // BackHandler bên trong (huỷ phòng, rời phòng) được ưu tiên khi đang mở phòng hay trong ván.
+            BackHandler { screen = Screen.MENU }
             LanRoute(
                 playerName = playerName,
                 onOpenMenu = { screen = Screen.MENU },
                 modifier = modifier,
             )
-            // Câu hỏi "tiếp tục hay bỏ" đặt ở sảnh vì sảnh là màn đầu tiên người chơi thấy
-            // sau splash, không phải menu.
-            ResumePrompt(
-                onResume = { saved ->
-                    mode = saved.mode
-                    difficulty = saved.difficulty
-                    resumeSaved = true
-                    screen = Screen.MATCH
-                },
-            )
         }
 
         Screen.MENU -> {
-            // Back ở menu là về sảnh, vì sảnh mới là màn chính.
-            BackHandler { screen = Screen.LOBBY }
+            // Menu là màn gốc: không có BackHandler để back thoát app như bình thường.
             MenuScreen(
                 name = playerName,
                 onNameChange = { playerName = it },
@@ -136,6 +126,15 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onOpenProfile = { screen = Screen.PROFILE },
                 onOpenJournal = { screen = Screen.JOURNAL },
                 modifier = modifier,
+            )
+            // Hỏi "tiếp tục hay bỏ" ngay trên menu, màn đầu tiên người chơi thấy sau splash.
+            ResumePrompt(
+                onResume = { saved ->
+                    mode = saved.mode
+                    difficulty = saved.difficulty
+                    resumeSaved = true
+                    screen = Screen.MATCH
+                },
             )
         }
 
@@ -446,7 +445,7 @@ private fun ResumePrompt(onResume: (SavedGame) -> Unit) {
     // Dùng applicationContext: store sống lâu hơn một lần vẽ, không được giữ Activity.
     val store = remember(context) { SavedGameStore(context.applicationContext) }
     val saved by store.saved.collectAsStateWithLifecycle(initialValue = null)
-    // Đã trả lời rồi thì không hỏi lại trong cùng một lần mở app, kể cả khi quay về sảnh.
+    // Đã trả lời rồi thì không hỏi lại trong cùng một lần mở app, kể cả khi quay về menu.
     var answered by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 

@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 22:42 GMT+7 — Splash mới, sau splash vào menu, menu dùng nút ảnh gothic
+- AppRoot: SPLASH → MENU (trước đây vào thẳng sảnh LAN). Menu là màn gốc (back thoát app), sảnh LAN back về menu, hộp thoại tiếp tục ván dở chuyển sang menu
+- SplashScreen: nền screen_splash_background, logo ui_logo_tower_of_chess, thanh tiến độ thật nạp trước ảnh menu/bàn cờ/quân cờ vào ArtCache (tối thiểu 1,4 giây)
+- ui/art: thêm ArtAssets (danh sách nạp trước, ArtSizes) và PlateButton (nút dạng ảnh giữ tỉ lệ, hiệu ứng nhấn)
+- MenuScreen: nền/nhân vật nạp qua ArtCache, quầng đỏ phía sau nhân vật, khung avatar, hai nút chính dùng ui_menu_button_primary_wide (+pressed), ba nút phụ dùng secondary_wide. LobbyLayoutTest vẫn pass. `:app:testDebugUnitTest` thành công
+
 ## 2026-10-03 22:39 GMT+7 — Thêm 35 asset gothic bổ sung, nền theme gothic cố định và bộ nạp ảnh ArtCache
 - Đổi tên 35 ảnh trong asset_adding theo thời gian lưu khớp thứ tự prompt rồi chuyển vào res/drawable (screen_splash_background, ui_logo_tower_of_chess, ui_emblem_chess_tower, ic_launcher_art_*, ui_menu_button_*_wide(+_pressed), piece_black_*_bright, tile_*_overlay, tile_marble_light/dark, icon_* thanh chức năng và tiền tệ, ui_avatar_frame, screen_lan_lobby, screen_game_history, screen_ai_vs_ai)
 - Theme gothic cố định (bỏ dynamic color), themes.xml nền tối chống nháy trắng lúc khởi động, MainActivity bỏ Scaffold, thêm ui/art/ArtCache (giải mã downsample có cache). Chưa nối vào các màn hình. `:app:testDebugUnitTest` và `:app:assembleDebug` đều thành công
