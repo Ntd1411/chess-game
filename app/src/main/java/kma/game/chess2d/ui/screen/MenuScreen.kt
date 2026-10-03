@@ -192,6 +192,7 @@ private fun pieceThemeLabel(theme: PieceTheme): Int = when (theme) {
     PieceTheme.SOLID -> R.string.piece_theme_solid
     PieceTheme.OUTLINE -> R.string.piece_theme_outline
     PieceTheme.LETTER -> R.string.piece_theme_letter
+    PieceTheme.IMAGE -> R.string.piece_theme_image
 }
 
 /**

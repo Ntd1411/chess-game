@@ -1,6 +1,8 @@
 package kma.game.chess2d.ui.board
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import kma.game.chess2d.R
 import kma.game.chess2d.engine.Piece
 
 /**
@@ -45,6 +47,13 @@ enum class PieceTheme {
 
     /** Chữ cái K Q R B N P, dành cho người quen đọc ký hiệu hơn quen hình quân. */
     LETTER,
+
+    /**
+     * Ảnh PNG vẽ sẵn cho từng quân (bộ AI-generated, đã xác nhận dùng thoải mái —
+     * không vướng yêu cầu license ở mục 6). Không dùng glyphOf: [PieceGlyph] rẽ
+     * nhánh sang [pieceImageRes] trước khi gọi glyphOf.
+     */
+    IMAGE,
     ;
 
     /**
@@ -57,6 +66,28 @@ enum class PieceTheme {
         SOLID -> solidGlyph(piece)
         OUTLINE -> if (Piece.isWhite(piece)) hollowGlyph(piece) else solidGlyph(piece)
         LETTER -> letterGlyph(piece)
+        // Không có nơi nào gọi glyphOf khi IMAGE (xem PieceGlyph), nhưng vẫn cần một
+        // giá trị hợp lệ để when ở trên là exhaustive.
+        IMAGE -> solidGlyph(piece)
+    }
+}
+
+/**
+ * Resource ảnh cho [piece] khi dùng [PieceTheme.IMAGE].
+ *
+ * Bộ ảnh AI-generated, đặt trong res/drawable/ với tên piece_<mau>_<loai>.png
+ * (piece_white_king, piece_black_pawn, ...).
+ */
+@DrawableRes
+internal fun pieceImageRes(piece: Byte): Int {
+    val white = Piece.isWhite(piece)
+    return when (Piece.typeOf(piece)) {
+        Piece.KING -> if (white) R.drawable.piece_white_king else R.drawable.piece_black_king
+        Piece.QUEEN -> if (white) R.drawable.piece_white_queen else R.drawable.piece_black_queen
+        Piece.ROOK -> if (white) R.drawable.piece_white_rook else R.drawable.piece_black_rook
+        Piece.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop
+        Piece.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight
+        else -> if (white) R.drawable.piece_white_pawn else R.drawable.piece_black_pawn
     }
 }
 

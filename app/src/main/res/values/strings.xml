@@ -156,6 +156,7 @@
     <string name="piece_theme_solid">Quân đặc</string>
     <string name="piece_theme_outline">Quân viền</string>
     <string name="piece_theme_letter">Chữ cái</string>
+    <string name="piece_theme_image">Hình ảnh</string>
 
     <!-- Lịch sử ván đấu lưu bằng Room -->
     <string name="history_title">Lịch sử ván đấu</string>
