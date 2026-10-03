@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:15 GMT+7 — Giai đoạn 5 (phần 1): tầng dữ liệu Hồ sơ + Nhật ký (Room), chưa có màn hình
+- Thêm profile/PlayerStats.kt (thống kê + luật cộng thắng/thua/hòa/checkmate/thời gian/tầng cao nhất/cấp), Journal.kt (trạng thái ✓/?/🔒 dùng chung điều kiện mở với AiCharacter), ProfileDatabase.kt (Room DB riêng `profile.db`, không đụng `match-history.db`) + ProfileRepository (ghi trong giao dịch)
+- Nối AppRoot: vượt tầng → recordFloorCleared; bấm BẮT ĐẦU ở màn chọn đối thủ → recordMet (đều NonCancellable)
+- Thêm test ProfileLogicTest (14)
+
 ## 2026-10-03 16:57 GMT+7 — Giai đoạn 4: nối trọn luồng Tower Map → Thoại → Ván đấu → Thắng/Thua
 - Thêm campaign/FloorDialogue.kt (thoại 6 tầng mốc + đoạn kết tầng 49), TowerFlow.kt (luật chuyển màn), CampaignMatch.kt (luật thắng/thua theo mục tiêu tầng), CampaignViewModel.kt
 - Thêm DialogueScreen, VictoryScreen/DefeatScreen (FloorResultScreens.kt), CampaignBattleScreen.kt; viết lại TowerRoute trong AppRoot để chạy cả luồng

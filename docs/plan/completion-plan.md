@@ -178,9 +178,14 @@ chạy thử trên emulator.
 **Mục tiêu:** Hoàn thiện các màn còn lại, không ảnh hưởng luồng chính.
 
 **Công việc:**
-- [ ] **Character/Profile**: bảng Room mới lưu stats (thắng/thua/tầng cao nhất/
+- [~] **Character/Profile**: bảng Room mới lưu stats (thắng/thua/tầng cao nhất/
       checkmate/thời gian chơi)
-- [ ] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
+      — **xong phần dữ liệu:** `profile/PlayerStats.kt` + `ProfileDatabase` (DB riêng, không cần
+      migration). Đã ghi được tầng cao nhất. **Còn thiếu:** màn hình Profile; ghi thắng/thua/
+      checkmate/thời gian từ các màn đấu (`recordMatch` đã có nhưng chưa ai gọi)
+- [~] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
+      — **xong phần dữ liệu:** `JournalEntry` + `Journal.stateOf`; ghi đã gặp khi bấm BẮT ĐẦU
+      ở màn chọn đối thủ. **Còn thiếu:** màn hình Nhật ký (chỉ mới có 5 nhân vật AI)
 - [ ] Màn **setup 2 người cùng máy** (chọn quân/tên/thời gian) trước khi vào Battle
 - [ ] Mở rộng `SettingsStore` + UI tabs đầy đủ (Chung/Âm thanh/Hình ảnh/Điều khiển/
       Khác)

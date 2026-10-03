@@ -34,6 +34,8 @@ import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
 import kma.game.chess2d.opponent.AiCharacter
+import kma.game.chess2d.profile.ProfileDatabase
+import kma.game.chess2d.profile.ProfileRepository
 import kma.game.chess2d.puzzle.PuzzleCatalog
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -186,10 +188,16 @@ private fun AiSelectRoute(
     val context = LocalContext.current
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
     val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
+    val scope = rememberCoroutineScope()
 
     AiSelectionScreen(
         clearedUpTo = progress.clearedUpTo,
-        onStart = onStart,
+        onStart = { character ->
+            // Bắt đầu đối đầu = đã gặp nhân vật: ghi vào Nhật ký rồi mới vào ván.
+            scope.launch { withContext(NonCancellable) { profile.recordMet(character.id) } }
+            onStart(character)
+        },
         onBack = onBack,
         modifier = modifier,
     )
@@ -210,6 +218,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
     val puzzles = remember(context) { PuzzleCatalog.load(context.applicationContext) }
     val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
+    val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
     val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
 
     var stage by rememberSaveable { mutableStateOf(TowerStage.MAP) }
@@ -275,7 +284,11 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
         TowerStage.VICTORY -> {
             // NonCancellable: rời màn ngay sau khi thắng không được làm mất lần ghi tiến độ.
             LaunchedEffect(floor.number) {
-                withContext(NonCancellable) { store.markCleared(floor.number) }
+                withContext(NonCancellable) {
+                    store.markCleared(floor.number)
+                    // Hồ sơ giữ tầng cao nhất riêng (không lùi), độc lập với tiến độ mở khóa.
+                    profile.recordFloorCleared(floor.number)
+                }
             }
             BackHandler { stage = TowerStage.MAP }
             VictoryScreen(
