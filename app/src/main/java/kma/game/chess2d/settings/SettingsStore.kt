@@ -30,8 +30,8 @@ import kotlinx.coroutines.flow.map
 data class AppSettings(
     val soundEnabled: Boolean = true,
     val hapticEnabled: Boolean = true,
-    val boardPalette: BoardPalette = BoardPalette.GREEN,
-    val pieceTheme: PieceTheme = PieceTheme.SOLID,
+    val boardPalette: BoardPalette = BoardPalette.GOTHIC,
+    val pieceTheme: PieceTheme = PieceTheme.IMAGE,
     val showLegalMoves: Boolean = true,
 )
 
@@ -99,10 +99,10 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
          * (bản cũ hơn, hoặc bộ đã bị bỏ) thì lùi về mặc định.
          */
         fun paletteOf(name: String?): BoardPalette =
-            BoardPalette.entries.firstOrNull { it.name == name } ?: BoardPalette.GREEN
+            BoardPalette.entries.firstOrNull { it.name == name } ?: BoardPalette.GOTHIC
 
         fun pieceThemeOf(name: String?): PieceTheme =
-            PieceTheme.entries.firstOrNull { it.name == name } ?: PieceTheme.SOLID
+            PieceTheme.entries.firstOrNull { it.name == name } ?: PieceTheme.IMAGE
     }
 }
 

@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 22:46 GMT+7 — Bàn cờ gothic: ô marble, overlay phát sáng, quân ảnh làm mặc định
+- BoardPalette thêm GOTHIC (textured) làm mặc định: ChessBoard vẽ tile_marble_light/dark, overlay tile_selected/move/attack/check, viền vàng mảnh; chưa nạp xong thì dùng màu phẳng dự phòng. Các bộ màu cũ giữ nguyên cách vẽ
+- PieceTheme.IMAGE làm mặc định, quân Đen dùng piece_black_*_bright, quân nạp qua ArtCache (không còn painterResource 1254px) kèm quầng tối mờ phía sau
+- SettingsStore mặc định GOTHIC + IMAGE, thêm nhãn palette_gothic trong SettingsPanel/strings, cập nhật 3 assert trong SettingsStoreTest. `:app:testDebugUnitTest` thành công
+
 ## 2026-10-03 22:42 GMT+7 — Splash mới, sau splash vào menu, menu dùng nút ảnh gothic
 - AppRoot: SPLASH → MENU (trước đây vào thẳng sảnh LAN). Menu là màn gốc (back thoát app), sảnh LAN back về menu, hộp thoại tiếp tục ván dở chuyển sang menu
 - SplashScreen: nền screen_splash_background, logo ui_logo_tower_of_chess, thanh tiến độ thật nạp trước ảnh menu/bàn cờ/quân cờ vào ArtCache (tối thiểu 1,4 giây)

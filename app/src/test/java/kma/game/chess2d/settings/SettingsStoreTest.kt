@@ -79,7 +79,7 @@ class SettingsStoreTest {
         assertFalse(s.showLegalMoves)
         // Các giá trị chưa đụng tới vẫn là mặc định.
         assertTrue(s.soundEnabled)
-        assertEquals(PieceTheme.SOLID, s.pieceTheme)
+        assertEquals(PieceTheme.IMAGE, s.pieceTheme)
     }
 
     @Test
@@ -101,8 +101,8 @@ class SettingsStoreTest {
         ds.edit { it[stringPreferencesKey("board_palette")] = "BO_MAU_DA_BI_BO" }
         ds.edit { it[stringPreferencesKey("piece_theme")] = "???" }
         val s = store.settings.first()
-        assertEquals(BoardPalette.GREEN, s.boardPalette)
-        assertEquals(PieceTheme.SOLID, s.pieceTheme)
+        assertEquals(BoardPalette.GOTHIC, s.boardPalette)
+        assertEquals(PieceTheme.IMAGE, s.pieceTheme)
     }
 
     @Test

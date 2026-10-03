@@ -16,8 +16,15 @@ import kma.game.chess2d.engine.Piece
  * định giữa ô sáng và ô tối, nên người chơi đổi bằng bộ màu ở đây chứ không bằng
  * hình nền điện thoại.
  */
-enum class BoardPalette(val lightSquare: Color, val darkSquare: Color) {
-    /** Bộ xanh lá quen thuộc, cũng là bộ mặc định từ Phase 2. */
+enum class BoardPalette(val lightSquare: Color, val darkSquare: Color, val textured: Boolean = false) {
+    /**
+     * Bộ gothic: ô đá cẩm thạch ngà và obsidian vân vàng vẽ từ ảnh, có lớp phủ phát sáng cho
+     * ô chọn, nước đi, nước ăn và vua bị chiếu. Hai màu phẳng chỉ là màu dự phòng lúc ảnh
+     * chưa nạp xong. Là bộ mặc định.
+     */
+    GOTHIC(Color(0xFFD9CDB4), Color(0xFF26262C), textured = true),
+
+    /** Bộ xanh lá quen thuộc từ Phase 2. */
     GREEN(Color(0xFFEEEED2), Color(0xFF769656)),
 
     /** Bộ gỗ nâu, giống bàn cờ gỗ thật. */
@@ -76,18 +83,19 @@ enum class PieceTheme {
  * Resource ảnh cho [piece] khi dùng [PieceTheme.IMAGE].
  *
  * Bộ ảnh AI-generated, đặt trong res/drawable/ với tên piece_<mau>_<loai>.png
- * (piece_white_king, piece_black_pawn, ...).
+ * (piece_white_king, ...). Quân Đen dùng bản sáng piece_black_<loai>_bright: bản cũ chỉ
+ * sáng khoảng 70 trên ô tối khoảng 45 nên khó thấy, bản bright có viền ngà để nổi trên ô tối.
  */
 @DrawableRes
 internal fun pieceImageRes(piece: Byte): Int {
     val white = Piece.isWhite(piece)
     return when (Piece.typeOf(piece)) {
-        Piece.KING -> if (white) R.drawable.piece_white_king else R.drawable.piece_black_king
-        Piece.QUEEN -> if (white) R.drawable.piece_white_queen else R.drawable.piece_black_queen
-        Piece.ROOK -> if (white) R.drawable.piece_white_rook else R.drawable.piece_black_rook
-        Piece.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop
-        Piece.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight
-        else -> if (white) R.drawable.piece_white_pawn else R.drawable.piece_black_pawn
+        Piece.KING -> if (white) R.drawable.piece_white_king else R.drawable.piece_black_king_bright
+        Piece.QUEEN -> if (white) R.drawable.piece_white_queen else R.drawable.piece_black_queen_bright
+        Piece.ROOK -> if (white) R.drawable.piece_white_rook else R.drawable.piece_black_rook_bright
+        Piece.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop_bright
+        Piece.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight_bright
+        else -> if (white) R.drawable.piece_white_pawn else R.drawable.piece_black_pawn_bright
     }
 }
 

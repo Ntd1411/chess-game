@@ -254,6 +254,7 @@ private fun SettingSwitch(label: String, checked: Boolean, onCheckedChange: (Boo
 
 /** Nhãn hiện cho một bộ màu bàn. */
 private fun paletteLabel(palette: BoardPalette): Int = when (palette) {
+    BoardPalette.GOTHIC -> R.string.palette_gothic
     BoardPalette.GREEN -> R.string.palette_green
     BoardPalette.WOOD -> R.string.palette_wood
     BoardPalette.OCEAN -> R.string.palette_ocean

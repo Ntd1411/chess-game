@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -27,7 +27,19 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kma.game.chess2d.R
+import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtSizes
+import kma.game.chess2d.ui.art.rememberArt
+import kma.game.chess2d.ui.theme.GothicColors
+import kotlin.math.roundToInt
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -64,14 +76,24 @@ fun ChessBoard(
     checkedKingSquare: Int,
     onSquareTap: (Int) -> Unit,
     flipped: Boolean = false,
-    palette: BoardPalette = BoardPalette.GREEN,
-    pieceTheme: PieceTheme = PieceTheme.SOLID,
+    palette: BoardPalette = BoardPalette.GOTHIC,
+    pieceTheme: PieceTheme = PieceTheme.IMAGE,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
         val squareSize = maxWidth / BOARD_EDGE
         val squarePx = with(LocalDensity.current) { squareSize.toPx() }
         val occupied = remember(pieces) { pieces.mapTo(HashSet()) { it.square } }
+
+        // Ảnh ô và lớp phủ của bộ gothic, đã được nạp trước ở splash nên thường có ngay. Chưa có (null)
+        // thì Canvas vẽ màu phẳng dự phòng của bộ màu thay vì chờ.
+        val tileLight = rememberArt(R.drawable.tile_marble_light, ArtSizes.OVERLAY)
+        val tileDark = rememberArt(R.drawable.tile_marble_dark, ArtSizes.OVERLAY)
+        val selectedOverlay = rememberArt(R.drawable.tile_selected_overlay, ArtSizes.OVERLAY)
+        val moveOverlay = rememberArt(R.drawable.tile_move_overlay, ArtSizes.OVERLAY)
+        val attackOverlay = rememberArt(R.drawable.tile_attack_overlay, ArtSizes.OVERLAY)
+        val checkOverlay = rememberArt(R.drawable.tile_check_overlay, ArtSizes.OVERLAY)
+        val textured = palette.textured
 
         // Ô đang được kéo và khoảng đã kéo (đơn vị px). Kéo thả chỉ là một lối vào khác
         // của đúng luồng tap: nhấc quân = chạm ô nguồn, nhả quân = chạm ô đích. Nhờ vậy
@@ -138,22 +160,55 @@ fun ChessBoard(
                 // Màu ô tính theo ô của engine, không theo vị trí màn hình: a1 phải luôn
                 // là ô tối kể cả khi lật bàn.
                 val isLight = (Squares.fileOf(square) + Squares.rankOf(square)) % 2 != 0
+                val col = screenCol(square)
+                val row = screenRow(square)
+                val tile = if (isLight) tileLight else tileDark
 
-                drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
+                if (textured && tile != null) {
+                    drawTile(tile, col, row, squarePx)
+                } else {
+                    drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
+                }
                 if (square == lastMoveFrom || square == lastMoveTo) {
                     drawRect(BoardColors.lastMove, topLeft, size)
                 }
-                if (square == checkedKingSquare) drawRect(BoardColors.check, topLeft, size)
-                if (square == selectedSquare) drawRect(BoardColors.selected, topLeft, size)
+                if (square == checkedKingSquare) {
+                    drawRect(BoardColors.check, topLeft, size)
+                    if (textured && checkOverlay != null) drawTile(checkOverlay, col, row, squarePx)
+                }
+                if (square == selectedSquare) {
+                    if (textured && selectedOverlay != null) {
+                        drawTile(selectedOverlay, col, row, squarePx)
+                    } else {
+                        drawRect(BoardColors.selected, topLeft, size)
+                    }
+                }
+            }
+
+            // Viền vàng mảnh quanh bàn cờ gothic, nằm trong khung 8x8 nên không làm bàn lệch ô.
+            if (textured) {
+                val edge = squarePx * 0.05f
+                drawRect(
+                    color = GothicColors.Gold.copy(alpha = 0.85f),
+                    topLeft = Offset(edge / 2f, edge / 2f),
+                    size = Size(this.size.width - edge, this.size.height - edge),
+                    style = Stroke(width = edge),
+                )
             }
 
             // Gợi ý nước đi vẽ sau cùng để không bị màu ô nào phủ lên.
             for (target in legalTargets) {
+                val capture = occupied.contains(target)
+                val overlay = if (capture) attackOverlay else moveOverlay
+                if (textured && overlay != null) {
+                    drawTile(overlay, screenCol(target), screenRow(target), squarePx)
+                    continue
+                }
                 val center = Offset(
                     squarePx * screenCol(target) + squarePx / 2f,
                     squarePx * screenRow(target) + squarePx / 2f,
                 )
-                if (occupied.contains(target)) {
+                if (capture) {
                     // Ô có quân địch: vòng tròn viền để không che mất quân bên dưới.
                     drawCircle(
                         color = BoardColors.legalTarget,
@@ -211,14 +266,21 @@ fun ChessBoard(
 @Composable
 private fun PieceGlyph(piece: Byte, squareSize: Dp, theme: PieceTheme) {
     if (theme == PieceTheme.IMAGE) {
-        // Bộ ảnh AI-generated đã có ảnh riêng cho từng quân/màu, không cần tô màu hay
-        // vẽ viền như glyph — chỉ vẽ vừa khít ô.
-        Image(
-            painter = painterResource(id = pieceImageRes(piece)),
-            contentDescription = null,
-            modifier = Modifier.size(squareSize),
-            contentScale = ContentScale.Fit,
-        )
+        // Bộ ảnh AI-generated đã có ảnh riêng cho từng quân/màu, không cần tô màu hay vẽ viền như
+        // glyph. Một quầng tối mờ phía sau tách quân khỏi ô (quân Trắng trên ô ngà dễ bị chìm).
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.size(squareSize * 0.8f).background(
+                    Brush.radialGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)),
+                ),
+            )
+            ArtImage(
+                res = pieceImageRes(piece),
+                maxEdge = ArtSizes.PIECE,
+                modifier = Modifier.size(squareSize * 0.94f),
+                contentScale = ContentScale.Fit,
+            )
+        }
         return
     }
 
@@ -257,6 +319,22 @@ private fun PieceGlyph(piece: Byte, squareSize: Dp, theme: PieceTheme) {
  * rõ trên nền phẳng, không phụ thuộc bộ quân đang chọn.
  */
 internal fun glyphOf(piece: Byte): String = PieceTheme.SOLID.glyphOf(piece)
+
+/** Vẽ [image] kín ô (cột [col], hàng [row] trên màn hình). Làm tròn hai đầu để các ô liền nhau không hở khe. */
+private fun DrawScope.drawTile(image: ImageBitmap, col: Int, row: Int, squarePx: Float) {
+    val x0 = (col * squarePx).roundToInt()
+    val y0 = (row * squarePx).roundToInt()
+    val x1 = ((col + 1) * squarePx).roundToInt()
+    val y1 = ((row + 1) * squarePx).roundToInt()
+    drawImage(
+        image = image,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(image.width, image.height),
+        dstOffset = IntOffset(x0, y0),
+        dstSize = IntSize(x1 - x0, y1 - y0),
+        filterQuality = FilterQuality.Medium,
+    )
+}
 
 /** Cột trên màn hình của một ô engine. */
 private fun squareCol(square: Int, flipped: Boolean): Int {
