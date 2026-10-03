@@ -181,8 +181,8 @@ chạy thử trên emulator.
 - [~] **Character/Profile**: bảng Room mới lưu stats (thắng/thua/tầng cao nhất/
       checkmate/thời gian chơi)
       — **xong phần dữ liệu:** `profile/PlayerStats.kt` + `ProfileDatabase` (DB riêng, không cần
-      migration). Đã ghi được tầng cao nhất. **Còn thiếu:** màn hình Profile; ghi thắng/thua/
-      checkmate/thời gian từ các màn đấu (`recordMatch` đã có nhưng chưa ai gọi)
+      migration). Đã ghi được tầng cao nhất, thắng/thua/hòa/checkmate/thời gian chơi (đấu máy,
+      LAN, chiến dịch; qua `MatchRecording`). **Còn thiếu:** màn hình Profile
 - [~] **Character Journal**: bảng Room lưu NPC đã gặp + trạng thái (✓/?/🔒)
       — **xong phần dữ liệu:** `JournalEntry` + `Journal.stateOf`; ghi đã gặp khi bấm BẮT ĐẦU
       ở màn chọn đối thủ. **Còn thiếu:** màn hình Nhật ký (chỉ mới có 5 nhân vật AI)

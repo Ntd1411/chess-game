@@ -25,8 +25,12 @@ import kma.game.chess2d.net.RoomInfo
 import kma.game.chess2d.net.RoomSource
 import kma.game.chess2d.net.LanOutcome
 import kma.game.chess2d.net.TimeControl
+import kma.game.chess2d.profile.MatchRecording
+import kma.game.chess2d.profile.ProfileDatabase
+import kma.game.chess2d.profile.ProfileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +55,13 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Lịch sử ván đấu (mục 7.3): ván LAN cũng được lưu như ván offline. */
     private val matches = MatchHistoryDatabase.get(application).matches()
+
+    /** Hồ sơ người chơi: ván LAN cũng được cộng thắng/thua/hòa theo phía máy này. */
+    private val profile = ProfileRepository(ProfileDatabase.get(application))
+
+    /** Mã ván đang được đo giờ và lúc máy này thấy ván đó lần đầu, để tính thời gian chơi. */
+    private var timedGameId: Int? = null
+    private var timedGameStartMillis: Long = 0L
 
     /**
      * Mã ván đã ghi vào lịch sử gần nhất.
@@ -396,6 +407,11 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
     // ------------------------------------------------------- tín hiệu từ :net
 
     private fun onNetworkState(state: LanGameState) {
+        // Ván mới (lần đầu, hoặc đấu lại đổi mã ván) thì bắt đầu đo giờ từ lúc này.
+        if (timedGameId != state.gameId) {
+            timedGameId = state.gameId
+            timedGameStartMillis = System.currentTimeMillis()
+        }
         mirror.sync(state.startFen, state.moves, state.gameId)
         // Đối thủ vừa đi, hoặc ván vừa được đồng bộ lại: ô đang chọn không còn ý nghĩa.
         if (!state.yourTurn) {
@@ -443,6 +459,18 @@ class LanViewModel(application: Application) : AndroidViewModel(application) {
         )
         viewModelScope.launch {
             withContext(Dispatchers.IO) { matches.insert(record) }
+        }
+
+        // Chỉ chiếu hết thật sự mới tính checkmate: đầu hàng/hết giờ/hòa thỏa thuận thì không.
+        val byCheckmate = result == MatchResult.WIN &&
+            state.outcome != LanOutcome.RESIGNATION &&
+            state.outcome != LanOutcome.TIMEOUT &&
+            state.status == GameStatus.CHECKMATE
+        val seconds = MatchRecording.elapsedSeconds(timedGameStartMillis, System.currentTimeMillis())
+        viewModelScope.launch {
+            withContext(Dispatchers.IO + NonCancellable) {
+                profile.recordMatch(result, byCheckmate, seconds)
+            }
         }
     }
 

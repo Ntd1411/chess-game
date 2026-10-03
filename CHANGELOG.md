@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 17:31 GMT+7 — Giai đoạn 5 (phần 4): ghi thắng/thua/hòa/checkmate/thời gian chơi vào Hồ sơ
+- Thêm profile/MatchRecording.kt (luật thuần): chế độ nào tính vào Hồ sơ (chỉ đấu máy; 2 người cùng máy và Máy vs Máy không tính), đo giây chơi (cắt trần 3 giờ/ván), kết quả ván chiến dịch (chỉ tầng đánh bại máy mới tính checkmate)
+- GameViewModel (đấu máy): gọi `recordMatch` khi ván kết thúc, mỗi ván đúng 1 lần (Undo rồi thắng lại không cộng 2 lần; xoay máy sau khi ván xong không cộng lại nhờ cờ `replaying`)
+- LanViewModel: ghi theo phía máy này; checkmate chỉ tính khi thắng bằng chiếu hết thật (đầu hàng/hết giờ không tính)
+- AppRoot/TowerRoute: ghi ở `onWon`/`onLost` của ván chiến dịch, đồng hồ đo từ đầu mỗi lượt chơi (`newAttempt`); tất cả lần ghi chạy NonCancellable
+- Test: MatchRecordingTest (10); `:app:testDebugUnitTest` và `:app:assembleDebug` BUILD SUCCESSFUL
+
 ## 2026-10-03 17:35 GMT+7 — Giai đoạn 5 (phần 3): Cài đặt dạng tab
 - Thêm ui/screen/SettingsPanel.kt (Dialog toàn màn, 5 tab Chung/Âm thanh/Hình ảnh/Điều khiển/Khác) dùng chung cho Sảnh và Pause; settings/DataReset.kt (Xóa dữ liệu có xác nhận: cài đặt, tiến độ Tháp, ván dở, lịch sử, Hồ sơ, Nhật ký)
 - SettingsStore nhận DataStore (test được trên JVM), thêm `showLegalMoves` + `resetToDefaults`; nối công tắc này vào bàn cờ GameScreen/CampaignBattle/LAN; TowerProgressStore.clear()

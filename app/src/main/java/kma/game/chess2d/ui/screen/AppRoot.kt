@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -22,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.campaign.FloorDialogues
+import kma.game.chess2d.campaign.FloorResult
 import kma.game.chess2d.campaign.LossReason
 import kma.game.chess2d.campaign.TowerCatalog
 import kma.game.chess2d.campaign.TowerFlow
@@ -34,6 +36,7 @@ import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
 import kma.game.chess2d.opponent.AiCharacter
+import kma.game.chess2d.profile.MatchRecording
 import kma.game.chess2d.profile.ProfileDatabase
 import kma.game.chess2d.profile.ProfileRepository
 import kma.game.chess2d.puzzle.PuzzleCatalog
@@ -225,7 +228,27 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
     var floorNumber by rememberSaveable { mutableIntStateOf(1) }
     var attempt by rememberSaveable { mutableIntStateOf(0) }
     var lossReason by rememberSaveable { mutableStateOf(LossReason.CHECKMATE) }
+    // Lúc bắt đầu lượt chơi hiện tại, để tính thời gian chơi cho Hồ sơ.
+    var attemptStartedAt by rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
+    val scope = rememberCoroutineScope()
     val floor = floors[floorNumber - 1]
+
+    /** Mở lượt chơi mới: đổi khóa ván và đặt lại đồng hồ đo thời gian. */
+    fun newAttempt() {
+        attempt++
+        attemptStartedAt = System.currentTimeMillis()
+    }
+
+    /** Cộng ván chiến dịch vừa xong vào Hồ sơ (NonCancellable: rời màn ngay cũng không mất). */
+    fun recordBattle(result: FloorResult, reason: LossReason?) {
+        val outcome = MatchRecording.campaignOutcome(floor.goal, result, reason) ?: return
+        val seconds = MatchRecording.elapsedSeconds(attemptStartedAt, System.currentTimeMillis())
+        scope.launch {
+            withContext(NonCancellable) {
+                profile.recordMatch(outcome.result, outcome.byCheckmate, seconds)
+            }
+        }
+    }
 
     when (stage) {
         TowerStage.MAP -> {
@@ -237,7 +260,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                 onFloorClick = { picked ->
                     floorNumber = picked.number
                     // Lượt mới mỗi lần vào tầng để vào lại tầng cũ luôn là ván mới.
-                    attempt++
+                    newAttempt()
                     stage = TowerFlow.onSelect(picked)
                 },
                 onBack = onBack,
@@ -261,12 +284,16 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                 attempt = attempt,
                 puzzles = puzzles,
                 playerName = playerName,
-                onWon = { stage = TowerFlow.afterWin(floor) },
+                onWon = {
+                    recordBattle(FloorResult.WON, null)
+                    stage = TowerFlow.afterWin(floor)
+                },
                 onLost = { reason ->
+                    recordBattle(FloorResult.LOST, reason)
                     lossReason = reason
                     stage = TowerStage.DEFEAT
                 },
-                onRestart = { attempt++ },
+                onRestart = { newAttempt() },
                 onExit = { stage = TowerStage.MAP },
                 modifier = modifier,
             )
@@ -297,7 +324,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                 onNext = {
                     TowerFlow.nextFloor(floors, floor)?.let { next ->
                         floorNumber = next.number
-                        attempt++
+                        newAttempt()
                         stage = TowerFlow.onSelect(next)
                     }
                 },
@@ -312,7 +339,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                 floor = floor,
                 reason = lossReason,
                 onRetry = {
-                    attempt++
+                    newAttempt()
                     stage = TowerStage.BATTLE
                 },
                 onMap = { stage = TowerStage.MAP },

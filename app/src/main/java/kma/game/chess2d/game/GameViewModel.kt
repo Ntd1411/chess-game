@@ -18,10 +18,14 @@ import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.history.MatchHistoryDatabase
 import kma.game.chess2d.history.MatchRecord
 import kma.game.chess2d.history.MatchResult
+import kma.game.chess2d.profile.MatchRecording
+import kma.game.chess2d.profile.ProfileDatabase
+import kma.game.chess2d.profile.ProfileRepository
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +61,23 @@ class GameViewModel(
 
     /** Lịch sử ván đấu (mục 7.3). Chỉ ghi đúng một dòng khi ván kết thúc. */
     private val matches = MatchHistoryDatabase.get(application).matches()
+
+    /** Hồ sơ người chơi: chỉ ván đấu máy được cộng vào đây (xem [MatchRecording.countsForProfile]). */
+    private val profile = ProfileRepository(ProfileDatabase.get(application))
+
+    /**
+     * Ván hiện tại đã được cộng vào Hồ sơ hay chưa.
+     *
+     * Khác [recordedInHistory] ở chỗ **không** được reset khi Undo: thắng rồi Undo rồi thắng
+     * lại không được tính hai thắng. Chỉ ván mới ([resetBoard]) mới mở khóa lại.
+     */
+    private var recordedInProfile = false
+
+    /** Lúc đi nước đầu tiên của ván, để tính thời gian chơi; `null` khi chưa đi nước nào. */
+    private var firstMoveAtMillis: Long? = null
+
+    /** Đang đi lại ván cũ từ SavedStateHandle: các nước này đã được tính từ trước, không ghi lại. */
+    private var replaying = false
 
     /**
      * Ván hiện tại đã được ghi vào lịch sử hay chưa.
@@ -130,7 +151,14 @@ class GameViewModel(
         difficulty = savedState.get<String>(KEY_DIFFICULTY)?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
             ?: Difficulty.MEDIUM
         // Đi lại toàn bộ ván cũ nếu có. Các nước này đã từng hợp lệ nên không cần lọc lại.
-        savedState.get<IntArray>(KEY_PLAYED_MOVES)?.forEach { raw -> applyMove(Move(raw)) }
+        savedState.get<IntArray>(KEY_PLAYED_MOVES)?.let { raw ->
+            replaying = true
+            try {
+                raw.forEach { applyMove(Move(it)) }
+            } finally {
+                replaying = false
+            }
+        }
         publish()
         // Vòng ghi đĩa chạy suốt đời ViewModel. Đặt trên [Dispatchers.IO] vì đây là I/O thật.
         viewModelScope.launch {
@@ -431,6 +459,7 @@ class GameViewModel(
             squareIds[rookFrom] = NO_PIECE_ID
         }
 
+        if (playedMoves.isEmpty()) firstMoveAtMillis = System.currentTimeMillis()
         playedMoves.add(move)
         sanMoves.add(san)
         noteSound(move)
@@ -472,6 +501,26 @@ class GameViewModel(
         )
         viewModelScope.launch {
             withContext(Dispatchers.IO) { matches.insert(record) }
+        }
+        recordInProfile(result, byCheckmate = status == GameStatus.CHECKMATE)
+    }
+
+    /**
+     * Cộng ván vừa xong vào Hồ sơ (một lần cho mỗi ván, và chỉ với chế độ đấu máy).
+     *
+     * Chạy trên [NonCancellable] vì người chơi hay thoát màn ngay sau khi
+     * chiếu hết; hủy viewModelScope giữa chừng không được làm mất ván thắng.
+     */
+    private fun recordInProfile(result: String, byCheckmate: Boolean) {
+        if (recordedInProfile || !MatchRecording.countsForProfile(mode)) return
+        recordedInProfile = true
+        // Đi lại ván cũ (xoay máy sau khi ván đã xong) không phải ván mới kết thúc: đã cộng từ lần trước.
+        if (replaying) return
+        val seconds = MatchRecording.elapsedSeconds(firstMoveAtMillis, System.currentTimeMillis())
+        viewModelScope.launch {
+            withContext(Dispatchers.IO + NonCancellable) {
+                profile.recordMatch(result, byCheckmate && result == MatchResult.WIN, seconds)
+            }
         }
     }
 
@@ -529,6 +578,8 @@ class GameViewModel(
         selectedSquare = Squares.NONE
         pendingPromotion = null
         recordedInHistory = false
+        recordedInProfile = false
+        firstMoveAtMillis = null
         // Ván mới thì không còn nước nào để phát tiếng, kể cả tiếng của ván trước.
         soundCue = null
     }
