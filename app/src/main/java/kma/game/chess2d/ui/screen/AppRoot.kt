@@ -28,6 +28,7 @@ import kma.game.chess2d.game.SavedGame
 import kma.game.chess2d.game.SavedGameStore
 import kma.game.chess2d.lan.LanPhase
 import kma.game.chess2d.lan.LanViewModel
+import kma.game.chess2d.opponent.AiCharacter
 import kma.game.chess2d.puzzle.PuzzleCatalog
 import kotlinx.coroutines.launch
 
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -98,22 +99,31 @@ fun AppRoot(modifier: Modifier = Modifier) {
             MenuScreen(
                 name = playerName,
                 onNameChange = { playerName = it },
-                difficulty = difficulty,
-                onDifficultyChange = { difficulty = it },
+                onOpenTower = { screen = Screen.TOWER },
+                // Người vs Máy đi qua màn chọn đối thủ: cấp độ do nhân vật được chọn quyết định.
+                onPlayComputer = { screen = Screen.AI_SELECT },
                 onPlayTwoPlayers = {
                     mode = GameMode.TWO_PLAYERS
                     resumeSaved = false
                     screen = Screen.MATCH
                 },
-                onPlayComputer = {
+                onPlayLan = { screen = Screen.LOBBY },
+                onOpenSpectate = { screen = Screen.SPECTATE },
+                onOpenHistory = { screen = Screen.HISTORY },
+                modifier = modifier,
+            )
+        }
+
+        Screen.AI_SELECT -> {
+            BackHandler { screen = Screen.MENU }
+            AiSelectRoute(
+                onStart = { character ->
+                    difficulty = character.difficulty
                     mode = GameMode.VS_COMPUTER
                     resumeSaved = false
                     screen = Screen.MATCH
                 },
-                onPlayLan = { screen = Screen.LOBBY },
-                onOpenHistory = { screen = Screen.HISTORY },
-                onOpenTower = { screen = Screen.TOWER },
-                onOpenSpectate = { screen = Screen.SPECTATE },
+                onBack = { screen = Screen.MENU },
                 modifier = modifier,
             )
         }
@@ -151,6 +161,27 @@ fun AppRoot(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * Nhánh chọn đối thủ AI: đọc tiến độ Tháp Cờ để biết nhân vật nào đã mở.
+ */
+@Composable
+private fun AiSelectRoute(
+    onStart: (AiCharacter) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val store = remember(context) { TowerProgressStore(context.applicationContext) }
+    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+
+    AiSelectionScreen(
+        clearedUpTo = progress.clearedUpTo,
+        onStart = onStart,
+        onBack = onBack,
+        modifier = modifier,
+    )
 }
 
 /**

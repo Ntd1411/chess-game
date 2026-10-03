@@ -112,11 +112,15 @@ trên emulator qua `adb` ở ×1/×4/Pause — MCP local không cho chạy `adb`
 **Mục tiêu:** Hai màn hình trung tâm nhất theo mockup gothic.
 
 **Công việc:**
-- [ ] Redesign `MenuScreen.kt` → Main Lobby: avatar/currency trên cùng, nhân vật
+- [~] Redesign `MenuScreen.kt` → Main Lobby: avatar/currency trên cùng, nhân vật
       đứng giữa, 2 bên icon (Nhật ký/Túi đồ/Thành tựu), 5 mode dưới cùng (2 mode
       chính to hơn)
-- [ ] Màn **AI Character Selection**: carousel, stat AI, nút BẮT ĐẦU, nối với danh
+      — **xong một phần:** có avatar/tên/Cài đặt, nhân vật giữa, 5 mode (2 chính 72dp,
+      3 phụ 48dp). **Còn thiếu:** currency (chưa có hệ thống Gold/Crystal) và 3 icon
+      Nhật ký/Túi đồ/Thành tựu (màn đích làm ở Giai đoạn 5)
+- [x] Màn **AI Character Selection**: carousel, stat AI, nút BẮT ĐẦU, nối với danh
       sách nhân vật AI trong `story-bible.md`
+      — **xong:** `AiSelectionScreen` + `opponent/AiCharacter.kt`
 
 **Tự xác minh:**
 - Compose UI test (hoặc `ComposeTestRule`) kiểm tra: mọi nút trên Main Lobby điều
@@ -128,6 +132,12 @@ trên emulator qua `adb` ở ×1/×4/Pause — MCP local không cho chạy `adb`
 
 **Hoàn thành khi:** navigation test pass, build không lỗi, không cần người dùng xem
 qua ở bước này (chỉ xem ở Giai đoạn 6).
+
+**→ GIAI ĐOẠN 3: CODE + TEST XONG MỘT PHẦN (2026-10-03).** `AiCharacterTest` (8) và
+`LobbyLayoutTest` (2: chế độ chính cao hơn chế độ phụ, so giá trị trong code) xanh;
+`:app:assembleDebug` thành công. **Chưa làm:** Compose navigation test (project chưa có
+`ui-test`/Robolectric; thêm cần quyết định vì JDK 25 có thể không tương thích Robolectric),
+Compose preview nhiều kích thước, currency và 3 icon lối tắt ở Lobby.
 
 ---
 

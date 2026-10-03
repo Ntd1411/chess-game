@@ -210,4 +210,43 @@
     <string name="spectate_auto_on">Tự động</string>
     <string name="spectate_auto_off">Thủ công</string>
     <string name="spectate_limit">Hết giới hạn %1$d nước — ván hòa</string>
+
+    <!-- Chọn đối thủ AI -->
+    <string name="ai_select_title">CHỌN ĐỐI THỦ AI</string>
+    <string name="ai_select_start">BẮT ĐẦU</string>
+    <string name="ai_select_back">Quay lại</string>
+    <string name="ai_select_prev">Đối thủ trước</string>
+    <string name="ai_select_next">Đối thủ sau</string>
+    <string name="ai_select_locked">Mở khi vượt qua tầng %1$d của Tháp Cờ</string>
+    <string name="ai_stat_difficulty">Độ khó</string>
+    <string name="ai_stat_style">Phong cách</string>
+    <string name="ai_stat_speed">Tốc độ nghĩ</string>
+    <string name="ai_stat_personality">Tính cách</string>
+    <string name="ai_speed_value">Tối đa %1$.1f giây mỗi nước</string>
+    <string name="ai_stars">%1$d/3 sao</string>
+
+    <string name="ai_mage_name">Pháp Sư Cờ</string>
+    <string name="ai_mage_style">Thử nghiệm, đi những nước lạ mắt và hay mắc sai lầm</string>
+    <string name="ai_mage_personality">Tò mò, ham học hỏi</string>
+    <string name="ai_mage_quote">“Mỗi nước đi là một phép thuật. Hãy xem ngươi đọc được bao nhiêu.”</string>
+    <string name="ai_knight_name">Hiệp Sĩ Bóng Đêm</string>
+    <string name="ai_knight_style">Phòng thủ chắc chắn, ít khi bỏ quân</string>
+    <string name="ai_knight_personality">Trầm lặng, kỷ luật</string>
+    <string name="ai_knight_quote">“Ta canh giữ bóng tối. Ngươi sẽ không qua được.”</string>
+    <string name="ai_queen_name">Nữ Hoàng Máu</string>
+    <string name="ai_queen_style">Tấn công dữ dội, ép thế địch ngay từ đầu</string>
+    <string name="ai_queen_personality">Hung hãn, kiêu ngạo</string>
+    <string name="ai_queen_quote">“Máu của ngươi sẽ nhuộm đỏ bàn cờ này.”</string>
+    <string name="ai_king_name">Vua Hắc Ám</string>
+    <string name="ai_king_style">Kiên nhẫn, tính trước nhiều nước</string>
+    <string name="ai_king_personality">Lạnh lùng, bí ẩn</string>
+    <string name="ai_king_quote">“Ngai vàng này không dành cho kẻ run sợ.”</string>
+    <string name="ai_hidden_name">\?\?\?</string>
+    <string name="ai_hidden_style">Chưa ai thấy hắn ra tay</string>
+    <string name="ai_hidden_personality">Không ai biết</string>
+    <string name="ai_hidden_quote">“…”</string>
+
+    <!-- Sảnh chính -->
+    <string name="lobby_settings">Cài đặt</string>
+    <string name="lobby_close">Đóng</string>
 </resources>

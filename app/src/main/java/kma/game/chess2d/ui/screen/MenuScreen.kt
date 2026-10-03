@@ -1,142 +1,248 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
-import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.board.BoardPalette
 import kma.game.chess2d.ui.board.PieceTheme
+import kma.game.chess2d.ui.theme.GothicColors
 import kotlinx.coroutines.launch
 
+/** Kích thước các nút chế độ ở sảnh: hai chế độ chính phải to hơn ba chế độ phụ. */
+internal object LobbyLayout {
+    val PrimaryButtonHeight = 72.dp
+    val SecondaryButtonHeight = 48.dp
+}
+
 /**
- * Màn hình menu: chọn chế độ rồi vào ván.
+ * Sảnh chính: tên người chơi và nút cài đặt ở trên, nhân vật ở giữa, năm chế độ ở dưới.
  *
- * Tên nhập ở đây dùng cho cả avatar trong ván đấu và tên phòng khi chơi LAN — một chỗ
- * nhập duy nhất, thay vì bắt nhập lại ở sảnh LAN như trước.
+ * **Khám Phá Tháp Cờ** và **Người vs Máy** là hai chế độ chính nên to hơn; hai người cùng
+ * máy, LAN và Máy vs Máy là ba chế độ phụ. Cấp độ máy không còn chọn ở đây mà chọn ở màn
+ * Chọn đối thủ AI. Tên người chơi, âm thanh và giao diện bàn cờ nằm trong hộp thoại Cài đặt.
  *
- * Cấp độ máy được chọn ngay ở đây chứ không phải trong ván: hàng nút trong ván
- * để cho các hành động của ván, không để cấu hình.
+ * Chưa có ba lối tắt Nhật ký/Túi đồ/Thành tựu: các màn đó thuộc Giai đoạn 5, và một nút
+ * bấm không dẫn đi đâu là ngõ cụt.
  */
 @Composable
 fun MenuScreen(
     name: String,
     onNameChange: (String) -> Unit,
-    difficulty: Difficulty,
-    onDifficultyChange: (Difficulty) -> Unit,
-    onPlayTwoPlayers: () -> Unit,
-    onPlayComputer: () -> Unit,
-    onPlayLan: () -> Unit,
-    onOpenHistory: () -> Unit,
     onOpenTower: () -> Unit,
+    onPlayComputer: () -> Unit,
+    onPlayTwoPlayers: () -> Unit,
+    onPlayLan: () -> Unit,
     onOpenSpectate: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(text = KING_GLYPH, fontSize = 64.sp)
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+    var showSettings by rememberSaveable { mutableStateOf(false) }
+
+    Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
+        Image(
+            painter = painterResource(R.drawable.screen_main_menu),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
         )
+        // Phủ tối nhẹ để tên và nút luôn đọc được trên mọi vùng của ảnh nền.
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
 
-        // Avatar hiện ngay đây để người chơi thấy trước tên mình sẽ ra avatar thế nào,
-        // vì màu được sinh từ chính cái tên đang nhập.
-        PlayerAvatar(name = name, size = 72.dp)
+        Column(
+            modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
+        ) {
+            LobbyHeader(name = name, onOpenSettings = { showSettings = true })
 
-        OutlinedTextField(
-            value = name,
-            onValueChange = onNameChange,
-            label = { Text(stringResource(R.string.lan_your_name)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Button(onClick = onOpenTower, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.tower_open))
-        }
-
-        Button(onClick = onPlayTwoPlayers, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.mode_two_players))
-        }
-
-        Button(onClick = onPlayComputer, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.mode_vs_computer))
-        }
-
-        Text(
-            text = stringResource(R.string.menu_difficulty),
-            style = MaterialTheme.typography.titleSmall,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LevelButton(
-                label = stringResource(R.string.difficulty_easy),
-                selected = difficulty == Difficulty.EASY,
-                onClick = { onDifficultyChange(Difficulty.EASY) },
+            // Nhân vật chiếm phần còn lại giữa màn hình; Fit để không bao giờ bị cắt đầu/chân.
+            Image(
+                painter = painterResource(R.drawable.char_protagonist_full_body),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(8.dp),
             )
-            LevelButton(
-                label = stringResource(R.string.difficulty_medium),
-                selected = difficulty == Difficulty.MEDIUM,
-                onClick = { onDifficultyChange(Difficulty.MEDIUM) },
-            )
-            LevelButton(
-                label = stringResource(R.string.difficulty_hard),
-                selected = difficulty == Difficulty.HARD,
-                onClick = { onDifficultyChange(Difficulty.HARD) },
-            )
-        }
 
-        Button(onClick = onPlayLan, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.mode_lan))
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                PrimaryModeButton(
+                    label = stringResource(R.string.tower_open),
+                    onClick = onOpenTower,
+                )
+                PrimaryModeButton(
+                    label = stringResource(R.string.mode_vs_computer),
+                    onClick = onPlayComputer,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SecondaryModeButton(
+                        label = stringResource(R.string.mode_two_players),
+                        onClick = onPlayTwoPlayers,
+                        modifier = Modifier.weight(1f),
+                    )
+                    SecondaryModeButton(
+                        label = stringResource(R.string.mode_lan),
+                        onClick = onPlayLan,
+                        modifier = Modifier.weight(1f),
+                    )
+                    SecondaryModeButton(
+                        label = stringResource(R.string.spectate_open),
+                        onClick = onOpenSpectate,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                TextButton(onClick = onOpenHistory, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.history_open),
+                        color = GothicColors.Parchment,
+                    )
+                }
+            }
         }
-
-        // Máy vs Máy là chế độ để xem, không phải để chơi, nên dùng nút viền như Lịch sử.
-        OutlinedButton(onClick = onOpenSpectate, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.spectate_open))
-        }
-
-        // Lịch sử là màn phụ, nên dùng nút viền để không đè lên ba nút vào chơi ở trên.
-        OutlinedButton(onClick = onOpenHistory, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.history_open))
-        }
-
-        SoundSettings()
-        AppearanceSettings()
     }
+
+    if (showSettings) {
+        SettingsDialog(
+            name = name,
+            onNameChange = onNameChange,
+            onDismiss = { showSettings = false },
+        )
+    }
+}
+
+/** Hàng trên cùng: avatar và tên người chơi bên trái, nút cài đặt bên phải. */
+@Composable
+private fun LobbyHeader(name: String, onOpenSettings: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PlayerAvatar(name = name, size = 48.dp)
+        Text(
+            text = name.ifBlank { stringResource(R.string.match_player_one) },
+            style = MaterialTheme.typography.titleMedium,
+            color = GothicColors.Parchment,
+            maxLines = 1,
+            modifier = Modifier.weight(1f),
+        )
+        Image(
+            painter = painterResource(R.drawable.icon_settings),
+            contentDescription = stringResource(R.string.lobby_settings),
+            modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSettings),
+        )
+    }
+}
+
+/** Nút chế độ chính: cao, nền đỏ máu, chữ vàng. */
+@Composable
+private fun PrimaryModeButton(label: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = GothicColors.Blood,
+            contentColor = GothicColors.Gold,
+        ),
+        modifier = Modifier.fillMaxWidth().height(LobbyLayout.PrimaryButtonHeight),
+    ) {
+        Text(text = label, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** Nút chế độ phụ: thấp hơn, chỉ có viền vàng. Cho phép xuống hai dòng vì ba nút chia chung một hàng. */
+@Composable
+private fun SecondaryModeButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        border = BorderStroke(1.dp, GothicColors.Gold),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = GothicColors.Parchment),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+        modifier = modifier.height(LobbyLayout.SecondaryButtonHeight),
+    ) {
+        Text(text = label, fontSize = 12.sp, maxLines = 2, textAlign = TextAlign.Center)
+    }
+}
+
+/** Hộp thoại cài đặt: tên người chơi, âm thanh, giao diện bàn cờ. */
+@Composable
+private fun SettingsDialog(
+    name: String,
+    onNameChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.lobby_settings)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // Tên nhập một chỗ duy nhất: dùng cho avatar trong ván và tên phòng LAN.
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = { Text(stringResource(R.string.lan_your_name)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                SoundSettings()
+                AppearanceSettings()
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.lobby_close)) }
+        },
+    )
 }
 
 /**
@@ -250,15 +356,3 @@ private fun SettingSwitch(label: String, checked: Boolean, onCheckedChange: (Boo
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
-
-/** Nút chọn cấp độ: tô đậm là đang chọn. */
-@Composable
-private fun LevelButton(label: String, selected: Boolean, onClick: () -> Unit) {
-    if (selected) {
-        Button(onClick = onClick) { Text(label) }
-    } else {
-        OutlinedButton(onClick = onClick) { Text(label) }
-    }
-}
-
-private const val KING_GLYPH = "\u265A"

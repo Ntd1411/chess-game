@@ -14,6 +14,24 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 16:32 GMT+7 — Giai đoạn 3: Main Lobby mới + màn Chọn đối thủ AI
+- Thêm `opponent/AiCharacter.kt`: 5 nhân vật AI (Pháp Sư Cờ, Hiệp Sĩ Bóng Đêm, Nữ Hoàng Máu,
+  Vua Hắc Ám, nhân vật ẩn `???`). Sức mạnh **chỉ** đến từ `Difficulty` (Dễ/Vừa/Khó/Khó); số sao
+  và tốc độ nghĩ suy ra từ độ khó, còn phong cách/tính cách/câu thoại chỉ là mô tả nhân vật
+  (engine chưa có phong cách chơi riêng). Nhân vật ẩn tạm mở khi vượt hết 49 tầng vì story bible
+  chưa chốt điều kiện; Pháp Sư Cờ tạm dùng art `char_tower_keeper`
+- Thêm `AiSelectionScreen` (nhân vật lớn ở giữa + câu thoại, thẻ thông tin, carousel mũi tên +
+  ảnh nhỏ, nút BẮT ĐẦU; nhân vật chưa mở hiện điều kiện mở thay vì nút bị xám)
+- Viết lại `MenuScreen` thành Main Lobby: nền `screen_main_menu`, avatar + tên + nút Cài đặt ở
+  trên, nhân vật chính ở giữa, 2 chế độ chính (Khám Phá Tháp Cờ, Người vs Máy) cao 72dp, 3 chế
+  độ phụ (2 người, LAN, Máy vs Máy) cao 48dp. Tên người chơi, âm thanh, giao diện bàn cờ chuyển
+  vào hộp thoại Cài đặt; hàng chọn cấp độ ở menu bị bỏ vì màn Chọn đối thủ đã thay thế
+- Nối `Screen.AI_SELECT` vào `AppRoot`: Người vs Máy → Chọn đối thủ → ván đấu với cấp độ của nhân vật
+- Test mới: `AiCharacterTest` (8) + `LobbyLayoutTest` (2) xanh; `:app:testDebugUnitTest` và
+  `:app:assembleDebug` thành công
+- Chưa làm: ba lối tắt Nhật ký/Túi đồ/Thành tựu ở Lobby (màn đích thuộc Giai đoạn 5, tránh nút
+  ngõ cụt); Compose navigation test (project chưa có `ui-test`/Robolectric, và chưa có emulator)
+
 ## 2026-10-03 16:25 GMT+7 — Giai đoạn 2: chế độ Máy vs Máy (AI vs AI)
 - Thêm package `spectate/`: `SpectateMatch` (lõi thuần, hai AI độc lập đấu tới hết ván hoặc
   chạm trần 300 nửa nước thì coi là hòa; giữ id quân ổn định để animate, tính cả nhập thành
