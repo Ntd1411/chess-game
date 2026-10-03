@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
  * Bundle mà không cần viết Saver riêng. Các lựa chọn kèm theo (chế độ, cấp độ, tên)
  * được giữ thành state riêng bên cạnh.
  */
-private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER }
+private enum class Screen { SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE }
 
 /**
  * Gốc cây giao diện: splash → sảnh phòng → (menu) → ván đấu.
@@ -113,8 +113,15 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onPlayLan = { screen = Screen.LOBBY },
                 onOpenHistory = { screen = Screen.HISTORY },
                 onOpenTower = { screen = Screen.TOWER },
+                onOpenSpectate = { screen = Screen.SPECTATE },
                 modifier = modifier,
             )
+        }
+
+        Screen.SPECTATE -> {
+            // Màn Xem mở từ menu nên back ở đây là về menu; rời màn là dừng vòng lặp AI.
+            BackHandler { screen = Screen.MENU }
+            SpectateRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
         }
 
         Screen.TOWER -> {

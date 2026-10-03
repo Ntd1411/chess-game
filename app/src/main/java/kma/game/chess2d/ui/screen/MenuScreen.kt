@@ -56,6 +56,7 @@ fun MenuScreen(
     onPlayLan: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenTower: () -> Unit,
+    onOpenSpectate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -121,6 +122,11 @@ fun MenuScreen(
 
         Button(onClick = onPlayLan, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.mode_lan))
+        }
+
+        // Máy vs Máy là chế độ để xem, không phải để chơi, nên dùng nút viền như Lịch sử.
+        OutlinedButton(onClick = onOpenSpectate, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.spectate_open))
         }
 
         // Lịch sử là màn phụ, nên dùng nút viền để không đè lên ba nút vào chơi ở trên.

@@ -14,6 +14,26 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-03 16:25 GMT+7 — Giai đoạn 2: chế độ Máy vs Máy (AI vs AI)
+- Thêm package `spectate/`: `SpectateMatch` (lõi thuần, hai AI độc lập đấu tới hết ván hoặc
+  chạm trần 300 nửa nước thì coi là hòa; giữ id quân ổn định để animate, tính cả nhập thành
+  và bắt tốt qua đường), `SpectateControls` (dừng/tiếp tục, tự động/thủ công, "1 nước",
+  tốc độ ×1/×2/×4) và `SpectateViewModel` (chạy AI trên `Dispatchers.Default`, tạm dừng có
+  hiệu lực sau nước đang nghĩ, vòng cũ phải dừng hẳn mới chạy vòng mới)
+- Thêm `SpectateScreen.kt` (`SpectateRoute`: chọn cấp độ AI Trắng/AI Đen → xem ván, tái dùng
+  `MatchScaffold`/`ChessBoard`/`CapturedRow`/`MoveList`; tự dừng khi app xuống nền bằng
+  `LifecycleStartEffect`); nối `Screen.SPECTATE` vào `AppRoot`, thêm nút "Máy vs Máy" vào
+  `MenuScreen`; mở `labelOf`/`statusLabel` của `GameScreen` thành `internal` để dùng lại;
+  thêm string `spectate_*`
+- Mở rộng `SelfPlayTest`: cặp cấp độ hỗn hợp (Dễ–Vừa, Vừa–Dễ, Vừa–Vừa), Khó–Khó vài nước mở
+  đầu, và bản 50 ván Khó–Khó chỉ chạy khi đặt `SELFPLAY_LONG=1` (mỗi nước Khó tới 5 giây nên
+  50 ván chạy hàng giờ, không để trong `gradlew test` thường)
+- Test mới: `SpectateMatchTest` (7) + `SpectateControlsTest` (8) + 2 test self-play đều xanh;
+  `:app:testDebugUnitTest`, `:app:assembleDebug` thành công. `:ai:test` chạy lại được, không
+  còn `EOFException` như ghi chú Giai đoạn 0
+- Chưa làm: chạy thử trên emulator/`adb` (MCP local không cho chạy `adb`) — cần chạy tay
+  hoặc ở Giai đoạn 6
+
 ## 2026-10-03 16:05 GMT+7 — Giai đoạn 1: dữ liệu 49 tầng + màn Tower Map
 - Thêm package `campaign/`: `Floor`/`NodeKind`/`FloorGoal`, `TowerCatalog` (sinh 49 tầng
   theo 7 chương × 7 tầng, 6 tầng mốc 1/5/21/42/45/49 có cờ thoại, độ khó theo 3 lớp

@@ -7,6 +7,7 @@ import kma.game.chess2d.engine.Rules
 import kotlin.random.Random
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
@@ -83,6 +84,81 @@ class SelfPlayTest {
         val firstChoice = Ai().chooseMove(board, Difficulty.HARD)
         val secondChoice = Ai().chooseMove(board, Difficulty.HARD)
         assertTrue(firstChoice.raw == secondChoice.raw)
+    }
+
+    /**
+     * Các cặp cấp độ khác nhau đấu nhau (Dễ–Vừa, Vừa–Dễ, Vừa–Vừa): mọi nước đều hợp luật và
+     * không ván nào treo. Giới hạn 30 nửa nước mỗi ván để cả bộ test còn chạy trong vài
+     * chục giây; ván dài đã được `aiVersusAiNeverPlaysAnIllegalMove` phủ ở cấp Dễ.
+     */
+    @Test
+    fun mixedDifficultiesPlayOnlyLegalMoves() {
+        val pairs = listOf(
+            Difficulty.EASY to Difficulty.MEDIUM,
+            Difficulty.MEDIUM to Difficulty.EASY,
+            Difficulty.MEDIUM to Difficulty.MEDIUM,
+        )
+        for ((index, pair) in pairs.withIndex()) {
+            for (game in 0 until 3) {
+                playChecked(
+                    whiteLevel = pair.first,
+                    blackLevel = pair.second,
+                    seed = 100 * index + game,
+                    maxPlies = 30,
+                    label = "${pair.first}-${pair.second} ván $game",
+                )
+            }
+        }
+    }
+
+    /**
+     * Hai AI cấp Khó đấu nhau: chỉ kiểm vài nước mở đầu ở bản nhanh vì mỗi nước cấp Khó có thể nghĩ
+     * tới 5 giây. Bản đầy đủ 50 ván chạy hàng giờ nên chỉ bật khi đặt biến môi trường
+     * `SELFPLAY_LONG=1` (ví dụ trên máy rảnh qua đêm), để `gradlew test` thường không bị kéo chậm.
+     */
+    @Test
+    fun hardVersusHardOpeningIsLegal() {
+        playChecked(Difficulty.HARD, Difficulty.HARD, seed = 1, maxPlies = 8, label = "HARD-HARD mở đầu")
+    }
+
+    @Test
+    fun hardVersusHardFiftyGamesNeverCrash() {
+        assumeTrue("bật bằng SELFPLAY_LONG=1", System.getenv("SELFPLAY_LONG") == "1")
+        for (game in 0 until 50) {
+            playChecked(Difficulty.HARD, Difficulty.HARD, seed = game, maxPlies = 300, label = "HARD-HARD ván $game")
+        }
+    }
+
+    /** Chơi một ván và đòi mọi nước đều có thật, hợp luật; trả về số nửa nước đã đi. */
+    private fun playChecked(
+        whiteLevel: Difficulty,
+        blackLevel: Difficulty,
+        seed: Int,
+        maxPlies: Int,
+        label: String,
+    ): Int {
+        val white = Ai(Random(seed))
+        val black = Ai(Random(seed + 1))
+        white.newGame()
+        black.newGame()
+
+        val board = Board.startPosition()
+        var ply = 0
+        while (ply < maxPlies && !Rules.isGameOver(board)) {
+            val legal = MoveGenerator.legalMoves(board).map { it.raw }.toSet()
+            val whiteMoves = board.whiteToMove
+            val move = (if (whiteMoves) white else black)
+                .chooseMove(board, if (whiteMoves) whiteLevel else blackLevel)
+
+            assertNotEquals("$label nước $ply: AI không chọn được nước nào", Move.NONE, move)
+            assertTrue(
+                "$label nước $ply: nước phi luật ${move.toUci()} ở thế ${board.toFen()}",
+                move.raw in legal,
+            )
+            board.makeMove(move)
+            ply++
+        }
+        return ply
     }
 
     private fun playScriptedGame(seed: Int): List<String> {

@@ -245,7 +245,7 @@ private fun LevelRow(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 /** Tên hiển thị của một cấp độ. */
-private fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
+internal fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
     Difficulty.EASY -> R.string.difficulty_easy
     Difficulty.MEDIUM -> R.string.difficulty_medium
     Difficulty.HARD -> R.string.difficulty_hard
@@ -270,7 +270,7 @@ private fun opponentSubtitle(state: GameUiState): String = when {
 
 /** Dòng trạng thái trên cùng: kết quả nếu đã xong, chưa xong thì lượt ai / thế chiếu. */
 @Composable
-private fun statusLabel(state: GameUiState): String {
+internal fun statusLabel(state: GameUiState): String {
     val sideToMove = stringResource(
         if (state.whiteToMove) R.string.side_white else R.string.side_black,
     )

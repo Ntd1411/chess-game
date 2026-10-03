@@ -79,11 +79,14 @@ BUILD SUCCESSFUL.
 **Mục tiêu:** Mode "Máy vs Máy" chạy được 2 AI tự đấu, có điều khiển xem.
 
 **Công việc:**
-- [ ] Màn chọn AI Trắng/AI Đen (tận dụng data AI đã định nghĩa cho AI Character
+- [x] Màn chọn AI Trắng/AI Đen (tận dụng data AI đã định nghĩa cho AI Character
       Selection nếu đã có, hoặc tạm dùng danh sách độ khó có sẵn)
-- [ ] Vòng lặp chạy: AI Trắng và AI Đen lần lượt gọi `ai` module để chọn nước đi,
+      — **xong:** tạm dùng 3 cấp độ có sẵn (`SpectateSetupScreen`); gắn nhân vật AI thật ở Giai đoạn 3
+- [x] Vòng lặp chạy: AI Trắng và AI Đen lần lượt gọi `ai` module để chọn nước đi,
       cập nhật board qua `engine`
-- [ ] Control: Pause/Resume, tốc độ ×1/×2/×4, Auto play, Move history hiển thị
+      — **xong:** `SpectateMatch` + `SpectateViewModel`
+- [x] Control: Pause/Resume, tốc độ ×1/×2/×4, Auto play, Move history hiển thị
+      — **xong:** `SpectateControls` + `SpectateScreen`
 
 **Tự xác minh:**
 - Mở rộng `SelfPlayTest` (đã có trong `ai/src/test`) để chạy nhiều ván AI vs AI liên
@@ -96,6 +99,11 @@ BUILD SUCCESSFUL.
 
 **Hoàn thành khi:** self-play test pass ổn định, demo chạy trên emulator không
 crash qua log, đủ 3 control (pause/speed/autoplay) hoạt động.
+
+**→ GIAI ĐOẠN 2: CODE + TEST XONG (2026-10-03), CÒN 1 MỤC MỞ.** `SpectateMatchTest` (7),
+`SpectateControlsTest` (8) và `SelfPlayTest` mở rộng xanh; `:app:assembleDebug` thành công.
+Bản 50 ván Khó–Khó chỉ chạy khi `SELFPLAY_LONG=1` (hàng giờ). **Chưa làm:** chạy thử
+trên emulator qua `adb` ở ×1/×4/Pause — MCP local không cho chạy `adb`, cần chạy tay.
 
 ---
 

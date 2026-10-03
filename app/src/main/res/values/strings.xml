@@ -194,4 +194,20 @@
     <string name="tower_kind_puzzle">Giải thế cờ</string>
     <string name="tower_kind_boss">Trùm</string>
     <string name="tower_kind_secret">Bí mật</string>
+
+    <!-- Máy vs Máy: hai AI tự đấu, người chơi ngồi xem -->
+    <string name="spectate_open">Máy vs Máy</string>
+    <string name="spectate_setup_title">MÁY VS MÁY</string>
+    <string name="spectate_setup_hint">Chọn độ mạnh của hai AI rồi xem chúng đấu với nhau</string>
+    <string name="spectate_white_ai">AI Trắng</string>
+    <string name="spectate_black_ai">AI Đen</string>
+    <string name="spectate_start">BẮT ĐẦU</string>
+    <string name="spectate_back">Quay lại</string>
+    <string name="spectate_pause">Dừng</string>
+    <string name="spectate_resume">Tiếp tục</string>
+    <string name="spectate_step">1 nước</string>
+    <string name="spectate_speed">×%1$d</string>
+    <string name="spectate_auto_on">Tự động</string>
+    <string name="spectate_auto_off">Thủ công</string>
+    <string name="spectate_limit">Hết giới hạn %1$d nước — ván hòa</string>
 </resources>
