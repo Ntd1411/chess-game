@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-04 16:46 GMT+7 — Đổi toàn bộ âm thanh từ wav sang ogg để giảm dung lượng APK
+- Thay 9 file trong `res/raw` từ wav sang ogg (khoảng 63 MB xuống khoảng 4 MB), giữ nguyên tên nên code không đổi
+- `:app:testDebugUnitTest` và `:app:assembleDebug` thành công
+
 ## 2026-10-04 02:05 GMT+7 — Nhạc nền theo màn hình, công tắc Nhạc nền và nối file âm thanh wav
 - Thêm `MusicPlayer` (MediaPlayer, phát lặp, tạm dừng khi app xuống nền) và `MusicTrack`/`MusicPlan` chọn nhạc menu, chiến đấu, trùm, thắng, thua
 - Thêm `MusicHost` ở gốc `MainActivity` và `PlayMusic` trong `AppRoot`, `TowerRoute`, `LanRoute` để mỗi màn khai báo bản nhạc
