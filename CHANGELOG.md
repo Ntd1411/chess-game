@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 19:05 GMT+7 — Vẽ lại Cài đặt và Nhật ký theo bản thiết kế
+- Cài đặt phủ toàn màn trên `bg_settings`: panel `ui_panel_main`, cột danh mục bên trái (tab chọn trên `button_secondary_normal`), hàng nhãn + control cuộn được với `toggle_on/off`, `radio_*`, nút "Khôi phục mặc định" (chỉ đặt lại cài đặt)
+- Thêm `GothicTextField`, `GothicToggle`, `GothicRadio` dùng chung
+- Nhật ký: lưới chân dung 3 cột trong `ui_character_frame`, huy hiệu trạng thái (`badge_complete/new/locked`, `icon_locked`), trang chi tiết có chân dung lớn, `ui_name_plate`, sao độ khó, `ui_separator`
+- Thêm `SubScreenLayoutTest`
+
 ## 2026-10-09 18:45 GMT+7 — Vẽ lại khung ván đấu theo bản thiết kế Chess Battle
 - `MatchScaffold` dựng trên `DesignCanvas`: khung đối thủ/mình (`battle_enemy_frame`/`battle_player_frame`) có chân dung, thanh máu suy từ quân đã mất, đồng hồ trong `battle_timer_frame`; bàn cờ trong `chess_board_frame`; hàng nút tròn (`battle_button_*`) căn giữa
 - Hiệu ứng chiếu (`battle_check_indicator`, `fx_check`) và chiếu hết (`fx_checkmate`)

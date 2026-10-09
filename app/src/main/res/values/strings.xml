@@ -344,6 +344,7 @@
     <string name="settings_tab_visual">Hình ảnh</string>
     <string name="settings_tab_controls">Điều khiển</string>
     <string name="settings_tab_other">Khác</string>
+    <string name="settings_restore_defaults">Khôi phục mặc định</string>
     <string name="settings_legal_moves">Hiển thị nước đi hợp lệ</string>
     <string name="settings_data">Dữ liệu</string>
     <string name="settings_reset_data">Xóa dữ liệu</string>
