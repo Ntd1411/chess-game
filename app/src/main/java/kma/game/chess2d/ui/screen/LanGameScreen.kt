@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
+import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Pgn
 import kma.game.chess2d.lan.LanNotice
 import kma.game.chess2d.lan.LanNoticeKind
@@ -152,14 +153,21 @@ fun LanGameScreen(
         opponent = MatchPlayer(
             name = state.opponentName.ifEmpty { stringResource(R.string.match_waiting_opponent) },
             subtitle = opponentSubtitle(state, clock),
+            piece = Piece.of(Piece.KING, !state.youPlayWhite),
             active = state.connected && !state.finished && !state.yourTurn,
+            portrait = R.drawable.portrait_unknown_01,
         ),
         you = MatchPlayer(
             name = state.lobby.localName,
             subtitle = youSubtitle(state, clock),
+            piece = Piece.of(Piece.KING, state.youPlayWhite),
             active = state.connected && !state.finished && state.yourTurn,
+            portrait = R.drawable.portrait_protagonist,
         ),
         actions = actions,
+        backdrop = R.drawable.bg_lan_lobby,
+        inCheck = state.status == GameStatus.CHECK,
+        checkmate = state.status == GameStatus.CHECKMATE,
         headline = headline(state),
         notice = state.notice?.let { notice ->
             {

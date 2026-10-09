@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 18:45 GMT+7 — Vẽ lại khung ván đấu theo bản thiết kế Chess Battle
+- `MatchScaffold` dựng trên `DesignCanvas`: khung đối thủ/mình (`battle_enemy_frame`/`battle_player_frame`) có chân dung, thanh máu suy từ quân đã mất, đồng hồ trong `battle_timer_frame`; bàn cờ trong `chess_board_frame`; hàng nút tròn (`battle_button_*`) căn giữa
+- Hiệu ứng chiếu (`battle_check_indicator`, `fx_check`) và chiếu hết (`fx_checkmate`)
+- Đấu máy, hai người, Tháp (boss dùng `bg_battle_boss` + chân dung Nữ hoàng Vàng), LAN và Máy vs Máy đều truyền chân dung/quân/nút mới
+- Màn chọn cấp Máy vs Máy vẽ lại bằng panel, chân dung và `GothicButton`; hàng điều khiển xem ván dùng nút gothic
+- Thêm `MatchLayoutTest` (vị trí nút, thanh máu)
+
 ## 2026-10-09 18:20 GMT+7 — Thiết kế lại các màn chính theo bộ asset mới và khung 1080x1920
 - Chuyển sang bộ asset mới (bg_*, button_*, portrait_*, chess_piece_*, board_tile_*, map_*, item_*...), bỏ bộ cũ; đổi tên hai file `.png.png`
 - Thêm `DesignCanvas` (khung thiết kế 1080x1920 co vừa màn, nền Crop phủ kín), `SlicedArt` (nine-slice không méo góc), cắt lề trong suốt khi vẽ ảnh, `GothicButton` chỉ vẽ một trạng thái nút

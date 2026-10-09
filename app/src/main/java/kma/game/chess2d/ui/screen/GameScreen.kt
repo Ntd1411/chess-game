@@ -30,6 +30,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.GameStatus
+import kma.game.chess2d.engine.Piece
+import kma.game.chess2d.opponent.AiCharacters
 import kma.game.chess2d.game.ClockFormat
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.GameUiState
@@ -120,6 +122,7 @@ fun GameScreen(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
                 label = stringResource(R.string.action_undo),
                 enabled = state.canUndo && !state.aiThinking,
+                art = R.drawable.battle_button_undo,
                 onClick = viewModel::undo,
             ),
         )
@@ -146,6 +149,7 @@ fun GameScreen(
             MatchAction(
                 icon = Icons.Filled.KeyboardArrowUp,
                 label = stringResource(R.string.action_flip),
+                art = R.drawable.battle_button_move,
                 onClick = { flipped = !flipped },
             ),
         )
@@ -153,6 +157,7 @@ fun GameScreen(
             MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
+                art = R.drawable.battle_button_menu,
                 onClick = { showPause = true },
             ),
         )
@@ -167,9 +172,12 @@ fun GameScreen(
         opponent = MatchPlayer(
             name = opponentName(state),
             subtitle = opponentSubtitle(state),
+            piece = Piece.of(Piece.KING, false),
             active = !state.whiteToMove,
             clock = blackClock?.let { ClockFormat.mmss(it) },
             clockLow = blackClock != null && blackClock <= LOW_CLOCK_MILLIS,
+            portrait = opponentPortrait(state),
+            hp = MatchHp.fromLost(state.takenFromBlack),
         ),
         you = MatchPlayer(
             name = if (twoPlayers && state.whiteName.isNotBlank()) {
@@ -181,11 +189,16 @@ fun GameScreen(
                 R.string.match_side,
                 stringResource(R.string.side_white),
             ),
+            piece = Piece.of(Piece.KING, true),
             active = state.whiteToMove,
             clock = whiteClock?.let { ClockFormat.mmss(it) },
             clockLow = whiteClock != null && whiteClock <= LOW_CLOCK_MILLIS,
+            portrait = R.drawable.portrait_protagonist,
+            hp = MatchHp.fromLost(state.takenFromWhite),
         ),
         actions = actions,
+        inCheck = state.status == GameStatus.CHECK,
+        checkmate = state.status == GameStatus.CHECKMATE,
         headline = state.reviewPly?.let {
             // Đang xem lại thì dòng trạng thái phải nói điều đó, không phải nói lượt ai:
             // bàn cờ đang không nhận đi, mà không nói thì người chơi tưởng app treo.
@@ -312,6 +325,13 @@ internal fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
     Difficulty.EASY -> R.string.difficulty_easy
     Difficulty.MEDIUM -> R.string.difficulty_medium
     Difficulty.HARD -> R.string.difficulty_hard
+}
+
+/** Chân dung đối thủ: nhân vật máy đúng cấp độ, hoặc bóng người lạ khi hai người một máy. */
+private fun opponentPortrait(state: GameUiState): Int = when (state.mode) {
+    GameMode.VS_COMPUTER -> AiCharacters.all.firstOrNull { it.difficulty == state.difficulty }
+        ?.portrait ?: R.drawable.portrait_unknown_01
+    GameMode.TWO_PLAYERS -> R.drawable.portrait_unknown_01
 }
 
 /** Còn dưới mức này (30 giây) thì đồng hồ đổi sang màu cảnh báo. */

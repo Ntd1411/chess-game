@@ -5,16 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,19 +19,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.GameStatus
+import kma.game.chess2d.engine.Piece
+import kma.game.chess2d.opponent.AiCharacters
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.spectate.SpectateViewModel
-import kma.game.chess2d.ui.art.gothicBackdrop
+import kma.game.chess2d.ui.art.ButtonArt
+import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.SubScreenHeader
+import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.board.ChessBoard
+import kma.game.chess2d.ui.theme.GothicColors
 
 /**
  * Nhánh Máy vs Máy: chọn độ mạnh hai AI rồi ngồi xem chúng đấu.
@@ -69,7 +73,15 @@ fun SpectateRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Bước chọn cấp độ cho AI Trắng và AI Đen. */
+/** Chân dung nhân vật máy ứng với một cấp độ; dùng chung cho bước chọn và khung ván. */
+private fun portraitFor(level: Difficulty): Int =
+    AiCharacters.all.firstOrNull { it.difficulty == level }?.portrait ?: R.drawable.portrait_unknown_01
+
+/**
+ * Bước chọn cấp độ cho AI Trắng và AI Đen, dựng trên khung 1080x1920 như các màn phụ khác:
+ * mỗi bên là một tấm `ui_panel_main` có chân dung nhân vật máy và ba nút cấp độ (nút đang chọn
+ * là nút chính), dưới cùng là nút Bắt đầu và nút Quay lại.
+ */
 @Composable
 private fun SpectateSetupScreen(
     onStart: (Difficulty, Difficulty) -> Unit,
@@ -79,66 +91,79 @@ private fun SpectateSetupScreen(
     var white by rememberSaveable { mutableStateOf(Difficulty.MEDIUM) }
     var black by rememberSaveable { mutableStateOf(Difficulty.MEDIUM) }
 
-    Column(
-        modifier = modifier
-            .gothicBackdrop(R.drawable.bg_battle_default)
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.spectate_setup_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Text(
+    DesignCanvas(background = R.drawable.bg_battle_default, dim = 0.4f, modifier = modifier) {
+        SubScreenHeader(title = stringResource(R.string.spectate_setup_title), onBack = onBack)
+        DesignText(
             text = stringResource(R.string.spectate_setup_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
+            size = 30,
+            maxLines = 3,
+            modifier = Modifier.at(90, 180, 900, 110),
         )
-
-        LevelPicker(
+        LevelPanel(
+            top = 320,
             title = stringResource(R.string.spectate_white_ai),
             current = white,
             onChosen = { white = it },
         )
-        LevelPicker(
+        LevelPanel(
+            top = 820,
             title = stringResource(R.string.spectate_black_ai),
             current = black,
             onChosen = { black = it },
         )
-
-        Button(onClick = { onStart(white, black) }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.spectate_start))
-        }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.spectate_back))
-        }
+        GothicButton(
+            label = stringResource(R.string.spectate_start),
+            onClick = { onStart(white, black) },
+            modifier = Modifier.at(150, 1400, 780, 110),
+        )
+        GothicButton(
+            label = stringResource(R.string.spectate_back),
+            onClick = onBack,
+            art = ButtonArt.SECONDARY,
+            modifier = Modifier.at(150, 1530, 780, 100),
+        )
     }
 }
 
-/** Một hàng ba nút cấp độ, nút đang chọn được tô đậm. */
+/** Tấm chọn cấp độ của một bên: chân dung, tên bên và hàng ba nút cấp độ. */
 @Composable
-private fun LevelPicker(
+private fun LevelPanel(
+    top: Int,
     title: String,
     current: Difficulty,
     onChosen: (Difficulty) -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (level in Difficulty.entries) {
-                val label = stringResource(labelOf(level))
-                if (level == current) {
-                    Button(onClick = { onChosen(level) }) { Text(label) }
-                } else {
-                    OutlinedButton(onClick = { onChosen(level) }) { Text(label) }
-                }
-            }
-        }
+    SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(60, top, 960, 440))
+    PortraitInFrame(
+        portrait = portraitFor(current),
+        contentDescription = title,
+        modifier = Modifier.at(110, top + 50, 220, 220),
+    )
+    DesignText(
+        text = title,
+        size = 44,
+        color = GothicColors.Gold,
+        weight = FontWeight.Bold,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(370, top + 70, 610, 80),
+    )
+    DesignText(
+        text = stringResource(labelOf(current)),
+        size = 32,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(370, top + 160, 610, 70),
+    )
+    Difficulty.entries.forEachIndexed { i, level ->
+        GothicButton(
+            label = stringResource(labelOf(level)),
+            onClick = { onChosen(level) },
+            art = if (level == current) ButtonArt.PRIMARY else ButtonArt.SECONDARY,
+            modifier = Modifier.at(100 + i * 300, top + 300, 280, 100),
+        )
     }
 }
 
@@ -179,7 +204,10 @@ private fun SpectateMatchScreen(
             } else {
                 stringResource(labelOf(state.blackLevel))
             },
+            piece = Piece.of(Piece.KING, false),
             active = !game.whiteToMove,
+            portrait = portraitFor(state.blackLevel),
+            hp = MatchHp.fromLost(game.takenFromBlack),
         ),
         you = MatchPlayer(
             name = whiteName,
@@ -188,17 +216,22 @@ private fun SpectateMatchScreen(
             } else {
                 stringResource(labelOf(state.whiteLevel))
             },
+            piece = Piece.of(Piece.KING, true),
             active = game.whiteToMove,
+            portrait = portraitFor(state.whiteLevel),
+            hp = MatchHp.fromLost(game.takenFromWhite),
         ),
         actions = listOf(
             MatchAction(
                 icon = Icons.Filled.KeyboardArrowUp,
                 label = stringResource(R.string.action_flip),
+                art = R.drawable.battle_button_move,
                 onClick = { flipped = !flipped },
             ),
             MatchAction(
                 icon = Icons.Filled.Home,
                 label = stringResource(R.string.action_menu),
+                art = R.drawable.battle_button_menu,
                 onClick = onExit,
             ),
         ),
@@ -209,8 +242,10 @@ private fun SpectateMatchScreen(
         },
         modifier = modifier,
         backdrop = R.drawable.bg_battle_default,
+        inCheck = game.status == GameStatus.CHECK,
+        checkmate = game.status == GameStatus.CHECKMATE,
         belowBoard = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalDesign.current.dp(12))) {
                 SpectateControlRow(
                     paused = controls.paused,
                     autoPlay = controls.autoPlay,
@@ -262,48 +297,39 @@ private fun SpectateControlRow(
     onToggleAuto: () -> Unit,
     onCycleSpeed: () -> Unit,
 ) {
+    val d = LocalDesign.current
     val running = autoPlay && !paused
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Button(
+    val rowHeight = Modifier.fillMaxWidth().height(d.dp(90))
+    Column(verticalArrangement = Arrangement.spacedBy(d.dp(12))) {
+        Row(modifier = rowHeight, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
+            GothicButton(
+                label = stringResource(if (paused) R.string.spectate_resume else R.string.spectate_pause),
                 onClick = onTogglePause,
                 enabled = autoPlay && !finished,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    stringResource(
-                        if (paused) R.string.spectate_resume else R.string.spectate_pause,
-                    ),
-                )
-            }
-            OutlinedButton(
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            )
+            GothicButton(
+                label = stringResource(R.string.spectate_step),
                 onClick = onStep,
+                art = ButtonArt.SECONDARY,
                 enabled = !running && !finished,
-                modifier = Modifier.weight(1f),
-            ) { Text(stringResource(R.string.spectate_step)) }
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedButton(
+        Row(modifier = rowHeight, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
+            GothicButton(
+                label = stringResource(if (autoPlay) R.string.spectate_auto_on else R.string.spectate_auto_off),
                 onClick = onToggleAuto,
+                art = ButtonArt.SECONDARY,
                 enabled = !finished,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    stringResource(
-                        if (autoPlay) R.string.spectate_auto_on else R.string.spectate_auto_off,
-                    ),
-                )
-            }
-            OutlinedButton(
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            )
+            GothicButton(
+                label = stringResource(R.string.spectate_speed, speedFactor),
                 onClick = onCycleSpeed,
-                modifier = Modifier.weight(1f),
-            ) { Text(stringResource(R.string.spectate_speed, speedFactor)) }
+                art = ButtonArt.SECONDARY,
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            )
         }
     }
 }

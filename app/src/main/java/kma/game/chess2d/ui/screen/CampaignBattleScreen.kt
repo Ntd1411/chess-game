@@ -28,6 +28,9 @@ import kma.game.chess2d.campaign.Floor
 import kma.game.chess2d.campaign.FloorGoal
 import kma.game.chess2d.campaign.FloorResult
 import kma.game.chess2d.campaign.LossReason
+import kma.game.chess2d.campaign.NodeKind
+import kma.game.chess2d.engine.GameStatus
+import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.game.PauseItem
 import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.puzzle.Puzzle
@@ -116,6 +119,7 @@ fun CampaignBattleRoute(
         FloorGoal.Claim -> ""
     }
     val isPuzzle = goal is FloorGoal.SolvePuzzle
+    val isBoss = floor.kind == NodeKind.BOSS
 
     MatchScaffold(
         opponent = MatchPlayer(
@@ -125,13 +129,22 @@ fun CampaignBattleRoute(
                 isPuzzle -> stringResource(R.string.tower_kind_puzzle)
                 else -> stringResource(labelOf(state.game.difficulty))
             },
+            piece = Piece.of(Piece.KING, false),
             active = !state.game.whiteToMove,
+            portrait = if (isBoss) R.drawable.portrait_golden_queen else R.drawable.portrait_tower_keeper,
+            hp = if (isPuzzle) null else MatchHp.fromLost(state.game.takenFromBlack),
         ),
         you = MatchPlayer(
             name = playerName.ifBlank { stringResource(R.string.match_player_one) },
             subtitle = stringResource(R.string.match_side, stringResource(R.string.side_white)),
+            piece = Piece.of(Piece.KING, true),
             active = state.game.whiteToMove,
+            portrait = R.drawable.portrait_protagonist,
+            hp = if (isPuzzle) null else MatchHp.fromLost(state.game.takenFromWhite),
         ),
+        backdrop = if (isBoss) R.drawable.bg_battle_boss else R.drawable.bg_battle_default,
+        inCheck = state.game.status == GameStatus.CHECK,
+        checkmate = state.game.status == GameStatus.CHECKMATE,
         actions = listOf(
             MatchAction(
                 icon = Icons.Filled.Refresh,
@@ -146,6 +159,7 @@ fun CampaignBattleRoute(
             MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
+                art = R.drawable.battle_button_menu,
                 onClick = { showPause = true },
             ),
         ),
