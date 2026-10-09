@@ -73,7 +73,7 @@ fun LocalSetupScreen(
 
     Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
         Image(
-            painter = painterResource(R.drawable.screen_main_menu),
+            painter = painterResource(R.drawable.bg_main_menu),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),

@@ -82,20 +82,19 @@ enum class PieceTheme {
 /**
  * Resource ảnh cho [piece] khi dùng [PieceTheme.IMAGE].
  *
- * Bộ ảnh AI-generated, đặt trong res/drawable/ với tên piece_<mau>_<loai>.png
- * (piece_white_king, ...). Quân Đen dùng bản sáng piece_black_<loai>_bright: bản cũ chỉ
- * sáng khoảng 70 trên ô tối khoảng 45 nên khó thấy, bản bright có viền ngà để nổi trên ô tối.
+ * Bộ ảnh gothic mới trong res/drawable/ với tên chess_piece_<mau>_<loai>.png. Quân Đen có viền vàng
+ * và đỏ nên vẫn nổi trên ô obsidian, không cần bản "bright" riêng như bộ cũ.
  */
 @DrawableRes
 internal fun pieceImageRes(piece: Byte): Int {
     val white = Piece.isWhite(piece)
     return when (Piece.typeOf(piece)) {
-        Piece.KING -> if (white) R.drawable.piece_white_king else R.drawable.piece_black_king_bright
-        Piece.QUEEN -> if (white) R.drawable.piece_white_queen else R.drawable.piece_black_queen_bright
-        Piece.ROOK -> if (white) R.drawable.piece_white_rook else R.drawable.piece_black_rook_bright
-        Piece.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop_bright
-        Piece.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight_bright
-        else -> if (white) R.drawable.piece_white_pawn else R.drawable.piece_black_pawn_bright
+        Piece.KING -> if (white) R.drawable.chess_piece_white_king else R.drawable.chess_piece_black_king
+        Piece.QUEEN -> if (white) R.drawable.chess_piece_white_queen else R.drawable.chess_piece_black_queen
+        Piece.ROOK -> if (white) R.drawable.chess_piece_white_rook else R.drawable.chess_piece_black_rook
+        Piece.BISHOP -> if (white) R.drawable.chess_piece_white_bishop else R.drawable.chess_piece_black_bishop
+        Piece.KNIGHT -> if (white) R.drawable.chess_piece_white_knight else R.drawable.chess_piece_black_knight
+        else -> if (white) R.drawable.chess_piece_white_pawn else R.drawable.chess_piece_black_pawn
     }
 }
 

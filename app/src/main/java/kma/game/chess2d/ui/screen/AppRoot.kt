@@ -29,6 +29,8 @@ import kma.game.chess2d.campaign.TowerCatalog
 import kma.game.chess2d.campaign.TowerFlow
 import kma.game.chess2d.campaign.TowerProgress
 import kma.game.chess2d.campaign.TowerProgressStore
+import kma.game.chess2d.campaign.Reward
+import kma.game.chess2d.campaign.TowerRewards
 import kma.game.chess2d.campaign.TowerStage
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.LocalSetup
@@ -62,6 +64,7 @@ import kotlinx.coroutines.withContext
  */
 private enum class Screen {
     SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE, JOURNAL, LOCAL_SETUP,
+    MODES, INVENTORY,
 }
 
 /**
@@ -119,7 +122,7 @@ fun AppRoot(modifier: Modifier = Modifier) {
 
         Screen.MENU -> {
             // Menu là màn gốc: không có BackHandler để back thoát app như bình thường.
-            MenuScreen(
+            MenuRoute(
                 name = playerName,
                 onNameChange = { playerName = it },
                 onOpenTower = { screen = Screen.TOWER },
@@ -127,10 +130,11 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onPlayComputer = { screen = Screen.AI_SELECT },
                 onPlayTwoPlayers = { screen = Screen.LOCAL_SETUP },
                 onPlayLan = { screen = Screen.LOBBY },
-                onOpenSpectate = { screen = Screen.SPECTATE },
+                onOpenModes = { screen = Screen.MODES },
                 onOpenHistory = { screen = Screen.HISTORY },
                 onOpenProfile = { screen = Screen.PROFILE },
                 onOpenJournal = { screen = Screen.JOURNAL },
+                onOpenInventory = { screen = Screen.INVENTORY },
                 modifier = modifier,
             )
             // Hỏi "tiếp tục hay bỏ" ngay trên menu, màn đầu tiên người chơi thấy sau splash.
@@ -142,6 +146,24 @@ fun AppRoot(modifier: Modifier = Modifier) {
                     screen = Screen.MATCH
                 },
             )
+        }
+
+        Screen.MODES -> {
+            BackHandler { screen = Screen.MENU }
+            ModeSelectScreen(
+                onOpenTower = { screen = Screen.TOWER },
+                onPlayComputer = { screen = Screen.AI_SELECT },
+                onPlayTwoPlayers = { screen = Screen.LOCAL_SETUP },
+                onPlayLan = { screen = Screen.LOBBY },
+                onOpenSpectate = { screen = Screen.SPECTATE },
+                onBack = { screen = Screen.MENU },
+                modifier = modifier,
+            )
+        }
+
+        Screen.INVENTORY -> {
+            BackHandler { screen = Screen.MENU }
+            InventoryRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
         }
 
         Screen.LOCAL_SETUP -> {
@@ -249,7 +271,65 @@ private fun musicFor(screen: Screen): MusicTrack? = when (screen) {
     Screen.SPLASH -> null
     Screen.MATCH, Screen.SPECTATE -> MusicTrack.BATTLE
     Screen.MENU, Screen.HISTORY, Screen.AI_SELECT, Screen.PROFILE, Screen.JOURNAL,
-    Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER -> MusicTrack.MENU
+    Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER, Screen.MODES, Screen.INVENTORY -> MusicTrack.MENU
+}
+
+/** Vàng/pha lê/sách suy ra từ tiến độ Tháp (xem [TowerRewards]); tự cập nhật khi qua tầng mới. */
+@Composable
+private fun rememberWallet(): Pair<Reward, Int> {
+    val context = LocalContext.current
+    val puzzles = remember(context) { PuzzleCatalog.load(context.applicationContext) }
+    val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
+    val store = remember(context) { TowerProgressStore(context.applicationContext) }
+    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val wallet = remember(floors, progress.clearedUpTo) { TowerRewards.total(floors, progress.clearedUpTo) }
+    return wallet to progress.clearedUpTo
+}
+
+/** Sảnh chính: đọc cấp từ Hồ sơ và ví từ tiến độ Tháp. */
+@Composable
+private fun MenuRoute(
+    name: String,
+    onNameChange: (String) -> Unit,
+    onOpenTower: () -> Unit,
+    onPlayComputer: () -> Unit,
+    onPlayTwoPlayers: () -> Unit,
+    onPlayLan: () -> Unit,
+    onOpenModes: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenProfile: () -> Unit,
+    onOpenJournal: () -> Unit,
+    onOpenInventory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
+    val stats by profile.stats.collectAsStateWithLifecycle(initialValue = PlayerStats())
+    val (wallet, _) = rememberWallet()
+    MenuScreen(
+        name = name,
+        level = stats.level,
+        gold = wallet.gold,
+        crystals = wallet.crystals,
+        onNameChange = onNameChange,
+        onOpenTower = onOpenTower,
+        onPlayComputer = onPlayComputer,
+        onPlayTwoPlayers = onPlayTwoPlayers,
+        onPlayLan = onPlayLan,
+        onOpenModes = onOpenModes,
+        onOpenHistory = onOpenHistory,
+        onOpenProfile = onOpenProfile,
+        onOpenJournal = onOpenJournal,
+        onOpenInventory = onOpenInventory,
+        modifier = modifier,
+    )
+}
+
+/** Túi đồ: ví và di vật đều suy ra từ tiến độ Tháp. */
+@Composable
+private fun InventoryRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val (wallet, clearedUpTo) = rememberWallet()
+    InventoryScreen(wallet = wallet, clearedUpTo = clearedUpTo, onBack = onBack, modifier = modifier)
 }
 
 /**
@@ -377,6 +457,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                 lines = FloorDialogues.intro(floor.number),
                 onFinished = { stage = TowerFlow.afterIntro(floor) },
                 modifier = modifier,
+                onBack = { stage = TowerStage.MAP },
             )
         }
 
@@ -423,15 +504,11 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
             BackHandler { stage = TowerStage.MAP }
             VictoryScreen(
                 floor = floor,
+                reward = TowerRewards.forFloor(floor),
                 nextFloor = TowerFlow.nextFloor(floors, floor),
-                onNext = {
-                    TowerFlow.nextFloor(floors, floor)?.let { next ->
-                        floorNumber = next.number
-                        newAttempt()
-                        stage = TowerFlow.onSelect(next)
-                    }
-                },
-                onMap = { stage = TowerStage.MAP },
+                // Về bản đồ: tầng kế đã được chọn sẵn, chỉ cần bấm Vào tầng.
+                onContinue = { stage = TowerStage.MAP },
+                onLobby = onBack,
                 modifier = modifier,
             )
         }
@@ -445,7 +522,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
                     newAttempt()
                     stage = TowerStage.BATTLE
                 },
-                onMap = { stage = TowerStage.MAP },
+                onLobby = onBack,
                 modifier = modifier,
             )
         }

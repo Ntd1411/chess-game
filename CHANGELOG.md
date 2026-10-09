@@ -14,6 +14,15 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 18:20 GMT+7 — Thiết kế lại các màn chính theo bộ asset mới và khung 1080x1920
+- Chuyển sang bộ asset mới (bg_*, button_*, portrait_*, chess_piece_*, board_tile_*, map_*, item_*...), bỏ bộ cũ; đổi tên hai file `.png.png`
+- Thêm `DesignCanvas` (khung thiết kế 1080x1920 co vừa màn, nền Crop phủ kín), `SlicedArt` (nine-slice không méo góc), cắt lề trong suốt khi vẽ ảnh, `GothicButton` chỉ vẽ một trạng thái nút
+- Vẽ lại Splash, Sảnh chính (avatar, cấp, vàng/pha lê, nhân vật toàn thân, cột icon, 4 nút), Chọn đối thủ AI, Thoại, Chiến thắng, Thất bại, Bản đồ Tháp (node zíc-zắc, xích nối, nút Vào tầng) theo tọa độ bản thiết kế
+- Thêm màn Chọn chế độ (5 thẻ, có Máy vs Máy) và Túi đồ (lưới 4x4, tooltip)
+- Thêm `TowerRewards`/`Relic`: vàng, pha lê, sách cổ và di vật suy ra từ tiến độ Tháp, hiện ở sảnh, Túi đồ và màn Chiến thắng
+- Bàn cờ ghép từ board_tile_* (không dùng chess_board.png), ô gợi ý/ăn/chọn/chiếu bằng tile riêng, fx_selected_piece_glow dưới quân đang chọn
+- Test mới: TowerRewardsTest, DesignLayoutTest, LobbyLayoutTest viết lại; `:app:testDebugUnitTest` và `:app:assembleDebug` thành công
+
 ## 2026-10-04 16:46 GMT+7 — Đổi toàn bộ âm thanh từ wav sang ogg để giảm dung lượng APK
 - Thay 9 file trong `res/raw` từ wav sang ogg (khoảng 63 MB xuống khoảng 4 MB), giữ nguyên tên nên code không đổi
 - `:app:testDebugUnitTest` và `:app:assembleDebug` thành công

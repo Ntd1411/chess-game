@@ -14,6 +14,9 @@ import kma.game.chess2d.campaign.TowerCatalog
  * cách AI nghĩ — nên số sao và tốc độ nghĩ hiển thị đều suy ra từ [difficulty] chứ không
  * khai báo riêng, để màn hình không bao giờ hứa một độ khó mà AI không có.
  *
+ * @param portrait ảnh chân dung **vuông** (`portrait_*`), không phải ảnh toàn thân.
+ * @param fullBody ảnh toàn thân nếu có (`character_*_fullbody`); `null` thì màn chọn đối thủ dùng
+ *        chân dung vuông chứ không phóng chân dung thành hình toàn thân.
  * @param unlockFloor tầng của Tháp Cờ phải vượt qua để mở nhân vật; `null` là mở sẵn.
  */
 data class AiCharacter(
@@ -25,6 +28,7 @@ data class AiCharacter(
     @StringRes val personality: Int,
     @StringRes val quote: Int,
     val unlockFloor: Int? = null,
+    @DrawableRes val fullBody: Int? = null,
 ) {
 
     /** Số sao độ khó, 1 đến 3, suy ra từ [difficulty]. */
@@ -44,8 +48,7 @@ object AiCharacters {
         AiCharacter(
             id = "chess_mage",
             name = R.string.ai_mage_name,
-            // Tạm dùng art người giữ tháp cho Pháp Sư Cờ, đúng như bảng asset audit.
-            portrait = R.drawable.char_tower_keeper,
+            portrait = R.drawable.portrait_silent_bishop,
             difficulty = Difficulty.EASY,
             style = R.string.ai_mage_style,
             personality = R.string.ai_mage_personality,
@@ -54,7 +57,7 @@ object AiCharacters {
         AiCharacter(
             id = "dark_knight",
             name = R.string.ai_knight_name,
-            portrait = R.drawable.char_knight_guardian,
+            portrait = R.drawable.portrait_crimson_knight,
             difficulty = Difficulty.MEDIUM,
             style = R.string.ai_knight_style,
             personality = R.string.ai_knight_personality,
@@ -63,7 +66,8 @@ object AiCharacters {
         AiCharacter(
             id = "blood_queen",
             name = R.string.ai_queen_name,
-            portrait = R.drawable.char_chess_queen,
+            portrait = R.drawable.portrait_golden_queen,
+            fullBody = R.drawable.character_golden_queen_fullbody,
             difficulty = Difficulty.HARD,
             style = R.string.ai_queen_style,
             personality = R.string.ai_queen_personality,
@@ -72,7 +76,7 @@ object AiCharacters {
         AiCharacter(
             id = "dark_king",
             name = R.string.ai_king_name,
-            portrait = R.drawable.char_mysterious_chess_king,
+            portrait = R.drawable.portrait_unknown_01,
             difficulty = Difficulty.HARD,
             style = R.string.ai_king_style,
             personality = R.string.ai_king_personality,
@@ -81,7 +85,7 @@ object AiCharacters {
         AiCharacter(
             id = "hidden",
             name = R.string.ai_hidden_name,
-            portrait = R.drawable.char_shadow_opponent,
+            portrait = R.drawable.portrait_unknown_02,
             difficulty = Difficulty.HARD,
             style = R.string.ai_hidden_style,
             personality = R.string.ai_hidden_personality,

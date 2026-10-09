@@ -81,7 +81,7 @@ private fun SpectateSetupScreen(
 
     Column(
         modifier = modifier
-            .gothicBackdrop(R.drawable.screen_ai_vs_ai)
+            .gothicBackdrop(R.drawable.bg_battle_default)
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -208,7 +208,7 @@ private fun SpectateMatchScreen(
             statusLabel(game)
         },
         modifier = modifier,
-        backdrop = R.drawable.screen_ai_vs_ai,
+        backdrop = R.drawable.bg_battle_default,
         belowBoard = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SpectateControlRow(

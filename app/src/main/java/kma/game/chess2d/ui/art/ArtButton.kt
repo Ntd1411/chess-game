@@ -5,7 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -15,74 +15,101 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import kma.game.chess2d.R
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
- * Nút bấm vẽ bằng ảnh "bảng" gothic (viền vàng, lõi đá obsidian) với chữ đè ở giữa.
+ * Bộ ảnh trạng thái của một loại nút. Mỗi lúc chỉ vẽ **một** trạng thái; `hover` không dùng vì
+ * màn hình cảm ứng không có trạng thái rê chuột.
+ */
+enum class ButtonArt(
+    @DrawableRes val normal: Int,
+    @DrawableRes val pressed: Int,
+    @DrawableRes val disabled: Int,
+) {
+    PRIMARY(R.drawable.button_primary_normal, R.drawable.button_primary_pressed, R.drawable.button_primary_disabled),
+    SECONDARY(
+        R.drawable.button_secondary_normal,
+        R.drawable.button_secondary_pressed,
+        R.drawable.button_secondary_disabled,
+    ),
+    SMALL(R.drawable.button_small_normal, R.drawable.button_small_pressed, R.drawable.button_small_disabled),
+    CHOICE(R.drawable.button_choice_normal, R.drawable.button_choice_pressed, R.drawable.button_choice_disabled),
+    ;
+
+    /** Ảnh cần vẽ cho trạng thái hiện tại: tắt ưu tiên hơn nhấn. */
+    @DrawableRes
+    fun resFor(isEnabled: Boolean, isPressed: Boolean): Int = when {
+        !isEnabled -> disabled
+        isPressed -> pressed
+        else -> normal
+    }
+}
+
+/**
+ * Nút gothic vẽ từ bộ ảnh `button_*` với chữ đè ở giữa.
  *
- * Ảnh luôn được vẽ Fit giữ đúng tỉ lệ gốc, không kéo giãn, vì hai đầu nút có ornament.
- * Vùng chạm là toàn bộ hộp của nút nên chiều cao do bên gọi quyết định (>= 48dp cho nút nhỏ).
- * Khi nhấn: nút thu nhẹ, và đổi sang [pressedRes] nếu có (ảnh pressed phải có nền trong suốt),
- * nếu không thì làm tối ảnh thường.
+ * Ảnh nút là khung 3:1 nhưng khung thiết kế thường tới 7:1, nên ảnh được vẽ kiểu nine-slice
+ * ([SlicedArt]): hai đầu ornament giữ đúng tỉ lệ, phần thân giãn ngang. Cỡ chữ và lề chữ tính
+ * theo chiều cao nút nếu bên gọi không truyền, nên chữ không đè lên hai đầu nút.
  */
 @Composable
-fun PlateButton(
+fun GothicButton(
     label: String,
     onClick: () -> Unit,
-    @DrawableRes normalRes: Int,
     modifier: Modifier = Modifier,
-    @DrawableRes pressedRes: Int? = null,
-    fontSize: TextUnit = 18.sp,
+    art: ButtonArt = ButtonArt.PRIMARY,
+    enabled: Boolean = true,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    textColor: Color = if (art == ButtonArt.PRIMARY) GothicColors.Gold else GothicColors.Parchment,
     maxLines: Int = 1,
-    textColor: Color = GothicColors.Gold,
-    textPadding: Dp = 22.dp,
-    maxEdge: Int = ArtSizes.BUTTON,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(targetValue = if (pressed) 0.97f else 1f, label = "plateScale")
+    val scale by animateFloatAsState(targetValue = if (pressed) 0.97f else 1f, label = "buttonScale")
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .scale(scale)
-            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick),
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        val usePressedAsset = pressed && pressedRes != null
-        ArtImage(
-            res = if (usePressedAsset) pressedRes!! else normalRes,
-            maxEdge = maxEdge,
-            contentScale = ContentScale.Fit,
-            colorFilter = if (pressed && !usePressedAsset) {
-                ColorFilter.tint(Color(0xFFB8B8B8), BlendMode.Modulate)
-            } else {
-                null
-            },
+        SlicedArt(
+            res = art.resFor(enabled, pressed),
+            slice = 0.5f,
             modifier = Modifier.fillMaxSize(),
         )
+        val size = if (fontSize != TextUnit.Unspecified) {
+            fontSize
+        } else {
+            with(LocalDensity.current) { (maxHeight * 0.30f).toSp() }
+        }
         Text(
             text = label,
-            color = textColor,
-            fontSize = fontSize,
+            color = if (enabled) textColor else textColor.copy(alpha = 0.5f),
+            fontSize = size,
+            lineHeight = size * 1.1f,
             fontWeight = FontWeight.Bold,
             maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            lineHeight = fontSize * 1.1f,
             style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 6f)),
-            modifier = Modifier.padding(horizontal = textPadding),
+            modifier = Modifier.padding(horizontal = maxHeight * 0.55f),
         )
     }
 }

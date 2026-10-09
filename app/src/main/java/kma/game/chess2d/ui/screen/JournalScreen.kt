@@ -73,7 +73,7 @@ fun JournalScreen(
 
     Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
         Image(
-            painter = painterResource(R.drawable.screen_character_journal),
+            painter = painterResource(R.drawable.bg_journal),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),

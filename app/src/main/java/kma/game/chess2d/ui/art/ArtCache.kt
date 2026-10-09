@@ -22,7 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import kma.game.chess2d.ui.theme.GothicColors
@@ -75,6 +80,55 @@ object ArtCache {
         image
     }
 
+    private val bounds = HashMap<String, IntRect>()
+
+    /**
+     * Vùng có nội dung (bỏ viền trong suốt) của ảnh [res] ở cỡ [maxEdge]. Bộ asset mới vẽ trên
+     * canvas vuông hoặc 3:1 với lề trong suốt khác nhau từng file, nên muốn đặt ảnh đúng khung
+     * thiết kế thì phải cắt lề trước. Tính một lần rồi nhớ lại. Gọi ngoài luồng chính.
+     */
+    fun trimBounds(resources: Resources, res: Int, maxEdge: Int): IntRect {
+        val image = load(resources, res, maxEdge)
+        return synchronized(lock) {
+            bounds.getOrPut(key(res, maxEdge)) {
+                val bitmap = image.asAndroidBitmap()
+                val row = IntArray(bitmap.width)
+                alphaBounds(bitmap.width, bitmap.height) { y ->
+                    bitmap.getPixels(row, 0, bitmap.width, 0, y, bitmap.width, 1)
+                    row
+                }
+            }
+        }
+    }
+
+    /** Lấy vùng nội dung nếu đã tính, không giải mã. */
+    fun peekBounds(res: Int, maxEdge: Int): IntRect? = synchronized(lock) { bounds[key(res, maxEdge)] }
+
+    /**
+     * Hình chữ nhật nhỏ nhất bao mọi điểm ảnh có alpha > [threshold]. [rowAt] trả các điểm ảnh ARGB
+     * của một hàng. Ảnh trong suốt hoàn toàn thì trả cả ảnh để bên vẽ không phải xử lý ca rỗng.
+     * Tách ra thành hàm thuần để test được.
+     */
+    internal fun alphaBounds(width: Int, height: Int, threshold: Int = 24, rowAt: (Int) -> IntArray): IntRect {
+        var minX = width
+        var minY = height
+        var maxX = -1
+        var maxY = -1
+        for (y in 0 until height) {
+            val pixels = rowAt(y)
+            for (x in 0 until width) {
+                if ((pixels[x] ushr 24) > threshold) {
+                    if (x < minX) minX = x
+                    if (x > maxX) maxX = x
+                    if (y < minY) minY = y
+                    maxY = y
+                }
+            }
+        }
+        if (maxX < 0) return IntRect(0, 0, width, height)
+        return IntRect(minX, minY, maxX + 1, maxY + 1)
+    }
+
     /** Nạp trước một danh sách ảnh, báo tiến độ sau mỗi ảnh. */
     suspend fun preload(context: Context, specs: List<ArtSpec>, onProgress: (done: Int, total: Int) -> Unit) {
         val resources = context.applicationContext.resources
@@ -113,7 +167,37 @@ fun rememberArt(@DrawableRes res: Int, maxEdge: Int): ImageBitmap? {
     return image
 }
 
-/** Thay cho `Image(painterResource(...))` với asset lớn: nạp ở cỡ vừa đủ, chưa xong thì vẽ trống. */
+/** Ảnh đã nạp kèm vùng có nội dung (đã bỏ lề trong suốt). */
+class TrimmedArt(val image: ImageBitmap, val bounds: IntRect)
+
+/** Ảnh [res] kèm vùng nội dung; `null` trong lúc đang giải mã/quét lề. */
+@Composable
+fun rememberTrimmedArt(@DrawableRes res: Int, maxEdge: Int): TrimmedArt? {
+    val context = LocalContext.current
+    var art by remember(res, maxEdge) {
+        val image = ArtCache.peek(res, maxEdge)
+        val rect = ArtCache.peekBounds(res, maxEdge)
+        mutableStateOf(if (image != null && rect != null) TrimmedArt(image, rect) else null)
+    }
+    LaunchedEffect(res, maxEdge) {
+        if (art == null) {
+            art = withContext(Dispatchers.Default) {
+                runCatching {
+                    val rect = ArtCache.trimBounds(context.resources, res, maxEdge)
+                    TrimmedArt(ArtCache.load(context.resources, res, maxEdge), rect)
+                }.getOrNull()
+            }
+        }
+    }
+    return art
+}
+
+/**
+ * Thay cho `Image(painterResource(...))` với asset lớn: nạp ở cỡ vừa đủ, chưa xong thì vẽ trống.
+ *
+ * @param trim bỏ lề trong suốt trước khi co ảnh vào khung, để phần có nội dung lấp đúng khung
+ *        thiết kế (asset mới thường có lề rộng và lệch).
+ */
 @Composable
 fun ArtImage(
     @DrawableRes res: Int,
@@ -125,7 +209,29 @@ fun ArtImage(
     alpha: Float = 1f,
     colorFilter: ColorFilter? = null,
     filterQuality: FilterQuality = FilterQuality.Medium,
+    trim: Boolean = false,
 ) {
+    if (trim) {
+        val art = rememberTrimmedArt(res, maxEdge) ?: return
+        val painter = remember(art) {
+            BitmapPainter(
+                image = art.image,
+                srcOffset = IntOffset(art.bounds.left, art.bounds.top),
+                srcSize = IntSize(art.bounds.width, art.bounds.height),
+                filterQuality = filterQuality,
+            )
+        }
+        Image(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = contentScale,
+            alignment = alignment,
+            alpha = alpha,
+            colorFilter = colorFilter,
+        )
+        return
+    }
     val image = rememberArt(res, maxEdge) ?: return
     Image(
         bitmap = image,

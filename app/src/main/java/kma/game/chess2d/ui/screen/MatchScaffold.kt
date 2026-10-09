@@ -86,7 +86,7 @@ fun MatchScaffold(
     headline: String? = null,
     notice: (@Composable () -> Unit)? = null,
     belowBoard: (@Composable () -> Unit)? = null,
-    @DrawableRes backdrop: Int = R.drawable.screen_chess_battle,
+    @DrawableRes backdrop: Int = R.drawable.bg_battle_default,
     board: @Composable () -> Unit,
 ) {
     Column(

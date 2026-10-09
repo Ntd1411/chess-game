@@ -56,7 +56,7 @@ fun ProfileScreen(
 ) {
     Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
         Image(
-            painter = painterResource(R.drawable.screen_main_menu),
+            painter = painterResource(R.drawable.bg_settings),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
@@ -97,7 +97,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
-                    painter = painterResource(R.drawable.char_protagonist_full_body),
+                    painter = painterResource(R.drawable.character_protagonist_fullbody),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.height(240.dp).fillMaxWidth(),

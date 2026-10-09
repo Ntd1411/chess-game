@@ -37,7 +37,8 @@ import androidx.compose.ui.unit.IntSize
 import kma.game.chess2d.R
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
-import kma.game.chess2d.ui.art.rememberArt
+import kma.game.chess2d.ui.art.TrimmedArt
+import kma.game.chess2d.ui.art.rememberTrimmedArt
 import kma.game.chess2d.ui.theme.GothicColors
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.TextStyle
@@ -87,12 +88,15 @@ fun ChessBoard(
 
         // Ảnh ô và lớp phủ của bộ gothic, đã được nạp trước ở splash nên thường có ngay. Chưa có (null)
         // thì Canvas vẽ màu phẳng dự phòng của bộ màu thay vì chờ.
-        val tileLight = rememberArt(R.drawable.tile_marble_light, ArtSizes.OVERLAY)
-        val tileDark = rememberArt(R.drawable.tile_marble_dark, ArtSizes.OVERLAY)
-        val selectedOverlay = rememberArt(R.drawable.tile_selected_overlay, ArtSizes.OVERLAY)
-        val moveOverlay = rememberArt(R.drawable.tile_move_overlay, ArtSizes.OVERLAY)
-        val attackOverlay = rememberArt(R.drawable.tile_attack_overlay, ArtSizes.OVERLAY)
-        val checkOverlay = rememberArt(R.drawable.tile_check_overlay, ArtSizes.OVERLAY)
+        // Bàn ghép từ board_tile_light/dark (8x8), không dùng chess_board.png: ảnh đó là bàn vẽ sẵn
+        // trong khung dọc 3:4 nên lưới ô không khớp được với toạ độ ô của engine. Hai cách không dùng chung.
+        val tileLight = rememberTrimmedArt(R.drawable.board_tile_light, ArtSizes.OVERLAY)
+        val tileDark = rememberTrimmedArt(R.drawable.board_tile_dark, ArtSizes.OVERLAY)
+        val selectedOverlay = rememberTrimmedArt(R.drawable.board_tile_selected, ArtSizes.OVERLAY)
+        val moveOverlay = rememberTrimmedArt(R.drawable.board_tile_move, ArtSizes.OVERLAY)
+        val attackOverlay = rememberTrimmedArt(R.drawable.board_tile_attack, ArtSizes.OVERLAY)
+        val checkOverlay = rememberTrimmedArt(R.drawable.board_tile_check, ArtSizes.OVERLAY)
+        val lastMoveOverlay = rememberTrimmedArt(R.drawable.fx_move_highlight, ArtSizes.OVERLAY)
         val textured = palette.textured
 
         // Ô đang được kéo và khoảng đã kéo (đơn vị px). Kéo thả chỉ là một lối vào khác
@@ -170,11 +174,18 @@ fun ChessBoard(
                     drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
                 }
                 if (square == lastMoveFrom || square == lastMoveTo) {
-                    drawRect(BoardColors.lastMove, topLeft, size)
+                    if (textured && lastMoveOverlay != null) {
+                        drawTile(lastMoveOverlay, col, row, squarePx)
+                    } else {
+                        drawRect(BoardColors.lastMove, topLeft, size)
+                    }
                 }
                 if (square == checkedKingSquare) {
-                    drawRect(BoardColors.check, topLeft, size)
-                    if (textured && checkOverlay != null) drawTile(checkOverlay, col, row, squarePx)
+                    if (textured && checkOverlay != null) {
+                        drawTile(checkOverlay, col, row, squarePx)
+                    } else {
+                        drawRect(BoardColors.check, topLeft, size)
+                    }
                 }
                 if (square == selectedSquare) {
                     if (textured && selectedOverlay != null) {
@@ -185,16 +196,6 @@ fun ChessBoard(
                 }
             }
 
-            // Viền vàng mảnh quanh bàn cờ gothic, nằm trong khung 8x8 nên không làm bàn lệch ô.
-            if (textured) {
-                val edge = squarePx * 0.05f
-                drawRect(
-                    color = GothicColors.Gold.copy(alpha = 0.85f),
-                    topLeft = Offset(edge / 2f, edge / 2f),
-                    size = Size(this.size.width - edge, this.size.height - edge),
-                    style = Stroke(width = edge),
-                )
-            }
 
             // Gợi ý nước đi vẽ sau cùng để không bị màu ô nào phủ lên.
             for (target in legalTargets) {
@@ -246,6 +247,15 @@ fun ChessBoard(
                         .zIndex(if (dragging) 1f else 0f),
                     contentAlignment = Alignment.Center,
                 ) {
+                    // Quầng sáng dưới quân đang chọn (trên ô, dưới quân).
+                    if (textured && piece.square == selectedSquare) {
+                        ArtImage(
+                            res = R.drawable.fx_selected_piece_glow,
+                            maxEdge = ArtSizes.OVERLAY,
+                            trim = true,
+                            modifier = Modifier.size(squareSize),
+                        )
+                    }
                     PieceGlyph(piece.piece, squareSize, pieceTheme)
                 }
             }
@@ -274,10 +284,13 @@ private fun PieceGlyph(piece: Byte, squareSize: Dp, theme: PieceTheme) {
                     Brush.radialGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)),
                 ),
             )
+            // Quân mới vẽ trên canvas vuông với lề trong suốt hai bên: cắt lề rồi Fit, giữ đúng tỉ lệ,
+            // cao khoảng 80% ô (~90 px trên ô 114 px của bản thiết kế).
             ArtImage(
                 res = pieceImageRes(piece),
                 maxEdge = ArtSizes.PIECE,
-                modifier = Modifier.size(squareSize * 0.94f),
+                trim = true,
+                modifier = Modifier.size(squareSize * 0.8f),
                 contentScale = ContentScale.Fit,
             )
         }
@@ -320,16 +333,16 @@ private fun PieceGlyph(piece: Byte, squareSize: Dp, theme: PieceTheme) {
  */
 internal fun glyphOf(piece: Byte): String = PieceTheme.SOLID.glyphOf(piece)
 
-/** Vẽ [image] kín ô (cột [col], hàng [row] trên màn hình). Làm tròn hai đầu để các ô liền nhau không hở khe. */
-private fun DrawScope.drawTile(image: ImageBitmap, col: Int, row: Int, squarePx: Float) {
+/** Vẽ phần có nội dung của [art] kín ô: cắt lề trong suốt để các ô ghép sát nhau. */
+private fun DrawScope.drawTile(art: TrimmedArt, col: Int, row: Int, squarePx: Float) {
     val x0 = (col * squarePx).roundToInt()
     val y0 = (row * squarePx).roundToInt()
     val x1 = ((col + 1) * squarePx).roundToInt()
     val y1 = ((row + 1) * squarePx).roundToInt()
     drawImage(
-        image = image,
-        srcOffset = IntOffset.Zero,
-        srcSize = IntSize(image.width, image.height),
+        image = art.image,
+        srcOffset = IntOffset(art.bounds.left, art.bounds.top),
+        srcSize = IntSize(art.bounds.width, art.bounds.height),
         dstOffset = IntOffset(x0, y0),
         dstSize = IntSize(x1 - x0, y1 - y0),
         filterQuality = FilterQuality.Medium,

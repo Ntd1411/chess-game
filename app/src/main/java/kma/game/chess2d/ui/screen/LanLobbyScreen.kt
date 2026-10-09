@@ -71,7 +71,7 @@ fun LanLobbyScreen(
 
     Column(
         modifier = modifier
-            .gothicBackdrop(R.drawable.screen_lan_lobby)
+            .gothicBackdrop(R.drawable.bg_lan_lobby)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),

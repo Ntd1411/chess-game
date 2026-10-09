@@ -81,7 +81,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     Column(
         modifier = modifier
-            .gothicBackdrop(R.drawable.screen_game_history)
+            .gothicBackdrop(R.drawable.bg_journal)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -190,7 +190,7 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
 
     Column(
         modifier = modifier
-            .gothicBackdrop(R.drawable.screen_game_history)
+            .gothicBackdrop(R.drawable.bg_journal)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

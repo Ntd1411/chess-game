@@ -2,20 +2,11 @@ package kma.game.chess2d.ui.screen
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,27 +17,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import kma.game.chess2d.R
 import kma.game.chess2d.ui.art.ArtAssets
-import kma.game.chess2d.ui.art.ArtBackdrop
 import kma.game.chess2d.ui.art.ArtCache
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
-import kma.game.chess2d.ui.theme.GothicColors
+import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.at
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 /**
- * Màn hình mở đầu: nền tháp cổ dưới trăng đỏ, logo Tower of Chess và thanh tiến độ.
+ * Màn mở đầu theo bản thiết kế 1080x1920: nền `bg_splash`, vương miện phía trên logo, logo
+ * Tower of Chess ở giữa, thanh tải và nhãn trạng thái phía dưới. Không dùng chân dung hay panel.
  *
- * Thanh tiến độ phản ánh việc thật: trong lúc hiện splash, app giải mã trước nền menu, nút,
- * bàn cờ và quân cờ vào [ArtCache] để menu và ván đấu mở ra là có ảnh ngay, không nhấp nháy.
- * Splash ở lại tối thiểu [MIN_SPLASH_MILLIS] để người chơi kịp thấy logo, nhưng không quá lâu:
- * nạp xong là vào menu.
+ * Thanh tiến độ phản ánh việc thật: trong lúc hiện splash, app giải mã trước nền sảnh, nút,
+ * bàn cờ và quân cờ vào [ArtCache] để màn sau mở ra là có ảnh ngay. Splash ở lại tối thiểu
+ * [MIN_SPLASH_MILLIS] để người chơi kịp thấy logo, nạp xong là vào menu.
  */
 @Composable
 fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
@@ -76,51 +68,60 @@ fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         onDone()
     }
 
-    Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
-        ArtBackdrop(res = R.drawable.screen_splash_background, dim = 0.15f, maxEdge = ArtSizes.SCREEN)
-        Column(
-            modifier = Modifier.fillMaxSize().systemBarsPadding().alpha(alpha).padding(horizontal = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // Vùng giữa-trên của ảnh nền được vẽ chừa trống cho logo.
-            Spacer(Modifier.fillMaxHeight(0.16f))
-            ArtImage(
-                res = R.drawable.ui_logo_tower_of_chess,
-                maxEdge = ArtSizes.LOGO,
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.fillMaxWidth(0.92f),
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.app_tagline),
-                style = MaterialTheme.typography.bodyLarge,
-                color = GothicColors.Parchment,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.weight(1f))
-            LoadingBar(progress = shownProgress, modifier = Modifier.fillMaxWidth(0.62f))
-            Spacer(Modifier.height(36.dp))
-        }
+    DesignCanvas(background = R.drawable.bg_splash, dim = 0.1f, modifier = modifier) {
+        // Hạt sáng: trên nền, dưới logo.
+        ArtImage(
+            res = R.drawable.decor_main_menu_particles,
+            maxEdge = ArtSizes.BOARD,
+            trim = true,
+            alpha = 0.55f * alpha,
+            modifier = Modifier.at(140, 620, 800, 560),
+        )
+        ArtImage(
+            res = R.drawable.decor_main_menu_crown,
+            maxEdge = ArtSizes.PIECE,
+            trim = true,
+            alpha = alpha,
+            modifier = Modifier.at(450, 700, 180, 100),
+        )
+        ArtImage(
+            res = R.drawable.logo_tower_of_chess,
+            maxEdge = ArtSizes.LOGO,
+            trim = true,
+            alpha = alpha,
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.at(120, 810, 840, 300),
+        )
+        LoadingBar(progress = shownProgress, modifier = Modifier.at(210, 1450, 660, 48).alpha(alpha))
+        DesignText(
+            text = stringResource(R.string.splash_loading, (shownProgress * 100).roundToInt()),
+            size = 30,
+            maxLines = 1,
+            modifier = Modifier.at(240, 1510, 600, 48).alpha(alpha),
+        )
     }
 }
 
-/** Thanh tiến độ vàng trên rãnh đỏ sẫm, bo tròn. */
+/** Thanh tải: khung `loading_bar_frame` và ruột `loading_bar_fill` cắt theo tiến độ. */
 @Composable
 private fun LoadingBar(progress: Float, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .height(8.dp)
-            .clip(RoundedCornerShape(50))
-            .background(GothicColors.Blood.copy(alpha = 0.45f)),
-        contentAlignment = Alignment.CenterStart,
-    ) {
+    val d = LocalDesign.current
+    Box(modifier = modifier) {
         Box(
             modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .clip(RoundedCornerShape(50))
-                .background(GothicColors.Gold),
-        )
+                .fillMaxSize()
+                .padding(horizontal = d.dp(22), vertical = d.dp(13)),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (progress > 0.02f) {
+                SlicedArt(
+                    res = R.drawable.loading_bar_fill,
+                    slice = 0.5f,
+                    modifier = Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)),
+                )
+            }
+        }
+        SlicedArt(res = R.drawable.loading_bar_frame, slice = 0.5f, modifier = Modifier.fillMaxSize())
     }
 }
 
