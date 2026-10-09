@@ -84,17 +84,19 @@ fun TowerMapScreen(
 ) {
     var selected by rememberSaveable(progress.currentFloor) { mutableIntStateOf(progress.currentFloor) }
     val selectedFloor = floors.getOrNull(selected - 1)
-    val d = LocalDesign.current
     val density = LocalDensity.current
     val scroll = rememberScrollState()
 
-    // Cuộn tới tầng hiện tại, đặt nó khoảng giữa dải bản đồ.
-    LaunchedEffect(progress.currentFloor, d.unitPx) {
-        val target = TowerMapLayout.centerY(progress.currentFloor) - MAP_HEIGHT / 2
-        scroll.scrollTo(with(density) { d.dp(target.coerceAtLeast(0)).toPx().roundToInt() })
-    }
-
     DesignCanvas(background = R.drawable.bg_tower_map, dim = 0.3f, modifier = modifier) {
+        // Đọc tỷ lệ bên trong DesignCanvas: bên ngoài chỉ có giá trị mặc định 1:1.
+        val d = LocalDesign.current
+
+        // Cuộn tới tầng hiện tại, đặt nó khoảng giữa dải bản đồ.
+        LaunchedEffect(progress.currentFloor, d.unitPx) {
+            val target = TowerMapLayout.centerY(progress.currentFloor) - MAP_HEIGHT / 2
+            scroll.scrollTo(with(density) { d.dp(target.coerceAtLeast(0)).toPx().roundToInt() })
+        }
+
         ArtImage(R.drawable.decor_map_vignette, maxEdge = ArtSizes.BOARD, alpha = 0.6f,
             modifier = Modifier.at(0, 0, 1080, 1920))
 

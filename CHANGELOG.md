@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 19:25 GMT+7 — Vẽ lại sảnh LAN và sửa tỷ lệ khung thiết kế
+- Sảnh LAN trên `bg_lan_lobby`: ô địa chỉ `lan_room_code_panel` + nút sao chép `lan_copy_icon`, hai ô `lan_player_slot` (miện vương chủ phòng, đèn sẵn sàng/đang chờ), nút thể thức gothic, danh sách phòng cuộn được trên `ui_panel_sub`, kết nối thủ công, nút Mở phòng / Huỷ phòng — giữ nguyên mọi chức năng cũ
+- Sửa lỗi đọc `LocalDesign` bên ngoài `DesignCanvas` (tỷ lệ 1:1 sai) ở khung ván, chọn AI, thoại, kết quả tầng, túi đồ, bản đồ Tháp: khoảng cách, cỡ chữ và cuộn tới tầng hiện tại giờ đúng tỷ lệ
+- Thêm kiểm thử bố cục sảnh LAN
+
 ## 2026-10-09 19:05 GMT+7 — Vẽ lại Cài đặt và Nhật ký theo bản thiết kế
 - Cài đặt phủ toàn màn trên `bg_settings`: panel `ui_panel_main`, cột danh mục bên trái (tab chọn trên `button_secondary_normal`), hàng nhãn + control cuộn được với `toggle_on/off`, `radio_*`, nút "Khôi phục mặc định" (chỉ đặt lại cài đặt)
 - Thêm `GothicTextField`, `GothicToggle`, `GothicRadio` dùng chung

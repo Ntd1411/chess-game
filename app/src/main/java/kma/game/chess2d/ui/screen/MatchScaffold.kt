@@ -121,8 +121,9 @@ fun MatchScaffold(
     checkmate: Boolean = false,
     board: @Composable () -> Unit,
 ) {
-    val d = LocalDesign.current
     DesignCanvas(background = backdrop, dim = 0.2f, modifier = modifier) {
+        // Đọc tỷ lệ bên trong DesignCanvas: bên ngoài chỉ có giá trị mặc định 1:1.
+        val d = LocalDesign.current
         PlayerFrame(player = opponent, frame = R.drawable.battle_enemy_frame, top = 56, height = 150)
 
         if (inCheck) {

@@ -115,6 +115,12 @@
     <string name="lan_room_address">%1$s:%2$d</string>
     <string name="lan_room_address_unknown">Đang mở cổng…</string>
     <string name="lan_cancel_room">Huỷ phòng</string>
+    <string name="lan_copy_address">Sao chép địa chỉ</string>
+    <string name="lan_address_copied">Đã sao chép địa chỉ</string>
+    <string name="lan_ready">Sẵn sàng</string>
+    <string name="lan_host_badge">Chủ phòng</string>
+    <string name="lan_address_title">Địa chỉ máy bạn</string>
+    <string name="lan_no_address">Chưa có mạng Wi-Fi</string>
 
     <!-- Hỏi "tiếp tục hay bỏ" khi mở app lên mà còn một ván offline đang chơi dở -->
     <string name="resume_title">Tiếp tục ván cũ?</string>

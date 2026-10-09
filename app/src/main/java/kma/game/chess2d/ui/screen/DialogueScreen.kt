@@ -55,9 +55,8 @@ fun DialogueScreen(
     val line = lines[current]
     val isLast = current == lines.lastIndex
     val advance = { if (isLast) onFinished() else index = current + 1 }
-    val d = LocalDesign.current
-
     DesignCanvas(background = R.drawable.bg_dialogue, dim = 0.25f, modifier = modifier) {
+        val d = LocalDesign.current
         if (onBack != null) BackIcon(onClick = onBack, modifier = Modifier.at(60, 70, 80, 80))
 
         ArtImage(R.drawable.decor_dialogue_top, maxEdge = ArtSizes.PIECE, trim = true, modifier = Modifier.at(340, 110, 400, 110))

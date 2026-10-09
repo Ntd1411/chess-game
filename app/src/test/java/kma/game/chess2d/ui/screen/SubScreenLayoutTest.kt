@@ -25,6 +25,18 @@ class SubScreenLayoutTest {
     }
 
     @Test
+    fun lanLobbyBoxesDoNotOverlap() {
+        val boxes = with(LanLobbyLayout) { listOf(CodePanel, YouSlot, OpponentSlot, Start, Leave) }
+        for (i in boxes.indices) for (j in i + 1 until boxes.size) {
+            assertTrue("$i vs $j", !boxes[i].overlaps(boxes[j]))
+        }
+        // Nút sao chép nằm trong ô địa chỉ; danh sách phòng kết thúc trước nút chính.
+        assertTrue(LanLobbyLayout.CodePanel.overlaps(LanLobbyLayout.CopyIcon))
+        assertTrue(LanLobbyLayout.ROOMS_BOTTOM <= LanLobbyLayout.Start.y)
+        assertTrue(LanLobbyLayout.roomsTop(true) >= LanLobbyLayout.OpponentSlot.bottom)
+    }
+
+    @Test
     fun journalGridIsCenteredThreeColumns() {
         assertEquals(listOf(120, 410, 700), (0..2).map(JournalLayout::cellX))
         assertEquals(1080, JournalLayout.cellX(0) + JournalLayout.cellX(2) + JournalLayout.CELL)

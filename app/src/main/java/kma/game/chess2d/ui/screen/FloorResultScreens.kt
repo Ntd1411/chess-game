@@ -52,9 +52,8 @@ fun VictoryScreen(
         floor.kind == NodeKind.STORY -> stringResource(R.string.victory_sub_story)
         else -> stringResource(R.string.victory_sub_floor, floor.number, floor.title)
     }
-    val d = LocalDesign.current
-
     DesignCanvas(background = R.drawable.bg_victory, dim = 0.15f, modifier = modifier) {
+        val d = LocalDesign.current
         ArtImage(R.drawable.fx_victory_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.5f,
             modifier = Modifier.at(40, 120, 1000, 640))
         ArtImage(R.drawable.decor_victory_light, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.85f,
@@ -132,8 +131,8 @@ fun DefeatScreen(
     onLobby: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val d = LocalDesign.current
     DesignCanvas(background = R.drawable.bg_defeat, dim = 0.2f, modifier = modifier) {
+        val d = LocalDesign.current
         ArtImage(R.drawable.decor_defeat_smoke, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.3f,
             modifier = Modifier.at(140, 360, 800, 1060))
         ArtImage(R.drawable.decor_defeat_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.45f,

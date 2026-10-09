@@ -78,9 +78,8 @@ fun InventoryScreen(
         InventoryEntry(art.icon, art.name, art.description, null, relic.isUnlocked(clearedUpTo), relic.unlockFloor)
     }
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    val d = LocalDesign.current
-
     DesignCanvas(background = R.drawable.bg_inventory, dim = 0.3f, modifier = modifier) {
+        val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.inventory_title), onBack = onBack)
         SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 190, 984, 1500))
 

@@ -62,9 +62,8 @@ fun AiSelectionScreen(
     var index by rememberSaveable { mutableIntStateOf(0) }
     val current = characters[index.coerceIn(characters.indices)]
     val unlocked = current.isUnlocked(clearedUpTo)
-    val d = LocalDesign.current
-
     DesignCanvas(background = R.drawable.bg_floor_select, dim = 0.3f, modifier = modifier) {
+        val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.ai_select_title), onBack = onBack, backY = 64)
 
         // Chân dung lớn, vuông.

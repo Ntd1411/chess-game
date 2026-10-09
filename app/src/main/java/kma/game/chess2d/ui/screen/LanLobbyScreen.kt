@@ -1,27 +1,24 @@
 package kma.game.chess2d.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -30,25 +27,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import kma.game.chess2d.R
 import kma.game.chess2d.lan.LanLobbyUiState
 import kma.game.chess2d.net.RoomInfo
 import kma.game.chess2d.net.TimeControl
-import kma.game.chess2d.ui.art.gothicBackdrop
+import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtSizes
+import kma.game.chess2d.ui.art.ButtonArt
+import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.art.GothicTextField
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.SubScreenHeader
+import kma.game.chess2d.ui.art.at
+import kma.game.chess2d.ui.theme.GothicColors
+
+/** Bố cục sảnh LAN theo bản thiết kế 1080x1920. */
+internal object LanLobbyLayout {
+    val CodePanel = LobbyLayout.Box(90, 230, 900, 190)
+    val CopyIcon = LobbyLayout.Box(820, 290, 70, 70)
+    val YouSlot = LobbyLayout.Box(90, 480, 900, 170)
+    val OpponentSlot = LobbyLayout.Box(90, 680, 900, 170)
+    val Start = LobbyLayout.Box(150, 1450, 780, 110)
+    val Leave = LobbyLayout.Box(150, 1580, 780, 100)
+
+    /** Danh sách phòng bắt đầu ngay dưới ô chọn thể thức, hoặc dưới ô đối thủ khi đang mở phòng. */
+    fun roomsTop(hosting: Boolean): Int = if (hosting) 880 else 1080
+    const val ROOMS_BOTTOM = 1430
+}
 
 /**
- * Sảnh chờ LAN: mở phòng, hoặc chọn một phòng đã thấy trong mạng.
+ * Sảnh chờ LAN theo bản thiết kế: nền `bg_lan_lobby`, ô địa chỉ phòng `lan_room_code_panel` kèm
+ * nút sao chép `lan_copy_icon`, hai ô người chơi `lan_player_slot` (miện vương `lan_host_crown`
+ * cạnh tên chủ phòng, `lan_ready_indicator`/`lan_waiting_indicator` cạnh trạng thái), danh sách
+ * phòng trong mạng cuộn được, nút chính Mở phòng và nút phụ Rời phòng / về Sảnh.
  *
- * Tên người chơi không còn ô nhập ở đây nữa: menu đã nhập một lần rồi, nhập lại ở
- * đây chỉ làm hai chỗ cùng sửa một giá trị. Ở đây chỉ hiện lại tên để người chơi
- * biết đối thủ sẽ thấy mình dưới tên nào.
- *
- * Đây là màn hình chính của app (mục 5.7): mở app lên là thấy phòng chơi ngay, còn
- * menu chơi offline nằm sau một cú chạm.
+ * Tên người chơi nhập ở Cài đặt của Sảnh, ở đây chỉ hiện lại. Ván tự bắt đầu khi có người vào
+ * phòng, nên lúc đang chờ thì nút chính tắt và ghi "Đang chờ người vào…".
  */
 @Composable
 fun LanLobbyScreen(
@@ -65,235 +89,258 @@ fun LanLobbyScreen(
     onCancelHosting: () -> Unit = {},
     onTimeControlChange: (TimeControl) -> Unit = {},
 ) {
-    // Khối kết nối thủ công gập lại mặc định: nó là đường dự phòng khi Wi-Fi chặn
-    // broadcast, không phải việc đầu tiên người chơi nên làm.
+    // Khối kết nối thủ công gập lại mặc định: nó là đường dự phòng khi Wi-Fi chặn broadcast.
     var manualOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    Column(
-        modifier = modifier
-            .gothicBackdrop(R.drawable.bg_lan_lobby)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.lan_title),
-            style = MaterialTheme.typography.headlineSmall,
+    // Địa chỉ để đọc cho người đối diện: có cổng khi đang mở phòng, không thì chỉ IP của máy.
+    val address = when {
+        hosting && hostPort > 0 && localAddresses.isNotEmpty() ->
+            stringResource(R.string.lan_room_address, localAddresses.first(), hostPort)
+        hosting -> null
+        else -> localAddresses.firstOrNull()
+    }
+    val copiedText = stringResource(R.string.lan_address_copied)
+
+    DesignCanvas(background = R.drawable.bg_lan_lobby, dim = 0.35f, modifier = modifier) {
+        // Đọc tỷ lệ bên trong DesignCanvas: bên ngoài chỉ có giá trị mặc định 1:1.
+        val d = LocalDesign.current
+        SubScreenHeader(title = stringResource(R.string.lan_title), onBack = onOpenMenu)
+
+        // Ô địa chỉ phòng.
+        val code = LanLobbyLayout.CodePanel
+        SlicedArt(res = R.drawable.lan_room_code_panel, slice = 0.3f, modifier = Modifier.at(code.x, code.y, code.w, code.h))
+        DesignText(
+            text = stringResource(if (hosting) R.string.lan_your_room else R.string.lan_address_title),
+            size = 30,
+            align = TextAlign.Start,
+            alignment = Alignment.CenterStart,
+            maxLines = 1,
+            modifier = Modifier.at(140, 250, 660, 56),
         )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            PlayerAvatar(name = state.localName)
-            Column {
-                Text(text = state.localName, style = MaterialTheme.typography.bodyLarge)
-                if (localAddresses.isNotEmpty()) {
-                    Text(
-                        text = stringResource(
-                            R.string.lan_my_address,
-                            localAddresses.joinToString(", "),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
+        DesignText(
+            text = address ?: stringResource(
+                if (hosting) R.string.lan_room_address_unknown else R.string.lan_no_address,
+            ),
+            size = 48,
+            color = GothicColors.Gold,
+            weight = FontWeight.Bold,
+            align = TextAlign.Start,
+            alignment = Alignment.CenterStart,
+            maxLines = 1,
+            modifier = Modifier.at(140, 305, 660, 90),
+        )
+        if (address != null) {
+            val copy = LanLobbyLayout.CopyIcon
+            ArtImage(
+                res = R.drawable.lan_copy_icon,
+                maxEdge = ArtSizes.ICON,
+                trim = true,
+                contentDescription = stringResource(R.string.lan_copy_address),
+                modifier = Modifier.at(copy.x, copy.y, copy.w, copy.h).clip(CircleShape)
+                    .clickable(role = Role.Button) { copyAddress(context, address, copiedText) },
+            )
         }
 
-        // Phòng của chính mình luôn nằm trên cùng, trên cả danh sách phòng khác: đang chờ
-        // người vào thì đó là thứ duy nhất người mở phòng muốn nhìn, và cũng là chỗ để
-        // đọc địa chỉ cho người đối diện gõ tay khi mạng chặn broadcast.
+        // Hai ô người chơi: mình luôn sẵn sàng, ô thứ hai chờ người vào (khi đang mở phòng).
+        PlayerSlot(
+            box = LanLobbyLayout.YouSlot,
+            portrait = R.drawable.portrait_protagonist,
+            name = state.localName,
+            status = if (hosting) {
+                stringResource(R.string.lan_ready) + " · " + stringResource(timeControlLabel(state.timeControl))
+            } else {
+                stringResource(R.string.lan_ready)
+            },
+            ready = true,
+            host = hosting,
+        )
         if (hosting) {
-            YourRoomCard(
-                roomName = state.localName,
-                addresses = localAddresses,
-                hostPort = hostPort,
-                onCancel = onCancelHosting,
+            PlayerSlot(
+                box = LanLobbyLayout.OpponentSlot,
+                portrait = R.drawable.portrait_unknown_01,
+                name = stringResource(R.string.match_waiting_opponent),
+                status = stringResource(R.string.lan_room_waiting),
+                ready = false,
+                host = false,
             )
         } else {
-            // Chọn thể thức trước khi mở phòng, vì host là bên giữ đồng hồ và con số này
-            // đi theo `Welcome` sang máy khách ngay lúc bắt tay.
+            // Chọn thể thức trước khi mở phòng: host giữ đồng hồ và gửi con số này khi bắt tay.
             TimeControlPicker(selected = state.timeControl, onSelect = onTimeControlChange)
-            Button(onClick = onHost, modifier = Modifier.fillMaxWidth()) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                Text(
-                    text = stringResource(R.string.lan_host_room),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
         }
 
-        // Một hàng duy nhất cho tiêu đề danh sách và dấu hiệu đang quét: trước đây một
-        // thanh tiến trình ngang cả màn hình cộng một dòng chữ riêng chiếm ba tầng, khiến
-        // sảnh trông rất rối. Vòng xoay nhỏ đủ trả lời câu "app treo hay đang tìm?".
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.lan_rooms_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f),
-            )
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-            )
-            Text(
-                text = stringResource(R.string.lan_scanning, state.rooms.size),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (state.rooms.isEmpty()) {
-            EmptyRoomsHint()
-        } else {
-            // Khoá của mỗi thẻ là `room.key` (nguồn + mã phòng), không phải địa chỉ IP: máy
-            // đổi IP thì vẫn là đúng một phòng đó.
-            for (room in state.rooms) {
-                key(room.key) {
-                    RoomCard(room = room, onJoin = { onJoin(room) })
-                }
-            }
-        }
-
-        TextButton(onClick = { manualOpen = !manualOpen }) {
-            Text(stringResource(R.string.lan_manual_section))
-        }
-        if (manualOpen) {
-            OutlinedTextField(
-                value = state.manualAddress,
-                onValueChange = onManualAddressChange,
-                label = { Text(stringResource(R.string.lan_manual_label)) },
-                placeholder = { Text(stringResource(R.string.lan_manual_hint)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(onClick = onManualJoin, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.lan_manual_join))
-            }
-        }
-
-        // Sảnh là màn chính nên ở đây không có "Quay lại" nữa: nút này đi **xuống** menu để
-        // chơi offline (hai người một máy hoặc đấu máy), chứ không rời chế độ LAN.
-        OutlinedButton(onClick = onOpenMenu, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.action_menu))
-        }
-    }
-}
-
-/**
- * Thẻ "Phòng của bạn": tên phòng, địa chỉ IPv4 kèm cổng, thanh tiến trình, nút huỷ.
- *
- * Thanh tiến trình ở đây không đo được gì cả (không ai biết khi nào người khác bấm
- * vào), nên nó là loại vô định: việc của nó chỉ là nói "phòng đang sống, beacon vẫn
- * đang phát" để người mở phòng không phải đoán xem app còn chạy hay đã treo.
- *
- * Cổng chỉ biết được sau khi ServerSocket bàn giao số thật, nên trước đó hiện một
- * dòng chờ thay vì in ra cổng 0 — đọc cho nhau một cổng sai còn tệ hơn là chờ thêm
- * nửa giây.
- */
-@Composable
-private fun YourRoomCard(
-    roomName: String,
-    addresses: List<String>,
-    hostPort: Int,
-    onCancel: () -> Unit,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+        // Danh sách phòng trong mạng + kết nối thủ công, cuộn được.
+        val top = LanLobbyLayout.roomsTop(hosting)
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.at(90, top, 900, LanLobbyLayout.ROOMS_BOTTOM - top)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(d.dp(14)),
         ) {
-            Text(
-                text = stringResource(R.string.lan_your_room),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                PlayerAvatar(name = roomName)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = roomName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = if (hostPort > 0 && addresses.isNotEmpty()) {
-                            stringResource(R.string.lan_room_address, addresses.first(), hostPort)
-                        } else {
-                            stringResource(R.string.lan_room_address_unknown)
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+            Row(modifier = Modifier.fillMaxWidth().height(d.dp(64)), verticalAlignment = Alignment.CenterVertically) {
+                DesignText(
+                    text = stringResource(R.string.lan_rooms_title),
+                    size = 36,
+                    color = GothicColors.Gold,
+                    weight = FontWeight.Bold,
+                    align = TextAlign.Start,
+                    alignment = Alignment.CenterStart,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f),
+                )
+                ArtImage(
+                    res = R.drawable.lan_waiting_indicator,
+                    maxEdge = ArtSizes.ICON,
+                    trim = true,
+                    modifier = Modifier.size(d.dp(44)),
+                )
+                DesignText(
+                    text = state.rooms.size.toString(),
+                    size = 32,
+                    modifier = Modifier.width(d.dp(60)),
+                )
+            }
+            if (state.rooms.isEmpty()) {
+                EmptyRoomsHint()
+            } else {
+                // Khoá của mỗi thẻ là `room.key` (nguồn + mã phòng), không phải IP.
+                for (room in state.rooms) {
+                    key(room.key) { RoomRow(room = room, onJoin = { onJoin(room) }) }
                 }
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
+            DesignText(
+                text = stringResource(R.string.lan_manual_section) + if (manualOpen) " ▴" else " ▾",
+                size = 32,
+                color = GothicColors.Gold,
+                align = TextAlign.Start,
+                alignment = Alignment.CenterStart,
+                modifier = Modifier.fillMaxWidth().height(d.dp(80))
+                    .clickable(role = Role.Button) { manualOpen = !manualOpen },
+            )
+            if (manualOpen) {
+                GothicTextField(
+                    value = state.manualAddress,
+                    onValueChange = onManualAddressChange,
+                    placeholder = stringResource(R.string.lan_manual_hint),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                    modifier = Modifier.fillMaxWidth().height(d.dp(110)),
                 )
-                Text(
-                    text = stringResource(R.string.lan_room_waiting),
-                    style = MaterialTheme.typography.bodySmall,
+                GothicButton(
+                    label = stringResource(R.string.lan_manual_join),
+                    onClick = onManualJoin,
+                    art = ButtonArt.SECONDARY,
+                    modifier = Modifier.fillMaxWidth().height(d.dp(100)),
                 )
-            }
-            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.lan_cancel_room))
             }
         }
+
+        val start = LanLobbyLayout.Start
+        GothicButton(
+            label = stringResource(if (hosting) R.string.lan_room_waiting else R.string.lan_host_room),
+            onClick = onHost,
+            enabled = !hosting,
+            modifier = Modifier.at(start.x, start.y, start.w, start.h),
+        )
+        val leave = LanLobbyLayout.Leave
+        GothicButton(
+            label = stringResource(if (hosting) R.string.lan_cancel_room else R.string.result_to_lobby),
+            onClick = if (hosting) onCancelHosting else onOpenMenu,
+            art = ButtonArt.SECONDARY,
+            modifier = Modifier.at(leave.x, leave.y, leave.w, leave.h),
+        )
     }
 }
 
+private fun copyAddress(context: Context, address: String, toast: String) {
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(ClipData.newPlainText("LAN", address))
+    Toast.makeText(context, toast, Toast.LENGTH_SHORT).show()
+}
+
+/** Một ô `lan_player_slot`: chân dung, tên (kèm miện vương nếu là chủ phòng) và dòng trạng thái. */
+@Composable
+private fun PlayerSlot(
+    box: LobbyLayout.Box,
+    portrait: Int,
+    name: String,
+    status: String,
+    ready: Boolean,
+    host: Boolean,
+) {
+    SlicedArt(res = R.drawable.lan_player_slot, slice = 0.3f, modifier = Modifier.at(box.x, box.y, box.w, box.h))
+    Box(modifier = Modifier.at(box.x + 25, box.y + 20, 130, 130)) {
+        PortraitInFrame(portrait = portrait, dimmed = !ready)
+    }
+    DesignText(
+        text = name,
+        size = 40,
+        color = GothicColors.Gold,
+        weight = FontWeight.Bold,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(box.x + 180, box.y + 22, 560, 66),
+    )
+    if (host) {
+        ArtImage(
+            res = R.drawable.lan_host_crown,
+            maxEdge = ArtSizes.ICON,
+            trim = true,
+            contentDescription = stringResource(R.string.lan_host_badge),
+            modifier = Modifier.at(box.x + 770, box.y + 25, 80, 60),
+        )
+    }
+    ArtImage(
+        res = if (ready) R.drawable.lan_ready_indicator else R.drawable.lan_waiting_indicator,
+        maxEdge = ArtSizes.ICON,
+        trim = true,
+        modifier = Modifier.at(box.x + 180, box.y + 100, 44, 44),
+    )
+    DesignText(
+        text = status,
+        size = 30,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(box.x + 240, box.y + 92, 620, 60),
+    )
+}
+
 /**
- * Ba thể thức thời gian, chọn một.
- *
- * Dùng một dải nút liền (segmented) với nhãn ngắn chứ không phải ba chip rời: ba
- * nhãn dài đủ ("Cờ tiêu chuẩn 10+5"...) xếp cạnh nhau thì tràn ngang màn hình điện
- * thoại và bị bẻ xuống dòng trông rất xấu. Dải nút chia đều chiều ngang nên luôn
- * vừa một hàng, còn câu đầy đủ của thể thức đang chọn được ghi ngay bên dưới.
+ * Ba thể thức thời gian, chọn một: ba nút ngắn chia đều một hàng (nút đang chọn là nút chính),
+ * câu đầy đủ của thể thức đang chọn ghi ngay bên dưới.
  */
 @Composable
 private fun TimeControlPicker(selected: TimeControl, onSelect: (TimeControl) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = stringResource(R.string.lan_time_control),
-            style = MaterialTheme.typography.labelLarge,
-        )
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            TimeControl.entries.forEachIndexed { index, control ->
-                SegmentedButton(
-                    selected = control == selected,
-                    onClick = { onSelect(control) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = TimeControl.entries.size,
-                    ),
-                    label = {
-                        Text(
-                            text = stringResource(timeControlShortLabel(control)),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                )
-            }
-        }
-        Text(
-            text = stringResource(timeControlLabel(selected)),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    DesignText(
+        text = stringResource(R.string.lan_time_control),
+        size = 34,
+        color = GothicColors.Gold,
+        weight = FontWeight.Bold,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(90, 690, 900, 60),
+    )
+    TimeControl.entries.forEachIndexed { i, control ->
+        GothicButton(
+            label = stringResource(timeControlShortLabel(control)),
+            onClick = { onSelect(control) },
+            art = if (control == selected) ButtonArt.PRIMARY else ButtonArt.SECONDARY,
+            modifier = Modifier.at(90 + i * 305, 765, 290, 100),
         )
     }
+    DesignText(
+        text = stringResource(timeControlLabel(selected)),
+        size = 30,
+        maxLines = 1,
+        modifier = Modifier.at(90, 880, 900, 60),
+    )
+    ArtImage(
+        res = R.drawable.ui_separator,
+        maxEdge = ArtSizes.BUTTON,
+        trim = true,
+        modifier = Modifier.at(140, 960, 800, 40),
+    )
 }
 
 /** Nhãn tiếng Việt đầy đủ của từng thể thức. */
@@ -303,7 +350,7 @@ internal fun timeControlLabel(control: TimeControl): Int = when (control) {
     TimeControl.RAPID -> R.string.time_control_rapid
 }
 
-/** Nhãn ngắn, dùng cho dải nút chọn thể thức. */
+/** Nhãn ngắn, dùng cho hàng nút chọn thể thức. */
 private fun timeControlShortLabel(control: TimeControl): Int = when (control) {
     TimeControl.UNLIMITED -> R.string.time_control_unlimited_short
     TimeControl.BLITZ -> R.string.time_control_blitz_short
@@ -311,36 +358,50 @@ private fun timeControlShortLabel(control: TimeControl): Int = when (control) {
 }
 
 /**
- * Một phòng thấy được trong mạng.
+ * Một phòng thấy được trong mạng, trên nền `ui_panel_sub`.
  *
- * Badge nói rõ vì sao nút Vào phòng bị khoá: phòng đầy, hay hai máy lệch phiên bản.
- * Trước đây nút chỉ xám đi mà không nói lý do.
+ * Nhãn nói rõ vì sao nút Vào bị khoá: phòng đầy, hay hai máy lệch phiên bản.
  */
 @Composable
-private fun RoomCard(room: RoomInfo, onJoin: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun RoomRow(room: RoomInfo, onJoin: () -> Unit) {
+    val d = LocalDesign.current
+    Box(modifier = Modifier.fillMaxWidth().height(d.dp(140))) {
+        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.3f, modifier = Modifier.fillMaxSize())
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(24)),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(d.dp(20)),
         ) {
-            PlayerAvatar(name = room.hostName)
+            Box(modifier = Modifier.size(d.dp(100))) {
+                PortraitInFrame(portrait = R.drawable.portrait_unknown_02, dimmed = !room.joinable)
+            }
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                DesignText(
                     text = room.hostName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    size = 36,
+                    color = GothicColors.Gold,
+                    weight = FontWeight.Bold,
+                    align = TextAlign.Start,
+                    alignment = Alignment.CenterStart,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                Text(
+                DesignText(
                     text = stringResource(badgeOf(room)),
-                    style = MaterialTheme.typography.bodySmall,
+                    size = 28,
+                    align = TextAlign.Start,
+                    alignment = Alignment.CenterStart,
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Button(onClick = onJoin, enabled = room.joinable) {
-                Text(stringResource(R.string.lan_join))
-            }
+            GothicButton(
+                label = stringResource(R.string.lan_join),
+                onClick = onJoin,
+                art = ButtonArt.SMALL,
+                enabled = room.joinable,
+                modifier = Modifier.width(d.dp(200)).height(d.dp(84)),
+            )
         }
     }
 }
@@ -353,36 +414,32 @@ private fun badgeOf(room: RoomInfo): Int = when {
 }
 
 /**
- * Ba bước gợi ý khi không thấy phòng nào.
- *
- * Bước hotspot là bắt buộc phải có: nhiều Wi-Fi trường và quán cà phê bật AP
- * isolation, hai máy cùng mạng nhưng không bao giờ thấy nhau, và không câu chữ nào
- * trong app sửa được điều đó.
+ * Ba bước gợi ý khi không thấy phòng nào. Bước hotspot bắt buộc phải có: nhiều Wi-Fi công cộng
+ * bật AP isolation, hai máy cùng mạng nhưng không bao giờ thấy nhau.
  */
 @Composable
 private fun EmptyRoomsHint() {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val d = LocalDesign.current
+    Box(modifier = Modifier.fillMaxWidth()) {
+        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.2f, modifier = Modifier.matchParentSize())
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = d.dp(40), vertical = d.dp(30)),
+            verticalArrangement = Arrangement.spacedBy(d.dp(8)),
         ) {
-            Text(
-                text = stringResource(R.string.lan_empty_hint_title),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = stringResource(R.string.lan_empty_hint_1),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                text = stringResource(R.string.lan_empty_hint_2),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                text = stringResource(R.string.lan_empty_hint_3),
-                style = MaterialTheme.typography.bodySmall,
-            )
+            for (line in listOf(
+                R.string.lan_empty_hint_title,
+                R.string.lan_empty_hint_1,
+                R.string.lan_empty_hint_2,
+                R.string.lan_empty_hint_3,
+            )) {
+                DesignText(
+                    text = stringResource(line),
+                    size = 28,
+                    align = TextAlign.Start,
+                    alignment = Alignment.CenterStart,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }
