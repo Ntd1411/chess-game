@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 19:45 GMT+7 — Vẽ lại Setup hai người, Hồ sơ và Lịch sử trên khung thiết kế
+- Setup hai người cùng máy: hai tấm `ui_panel_sub` có chân dung, quân Vua từng bên, ô nhập `GothicTextField`; bốn nút thời gian gothic; nút Bắt đầu chính
+- Hồ sơ: nhân vật toàn thân, tên trên `ui_name_plate`, thanh lên cấp `loading_bar_*`, bảng thống kê hai cột trong `ui_panel_main`
+- Lịch sử: danh sách ván trên `ui_panel_sub` kèm huy hiệu kết quả và nút nhỏ; xem lại ván trong `chess_board_frame`, nút Back trong màn xem lại quay về danh sách
+
 ## 2026-10-09 19:25 GMT+7 — Vẽ lại sảnh LAN và sửa tỷ lệ khung thiết kế
 - Sảnh LAN trên `bg_lan_lobby`: ô địa chỉ `lan_room_code_panel` + nút sao chép `lan_copy_icon`, hai ô `lan_player_slot` (miện vương chủ phòng, đèn sẵn sàng/đang chờ), nút thể thức gothic, danh sách phòng cuộn được trên `ui_panel_sub`, kết nối thủ công, nút Mở phòng / Huỷ phòng — giữ nguyên mọi chức năng cũ
 - Sửa lỗi đọc `LocalDesign` bên ngoài `DesignCanvas` (tỷ lệ 1:1 sai) ở khung ván, chọn AI, thoại, kết quả tầng, túi đồ, bản đồ Tháp: khoảng cách, cỡ chữ và cuộn tới tầng hiện tại giờ đúng tỷ lệ

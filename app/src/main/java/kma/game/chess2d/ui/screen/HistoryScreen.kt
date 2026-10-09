@@ -3,18 +3,31 @@ package kma.game.chess2d.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextAlign
+import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtSizes
+import kma.game.chess2d.ui.art.ButtonArt
+import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.SubScreenHeader
+import kma.game.chess2d.ui.art.at
+import kma.game.chess2d.ui.theme.GothicColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.Board
@@ -42,7 +54,6 @@ import kma.game.chess2d.history.MatchResult
 import kma.game.chess2d.history.MatchStats
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
-import kma.game.chess2d.ui.art.gothicBackdrop
 import kma.game.chess2d.ui.board.ChessBoard
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -79,18 +90,10 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         return
     }
 
-    Column(
-        modifier = modifier
-            .gothicBackdrop(R.drawable.bg_journal)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.history_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
+    DesignCanvas(background = R.drawable.bg_journal, dim = 0.45f, modifier = modifier) {
+        val d = LocalDesign.current
+        SubScreenHeader(title = stringResource(R.string.history_title), onBack = onBack)
+        DesignText(
             text = stringResource(
                 R.string.history_stats,
                 stats.total,
@@ -98,28 +101,36 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 stats.draws,
                 stats.losses,
             ),
-            style = MaterialTheme.typography.bodyMedium,
+            size = 30,
+            maxLines = 2,
+            modifier = Modifier.at(90, 175, 900, 80),
         )
+        SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 270, 984, 1300))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onBack) { Text(stringResource(R.string.history_back)) }
-            if (records.isNotEmpty()) {
-                OutlinedButton(
-                    // Ghi đĩa là việc treo nên đẩy sang [Dispatchers.IO], không chặn main thread.
-                    onClick = { scope.launch { withContext(Dispatchers.IO) { dao.deleteAll() } } },
-                ) { Text(stringResource(R.string.history_delete_all)) }
-            }
+        if (records.isNotEmpty()) {
+            GothicButton(
+                label = stringResource(R.string.history_delete_all),
+                // Ghi đĩa là việc treo nên đẩy sang [Dispatchers.IO], không chặn main thread.
+                onClick = { scope.launch { withContext(Dispatchers.IO) { dao.deleteAll() } } },
+                art = ButtonArt.SECONDARY,
+                textColor = GothicColors.Blood,
+                modifier = Modifier.at(150, 1610, 780, 100),
+            )
         }
 
         if (records.isEmpty()) {
-            Text(
+            DesignText(
                 text = stringResource(R.string.history_empty),
-                style = MaterialTheme.typography.bodyMedium,
+                size = 34,
+                modifier = Modifier.at(100, 700, 880, 200),
             )
-            return@Column
+            return@DesignCanvas
         }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(
+            modifier = Modifier.at(80, 310, 920, 1220),
+            verticalArrangement = Arrangement.spacedBy(d.dp(16)),
+        ) {
             // Khoá theo id để xoá một ván không làm vẽ lại cả danh sách.
             items(items = records, key = { it.id }) { record ->
                 MatchRow(
@@ -145,27 +156,50 @@ private fun MatchRow(
     onExport: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val d = LocalDesign.current
+    Box(modifier = Modifier.fillMaxWidth().height(d.dp(250))) {
+        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.25f, modifier = Modifier.fillMaxSize())
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(30), vertical = d.dp(20)),
+            verticalArrangement = Arrangement.spacedBy(d.dp(8)),
         ) {
-            Text(
-                text = "${formatPlayedAt(record.playedAtMillis)} · " +
-                    stringResource(modeLabel(record.mode)),
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text(
-                text = stringResource(resultLabel(record.result)) + " · " +
-                    stringResource(R.string.history_moves_count, record.uciMoves.size),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onReview) { Text(stringResource(R.string.history_review)) }
-                TextButton(onClick = onExport) { Text(stringResource(R.string.history_export_pgn)) }
-                TextButton(onClick = onDelete) { Text(stringResource(R.string.history_delete)) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
+                ArtImage(
+                    res = resultBadge(record.result),
+                    maxEdge = ArtSizes.ICON,
+                    trim = true,
+                    modifier = Modifier.size(d.dp(96)),
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    DesignText(
+                        text = "${formatPlayedAt(record.playedAtMillis)} · " + stringResource(modeLabel(record.mode)),
+                        size = 30,
+                        color = GothicColors.Gold,
+                        weight = FontWeight.Bold,
+                        align = TextAlign.Start,
+                        alignment = Alignment.CenterStart,
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    DesignText(
+                        text = stringResource(resultLabel(record.result)) + " · " +
+                            stringResource(R.string.history_moves_count, record.uciMoves.size),
+                        size = 28,
+                        align = TextAlign.Start,
+                        alignment = Alignment.CenterStart,
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().height(d.dp(80)),
+                horizontalArrangement = Arrangement.spacedBy(d.dp(14)),
+            ) {
+                val cell = Modifier.weight(1f).fillMaxHeight()
+                GothicButton(stringResource(R.string.history_review), onReview, cell, art = ButtonArt.SMALL)
+                GothicButton(stringResource(R.string.history_export_pgn), onExport, cell, art = ButtonArt.SMALL)
+                GothicButton(stringResource(R.string.history_delete), onDelete, cell, art = ButtonArt.SMALL)
             }
         }
     }
@@ -188,19 +222,15 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
     val frames = remember(record.id) { framesOf(record) }
     var ply by remember(record.id) { mutableStateOf(frames.lastIndex) }
 
-    Column(
-        modifier = modifier
-            .gothicBackdrop(R.drawable.bg_journal)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.history_review_position, ply, frames.lastIndex),
-            style = MaterialTheme.typography.titleMedium,
+    BackHandler(onBack = onBack)
+    DesignCanvas(background = R.drawable.bg_journal, dim = 0.45f, modifier = modifier) {
+        SubScreenHeader(
+            title = stringResource(R.string.history_review_position, ply, frames.lastIndex),
+            onBack = onBack,
         )
-
-        ChessBoard(
+        SlicedArt(res = R.drawable.chess_board_frame, slice = 0.12f, modifier = Modifier.at(60, 260, 960, 960))
+        Box(modifier = Modifier.at(84, 284, 912, 912)) {
+            ChessBoard(
             pieces = frames[ply],
             selectedSquare = Squares.NONE,
             legalTargets = emptySet(),
@@ -211,19 +241,29 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
             onSquareTap = {},
             palette = settings.boardPalette,
             pieceTheme = settings.pieceTheme,
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
-                onClick = { ply = (ply - 1).coerceAtLeast(0) },
-                enabled = ply > 0,
-            ) { Text(stringResource(R.string.history_prev)) }
-            OutlinedButton(
-                onClick = { ply = (ply + 1).coerceAtMost(frames.lastIndex) },
-                enabled = ply < frames.lastIndex,
-            ) { Text(stringResource(R.string.history_next)) }
-            OutlinedButton(onClick = onBack) { Text(stringResource(R.string.history_back)) }
+            modifier = Modifier.fillMaxSize(),
+            )
         }
+
+        GothicButton(
+            label = stringResource(R.string.history_prev),
+            onClick = { ply = (ply - 1).coerceAtLeast(0) },
+            enabled = ply > 0,
+            art = ButtonArt.SECONDARY,
+            modifier = Modifier.at(90, 1300, 440, 110),
+        )
+        GothicButton(
+            label = stringResource(R.string.history_next),
+            onClick = { ply = (ply + 1).coerceAtMost(frames.lastIndex) },
+            enabled = ply < frames.lastIndex,
+            art = ButtonArt.SECONDARY,
+            modifier = Modifier.at(550, 1300, 440, 110),
+        )
+        GothicButton(
+            label = stringResource(R.string.history_back),
+            onClick = onBack,
+            modifier = Modifier.at(150, 1460, 780, 110),
+        )
     }
 }
 
@@ -296,6 +336,13 @@ private fun pgnResultOf(result: String): String = when (result) {
 /** Ngày giờ ván đã đánh, theo định dạng ngắn kiểu Việt Nam. */
 private fun formatPlayedAt(millis: Long): String =
     SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(millis))
+
+/** Huy hiệu kết quả: thắng `badge_victory`, thua `badge_defeat`, hòa `badge_complete`. */
+private fun resultBadge(result: String): Int = when (result) {
+    MatchResult.WIN -> R.drawable.badge_victory
+    MatchResult.LOSS -> R.drawable.badge_defeat
+    else -> R.drawable.badge_complete
+}
 
 /** Nhãn cho kết quả lưu dưới dạng chuỗi. */
 private fun resultLabel(result: String): Int = when (result) {
