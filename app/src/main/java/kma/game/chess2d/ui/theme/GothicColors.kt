@@ -21,4 +21,20 @@ object GothicColors {
 
     /** Đỏ sáng cho cảnh báo (đồng hồ sắp hết, lỗi): đủ tương phản trên nền tối. */
     val Alert = Color(0xFFE5574A)
+
+    // --- Hệ panel tối giản: nền than/tím đen, viền vàng tối mảnh. Vàng sáng [Gold] chỉ cho chữ
+    // quan trọng và trạng thái được chọn; đỏ thẫm [Crimson] cho hành động chính.
+
+    /** Vàng tối cho viền phụ, đường kẻ và nhãn phụ: không tranh sáng với chữ. */
+    val GoldDim = Color(0xFF8C6D3F)
+
+    /** Đầu và cuối dải màu nền panel: tím đen xuống than đen. */
+    val PanelTop = Color(0xFF1D1520)
+    val PanelBottom = Color(0xFF110C11)
+
+    /** Đỏ thẫm của hành động chính / mục đang chọn. */
+    val Crimson = Color(0xFF6E1222)
+
+    /** Chữ phụ (nhãn, mô tả): trắng ngà dịu hơn [Parchment]. */
+    val Muted = Color(0xFFB9AC95)
 }

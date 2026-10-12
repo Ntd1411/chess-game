@@ -14,6 +14,16 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 21:15 GMT+7 — Hệ panel tối giản, gọn lại Hồ sơ/Cài đặt/Nhật ký/Túi đồ/Lịch sử/LAN/Sảnh
+- Thêm `QuietPanel.kt`: `Modifier.quietPanel(PanelTone.BASE/SUNKEN/SELECTED)` (nền tối gradient, viền vàng tối mảnh, góc nhỏ; chỉ SELECTED có ánh đỏ thẫm + viền vàng sáng), `Hairline`, `SectionTitle`; thêm màu `GoldDim`, `PanelTop`, `PanelBottom`, `Crimson`, `Muted`
+- `DesignCanvas` thêm `scrim` làm tối nền ở vùng nội dung
+- Hồ sơ: bố cục mới `ProfileLayout` (nhân vật, bảng tên, panel cấp + thanh tiến độ, lưới thống kê 2x4) hết chồng chéo
+- Cài đặt: tab ngang một hàng trên cùng, nội dung chia nhóm có tiêu đề, hàng có kẻ mảnh, control canh phải — hết khoảng trống
+- Nhật ký, Túi đồ, Lịch sử: bỏ `ui_panel_main`/`ui_list_row`, dùng quiet panel; chữ phụ màu `Muted`
+- Sảnh LAN: ô địa chỉ, ô người chơi, danh sách phòng, gợi ý trống dùng quiet panel; tiêu đề nhóm rõ ràng, chữ phụ nhỏ và nhạt hơn
+- Sảnh chính: bỏ hoa văn trang trí, gom cột icon phải vào một thanh nền tối, ví vàng/pha lê trong một ô
+- Test: cập nhật `SubScreenLayoutTest` (Cài đặt, Nhật ký, Hồ sơ, `panelStyle`, thanh icon Sảnh)
+
 ## 2026-10-09 20:30 GMT+7 — Gắn bộ asset mới: nút trận, nền, hộp thoại, banner kết quả
 - Thêm `BattleButton` (normal/pressed/disabled) cho hàng nút ván đấu; `MatchAction.art` đổi sang `BattleButton?`. Gán restart/level/flip/map/resign/draw/rematch/sync/share/leave cho ván thường, Tháp, LAN, Máy vs Máy
 - Banner `ui_result_banner_win/loss/draw` hiện giữa bàn cờ khi ván xong (chạm để cất); `ResultBanner.of` tính theo bên của người chơi

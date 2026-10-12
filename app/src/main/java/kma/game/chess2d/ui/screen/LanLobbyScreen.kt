@@ -48,7 +48,9 @@ import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.GothicTextField
 import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.SectionTitle
+import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.SubScreenHeader
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
@@ -104,17 +106,18 @@ fun LanLobbyScreen(
     }
     val copiedText = stringResource(R.string.lan_address_copied)
 
-    DesignCanvas(background = R.drawable.bg_lan_lobby, dim = 0.35f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_lan_lobby, dim = 0.35f, scrim = true, modifier = modifier) {
         // Đọc tỷ lệ bên trong DesignCanvas: bên ngoài chỉ có giá trị mặc định 1:1.
         val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.lan_title), onBack = onOpenMenu)
 
         // Ô địa chỉ phòng.
         val code = LanLobbyLayout.CodePanel
-        SlicedArt(res = R.drawable.lan_room_code_panel, slice = 0.3f, modifier = Modifier.at(code.x, code.y, code.w, code.h))
+        Box(modifier = Modifier.at(code.x, code.y, code.w, code.h).quietPanel(PanelTone.BASE))
         DesignText(
             text = stringResource(if (hosting) R.string.lan_your_room else R.string.lan_address_title),
-            size = 30,
+            size = 28,
+            color = GothicColors.Muted,
             align = TextAlign.Start,
             alignment = Alignment.CenterStart,
             maxLines = 1,
@@ -156,6 +159,7 @@ fun LanLobbyScreen(
             },
             ready = true,
             host = hosting,
+            tone = PanelTone.BASE,
         )
         if (hosting) {
             PlayerSlot(
@@ -165,6 +169,7 @@ fun LanLobbyScreen(
                 status = stringResource(R.string.lan_room_waiting),
                 ready = false,
                 host = false,
+                tone = PanelTone.SUNKEN,
             )
         } else {
             // Chọn thể thức trước khi mở phòng: host giữ đồng hồ và gửi con số này khi bắt tay.
@@ -178,29 +183,7 @@ fun LanLobbyScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(d.dp(14)),
         ) {
-            Row(modifier = Modifier.fillMaxWidth().height(d.dp(64)), verticalAlignment = Alignment.CenterVertically) {
-                DesignText(
-                    text = stringResource(R.string.lan_rooms_title),
-                    size = 36,
-                    color = GothicColors.Gold,
-                    weight = FontWeight.Bold,
-                    align = TextAlign.Start,
-                    alignment = Alignment.CenterStart,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f),
-                )
-                ArtImage(
-                    res = R.drawable.lan_waiting_indicator,
-                    maxEdge = ArtSizes.ICON,
-                    trim = true,
-                    modifier = Modifier.size(d.dp(44)),
-                )
-                DesignText(
-                    text = state.rooms.size.toString(),
-                    size = 32,
-                    modifier = Modifier.width(d.dp(60)),
-                )
-            }
+            SectionTitle(text = stringResource(R.string.lan_rooms_title) + " · " + state.rooms.size)
             if (state.rooms.isEmpty()) {
                 EmptyRoomsHint()
             } else {
@@ -211,11 +194,11 @@ fun LanLobbyScreen(
             }
             DesignText(
                 text = stringResource(R.string.lan_manual_section) + if (manualOpen) " ▴" else " ▾",
-                size = 32,
-                color = GothicColors.Gold,
+                size = 28,
+                color = GothicColors.Muted,
                 align = TextAlign.Start,
                 alignment = Alignment.CenterStart,
-                modifier = Modifier.fillMaxWidth().height(d.dp(80))
+                modifier = Modifier.fillMaxWidth().height(d.dp(72))
                     .clickable(role = Role.Button) { manualOpen = !manualOpen },
             )
             if (manualOpen) {
@@ -267,8 +250,9 @@ private fun PlayerSlot(
     status: String,
     ready: Boolean,
     host: Boolean,
+    tone: PanelTone,
 ) {
-    SlicedArt(res = R.drawable.lan_player_slot, slice = 0.3f, modifier = Modifier.at(box.x, box.y, box.w, box.h))
+    Box(modifier = Modifier.at(box.x, box.y, box.w, box.h).quietPanel(tone))
     Box(modifier = Modifier.at(box.x + 25, box.y + 20, 130, 130)) {
         PortraitInFrame(portrait = portrait, dimmed = !ready)
     }
@@ -299,7 +283,8 @@ private fun PlayerSlot(
     )
     DesignText(
         text = status,
-        size = 30,
+        size = 28,
+        color = GothicColors.Muted,
         align = TextAlign.Start,
         alignment = Alignment.CenterStart,
         maxLines = 1,
@@ -313,16 +298,7 @@ private fun PlayerSlot(
  */
 @Composable
 private fun TimeControlPicker(selected: TimeControl, onSelect: (TimeControl) -> Unit) {
-    DesignText(
-        text = stringResource(R.string.lan_time_control),
-        size = 34,
-        color = GothicColors.Gold,
-        weight = FontWeight.Bold,
-        align = TextAlign.Start,
-        alignment = Alignment.CenterStart,
-        maxLines = 1,
-        modifier = Modifier.at(90, 690, 900, 60),
-    )
+    SectionTitle(text = stringResource(R.string.lan_time_control), modifier = Modifier.at(90, 676, 900, 80))
     TimeControl.entries.forEachIndexed { i, control ->
         GothicButton(
             label = stringResource(timeControlShortLabel(control)),
@@ -333,15 +309,10 @@ private fun TimeControlPicker(selected: TimeControl, onSelect: (TimeControl) -> 
     }
     DesignText(
         text = stringResource(timeControlLabel(selected)),
-        size = 30,
+        size = 28,
+        color = GothicColors.Muted,
         maxLines = 1,
-        modifier = Modifier.at(90, 880, 900, 60),
-    )
-    ArtImage(
-        res = R.drawable.ui_separator,
-        maxEdge = ArtSizes.BUTTON,
-        trim = true,
-        modifier = Modifier.at(140, 960, 800, 40),
+        modifier = Modifier.at(90, 885, 900, 60),
     )
 }
 
@@ -371,7 +342,8 @@ private fun RoomRow(room: RoomInfo, onJoin: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
-        modifier = Modifier.fillMaxWidth().height(d.dp(150)).clickable(
+        modifier = Modifier.fillMaxWidth().height(d.dp(140))
+            .quietPanel(if (pressed) PanelTone.SELECTED else PanelTone.BASE).clickable(
             interactionSource = interaction,
             indication = null,
             enabled = room.joinable,
@@ -379,17 +351,12 @@ private fun RoomRow(room: RoomInfo, onJoin: () -> Unit) {
             onClick = onJoin,
         ),
     ) {
-        SlicedArt(
-            res = if (pressed) R.drawable.ui_list_row_pressed else R.drawable.ui_list_row_normal,
-            slice = 0.3f,
-            modifier = Modifier.fillMaxSize(),
-        )
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(36)),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(28)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(d.dp(20)),
         ) {
-            Box(modifier = Modifier.size(d.dp(100))) {
+            Box(modifier = Modifier.size(d.dp(96))) {
                 PortraitInFrame(portrait = R.drawable.portrait_lan_opponent, dimmed = !room.joinable)
             }
             Column(modifier = Modifier.weight(1f)) {
@@ -405,7 +372,8 @@ private fun RoomRow(room: RoomInfo, onJoin: () -> Unit) {
                 )
                 DesignText(
                     text = stringResource(badgeOf(room)),
-                    size = 28,
+                    size = 26,
+                    color = GothicColors.Muted,
                     align = TextAlign.Start,
                     alignment = Alignment.CenterStart,
                     maxLines = 1,
@@ -437,21 +405,29 @@ private fun badgeOf(room: RoomInfo): Int = when {
 @Composable
 private fun EmptyRoomsHint() {
     val d = LocalDesign.current
-    Box(modifier = Modifier.fillMaxWidth()) {
-        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.2f, modifier = Modifier.matchParentSize())
+    Box(modifier = Modifier.fillMaxWidth().quietPanel(PanelTone.SUNKEN)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = d.dp(40), vertical = d.dp(30)),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = d.dp(36), vertical = d.dp(26)),
             verticalArrangement = Arrangement.spacedBy(d.dp(8)),
         ) {
+            DesignText(
+                text = stringResource(R.string.lan_empty_hint_title),
+                size = 30,
+                color = GothicColors.Parchment,
+                weight = FontWeight.Bold,
+                align = TextAlign.Start,
+                alignment = Alignment.CenterStart,
+                modifier = Modifier.fillMaxWidth(),
+            )
             for (line in listOf(
-                R.string.lan_empty_hint_title,
                 R.string.lan_empty_hint_1,
                 R.string.lan_empty_hint_2,
                 R.string.lan_empty_hint_3,
             )) {
                 DesignText(
                     text = stringResource(line),
-                    size = 28,
+                    size = 26,
+                    color = GothicColors.Muted,
                     align = TextAlign.Start,
                     alignment = Alignment.CenterStart,
                     modifier = Modifier.fillMaxWidth(),

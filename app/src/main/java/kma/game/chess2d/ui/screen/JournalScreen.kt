@@ -36,6 +36,9 @@ import kma.game.chess2d.profile.JournalState
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.Hairline
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.art.SlicedArt
@@ -43,13 +46,16 @@ import kma.game.chess2d.ui.art.SubScreenHeader
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
-/** Lưới Nhật ký theo bản thiết kế: 3 cột, ô 260, khoảng cách 30, căn giữa khung 1080. */
+/**
+ * Lưới Nhật ký: 3 cột thẻ 290, khoảng cách 25, căn giữa khung 1080. Thẻ to hơn bản cũ (260) vì
+ * bỏ panel lớn bao quanh: chân dung là nội dung chính, không phải khung.
+ */
 internal object JournalLayout {
     const val COLUMNS = 3
-    const val CELL = 260
-    const val GAP = 30
+    const val CELL = 290
+    const val GAP = 25
 
-    /** X của cột [col] (120, 410, 700). */
+    /** X của cột [col] (80, 395, 710). */
     fun cellX(col: Int): Int = (1080 - (COLUMNS * CELL + (COLUMNS - 1) * GAP)) / 2 + col * (CELL + GAP)
 
     /** Số hàng cần cho [count] nhân vật. */
@@ -57,10 +63,10 @@ internal object JournalLayout {
 }
 
 /**
- * Nhật ký nhân vật theo bản thiết kế: nền `bg_journal`, panel `ui_panel_main` (48,190,984,1500),
- * lưới chân dung 3 cột trong `ui_character_frame`; nhân vật khóa có `icon_locked` + `badge_locked`.
- * Chạm một ô mở trang chi tiết: chân dung lớn bên trái, `ui_name_plate` + thông tin bên phải,
- * mô tả đầy đủ bên dưới.
+ * Nhật ký nhân vật: nền `bg_journal` (có lớp tối dải trên/dưới), lưới 3 cột thẻ tối giản, mỗi thẻ
+ * là chân dung trong `ui_character_frame` + tên; nhân vật khóa có `icon_locked` + `badge_locked`.
+ * Không còn panel `ui_panel_main` bao quanh. Chạm một ô mở trang chi tiết: chân dung lớn bên trái,
+ * `ui_name_plate` + thông tin bên phải, mô tả đầy đủ trong panel tối giản bên dưới.
  *
  * Nhân vật chưa gặp hoặc còn khóa bị che tên và ảnh để không lộ trước. Back lúc đang xem một
  * trang là về lưới, back ở lưới là [onBack].
@@ -78,20 +84,19 @@ fun JournalScreen(
     val page = pages.firstOrNull { it.character.id == selectedId }
     BackHandler(enabled = page != null) { selectedId = null }
 
-    DesignCanvas(background = R.drawable.bg_journal, dim = 0.45f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_journal, dim = 0.4f, scrim = true, modifier = modifier) {
         SubScreenHeader(
             title = stringResource(R.string.journal_title),
             onBack = { if (page != null) selectedId = null else onBack() },
         )
-        SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 190, 984, 1500))
 
         if (page == null) {
             DesignText(
                 text = stringResource(R.string.journal_progress, Journal.metCount(pages), pages.size),
-                size = 32,
-                color = GothicColors.Gold,
+                size = 30,
+                color = GothicColors.Muted,
                 maxLines = 1,
-                modifier = Modifier.at(90, 220, 900, 60),
+                modifier = Modifier.at(90, 180, 900, 60),
             )
             PortraitGrid(pages = pages, onSelect = { selectedId = it.character.id })
         } else {
@@ -105,7 +110,7 @@ fun JournalScreen(
 private fun PortraitGrid(pages: List<Journal.Page>, onSelect: (Journal.Page) -> Unit) {
     val d = LocalDesign.current
     Column(
-        modifier = Modifier.at(60, 300, 960, 1370).verticalScroll(rememberScrollState()),
+        modifier = Modifier.at(60, 260, 960, 1620).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(d.dp(JournalLayout.GAP)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -128,10 +133,13 @@ private fun PortraitCell(page: Journal.Page, onClick: () -> Unit) {
     val revealed = page.state == JournalState.MET
     val name = displayName(page)
     Column(
-        modifier = Modifier.width(d.dp(JournalLayout.CELL)).clickable(role = Role.Button, onClick = onClick),
+        modifier = Modifier.width(d.dp(JournalLayout.CELL))
+            .quietPanel(if (revealed) PanelTone.BASE else PanelTone.SUNKEN)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(d.dp(18)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.size(d.dp(JournalLayout.CELL))) {
+        Box(modifier = Modifier.size(d.dp(JournalLayout.CELL - 36))) {
             PortraitInFrame(
                 portrait = page.character.portrait,
                 contentDescription = if (revealed) name else null,
@@ -139,7 +147,7 @@ private fun PortraitCell(page: Journal.Page, onClick: () -> Unit) {
             )
             StateMark(
                 state = page.state,
-                modifier = Modifier.align(Alignment.TopEnd).size(d.dp(72)),
+                modifier = Modifier.align(Alignment.TopEnd).size(d.dp(60)),
             )
             if (page.state == JournalState.LOCKED) {
                 ArtImage(
@@ -153,10 +161,10 @@ private fun PortraitCell(page: Journal.Page, onClick: () -> Unit) {
         DesignText(
             text = name,
             size = 30,
-            color = if (revealed) GothicColors.Parchment else GothicColors.Locked,
+            color = if (revealed) GothicColors.Parchment else GothicColors.Muted.copy(alpha = 0.6f),
             weight = FontWeight.Bold,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth().height(d.dp(60)),
+            modifier = Modifier.fillMaxWidth().height(d.dp(56)),
         )
     }
 }
@@ -259,8 +267,10 @@ private fun PageDetail(page: Journal.Page) {
         }
     }
 
+    Box(modifier = Modifier.at(90, 670, 900, 1100).quietPanel())
     Column(
-        modifier = Modifier.at(100, 690, 880, 960).verticalScroll(rememberScrollState()),
+        modifier = Modifier.at(90, 670, 900, 1100).padding(horizontal = d.dp(44), vertical = d.dp(36))
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(d.dp(20)),
     ) {
         when (page.state) {
@@ -301,12 +311,7 @@ private fun MetDetail(page: Journal.Page) {
 
 @Composable
 private fun Separator() {
-    ArtImage(
-        res = R.drawable.ui_separator,
-        maxEdge = ArtSizes.BUTTON,
-        trim = true,
-        modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(24)),
-    )
+    Hairline()
 }
 
 @Composable
@@ -314,8 +319,8 @@ private fun DetailBlock(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         DesignText(
             text = label,
-            size = 32,
-            color = GothicColors.Gold,
+            size = 28,
+            color = GothicColors.Muted,
             weight = FontWeight.Bold,
             align = TextAlign.Start,
             alignment = Alignment.CenterStart,

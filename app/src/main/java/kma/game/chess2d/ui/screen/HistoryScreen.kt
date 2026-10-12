@@ -25,6 +25,8 @@ import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.ButtonArt
 import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
@@ -94,7 +96,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         return
     }
 
-    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, scrim = true, modifier = modifier) {
         val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.history_title), onBack = onBack)
         DesignText(
@@ -106,10 +108,10 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 stats.losses,
             ),
             size = 30,
+            color = GothicColors.Muted,
             maxLines = 2,
             modifier = Modifier.at(90, 175, 900, 80),
         )
-        SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 270, 984, 1300))
 
         if (records.isNotEmpty()) {
             GothicButton(
@@ -118,7 +120,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 onClick = { scope.launch { withContext(Dispatchers.IO) { dao.deleteAll() } } },
                 art = ButtonArt.SECONDARY,
                 textColor = GothicColors.Blood,
-                modifier = Modifier.at(150, 1610, 780, 100),
+                modifier = Modifier.at(150, 1690, 780, 100),
             )
         }
 
@@ -132,7 +134,8 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
 
         LazyColumn(
-            modifier = Modifier.at(80, 310, 920, 1220),
+            // Không còn panel lớn bao quanh: mỗi ván là một thẻ, một ván thì chỉ có một thẻ.
+            modifier = Modifier.at(90, 280, 900, 1380),
             verticalArrangement = Arrangement.spacedBy(d.dp(16)),
         ) {
             // Khoá theo id để xoá một ván không làm vẽ lại cả danh sách.
@@ -153,8 +156,8 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * Một dòng ván đã lưu trên nền `ui_list_row_normal` (đang nhấn thì `ui_list_row_pressed`): ngày, chế độ,
- * kết quả, số nước và ba nút hành động. Chạm vào dòng cũng là xem lại.
+ * Một thẻ ván đã lưu (panel tối giản, đang nhấn thì ánh đỏ): huy hiệu kết quả, ngày + chế độ,
+ * kết quả + số nước, và hàng ba nút cao 96 để dễ bấm. Chạm vào thẻ cũng là xem lại.
  */
 @Composable
 private fun MatchRow(
@@ -167,17 +170,13 @@ private fun MatchRow(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
-        modifier = Modifier.fillMaxWidth().height(d.dp(260))
+        modifier = Modifier.fillMaxWidth().height(d.dp(290))
+            .quietPanel(if (pressed) PanelTone.SELECTED else PanelTone.BASE)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onReview),
     ) {
-        SlicedArt(
-            res = if (pressed) R.drawable.ui_list_row_pressed else R.drawable.ui_list_row_normal,
-            slice = 0.3f,
-            modifier = Modifier.fillMaxSize(),
-        )
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(44), vertical = d.dp(24)),
-            verticalArrangement = Arrangement.spacedBy(d.dp(8)),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(36), vertical = d.dp(28)),
+            verticalArrangement = Arrangement.spacedBy(d.dp(18)),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
                 ArtImage(
@@ -201,6 +200,7 @@ private fun MatchRow(
                         text = stringResource(resultLabel(record.result)) + " · " +
                             stringResource(R.string.history_moves_count, record.uciMoves.size),
                         size = 28,
+                        color = GothicColors.Muted,
                         align = TextAlign.Start,
                         alignment = Alignment.CenterStart,
                         maxLines = 1,
@@ -209,7 +209,7 @@ private fun MatchRow(
                 }
             }
             Row(
-                modifier = Modifier.fillMaxWidth().height(d.dp(80)),
+                modifier = Modifier.fillMaxWidth().height(d.dp(96)),
                 horizontalArrangement = Arrangement.spacedBy(d.dp(14)),
             ) {
                 val cell = Modifier.weight(1f).fillMaxHeight()

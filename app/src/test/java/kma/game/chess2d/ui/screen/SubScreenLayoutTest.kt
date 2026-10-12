@@ -1,27 +1,28 @@
 package kma.game.chess2d.ui.screen
 
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.panelStyle
+import kma.game.chess2d.ui.theme.GothicColors
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SubScreenLayoutTest {
 
     @Test
-    fun settingsTabsFollowTheDesignRows() {
-        assertEquals(listOf(300, 440, 580), (0..2).map(SettingsLayout::tabY))
-        // Mọi tab nằm trong panel (200..1620).
-        val last = SettingsLayout.tabY(SettingsTab.entries.size - 1) + SettingsLayout.TAB_H
-        assertTrue(last <= 1620)
+    fun settingsTabsFitOneRowAboveContent() {
+        assertEquals(listOf(90, 272, 454), (0..2).map(SettingsLayout::tabX))
+        val last = SettingsLayout.tabX(SettingsTab.entries.size - 1) + SettingsLayout.TAB_W
+        assertTrue(last <= SettingsLayout.CONTENT_X + SettingsLayout.CONTENT_W)
+        assertTrue(SettingsLayout.TAB_Y + SettingsLayout.TAB_H <= SettingsLayout.CONTENT_Y)
     }
 
     @Test
-    fun settingsColumnsMatchTheDesign() {
-        assertEquals(390, SettingsLayout.CONTENT_X)
-        assertEquals(760, SettingsLayout.CONTROL_X)
-        // Control kết thúc trong vùng nội dung và trong panel (48..1032).
-        assertTrue(SettingsLayout.CONTROL_X + SettingsLayout.CONTROL_W <= SettingsLayout.CONTENT_X + SettingsLayout.CONTENT_W)
+    fun settingsContentStaysInsideSafeArea() {
+        assertTrue(SettingsLayout.CONTENT_X >= 48)
         assertTrue(SettingsLayout.CONTENT_X + SettingsLayout.CONTENT_W <= 1032)
-        assertTrue(SettingsLayout.TAB_X + SettingsLayout.TAB_W < SettingsLayout.CONTENT_X)
+        assertTrue(SettingsLayout.CONTENT_Y + SettingsLayout.CONTENT_H <= SettingsLayout.RESTORE_Y)
     }
 
     @Test
@@ -38,10 +39,52 @@ class SubScreenLayoutTest {
 
     @Test
     fun journalGridIsCenteredThreeColumns() {
-        assertEquals(listOf(120, 410, 700), (0..2).map(JournalLayout::cellX))
+        assertEquals(listOf(80, 395, 710), (0..2).map(JournalLayout::cellX))
         assertEquals(1080, JournalLayout.cellX(0) + JournalLayout.cellX(2) + JournalLayout.CELL)
         assertEquals(0, JournalLayout.rows(0))
         assertEquals(1, JournalLayout.rows(3))
         assertEquals(3, JournalLayout.rows(7))
+    }
+
+    @Test
+    fun profileBlocksDoNotOverlap() {
+        val blocks = with(ProfileLayout) { listOf(Character, NamePlate, LevelPanel, StatsPanel) }
+        for (i in blocks.indices) for (j in i + 1 until blocks.size) {
+            assertTrue("$i vs $j", !blocks[i].overlaps(blocks[j]))
+        }
+        assertTrue(ProfileLayout.StatsPanel.bottom <= 1872)
+    }
+
+    @Test
+    fun profileStatCellsStayInsidePanelWithoutOverlap() {
+        val panel = ProfileLayout.StatsPanel
+        val cells = (0 until ProfileLayout.STAT_ROWS * 2).map(ProfileLayout::statCell)
+        for (c in cells) {
+            assertTrue(c.x >= panel.x && c.y >= panel.y && c.right <= panel.right && c.bottom <= panel.bottom)
+        }
+        for (i in cells.indices) for (j in i + 1 until cells.size) {
+            assertTrue("$i vs $j", !cells[i].overlaps(cells[j]))
+        }
+    }
+
+    @Test
+    fun onlySelectedPanelUsesBrightGoldAndTint() {
+        val selected = panelStyle(PanelTone.SELECTED)
+        assertEquals(GothicColors.Gold, selected.border)
+        assertEquals(GothicColors.Crimson, selected.tint)
+        for (tone in listOf(PanelTone.BASE, PanelTone.SUNKEN)) {
+            assertNull(panelStyle(tone).tint)
+            assertEquals(GothicColors.GoldDim, panelStyle(tone).border)
+        }
+    }
+
+    @Test
+    fun lobbyIconRailWrapsIconColumn() {
+        val rail = LobbyLayout.IconRail
+        for (icon in LobbyLayout.IconColumn) {
+            assertTrue(icon.x >= rail.x && icon.right <= rail.right && icon.y >= rail.y && icon.bottom <= rail.bottom)
+        }
+        assertTrue(rail.right <= 1080 - LobbyLayout.SAFE_MARGIN)
+        assertTrue(LobbyLayout.Buttons.none { it.overlaps(rail) })
     }
 }

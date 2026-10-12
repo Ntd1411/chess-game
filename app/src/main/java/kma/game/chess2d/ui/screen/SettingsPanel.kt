@@ -15,7 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Arrangement
 import kma.game.chess2d.ui.art.GothicConfirmDialog
+import kma.game.chess2d.ui.art.Hairline
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.SectionTitle
+import kma.game.chess2d.ui.art.quietPanel
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,24 +72,28 @@ enum class SettingsTab(@param:StringRes val label: Int) {
     OTHER(R.string.settings_tab_other),
 }
 
-/** Bố cục Cài đặt theo bản thiết kế 1080x1920. Hàm thuần để kiểm thử. */
+/**
+ * Bố cục Cài đặt theo đơn vị thiết kế 1080x1920. Hàm thuần để kiểm thử.
+ *
+ * Năm tab nằm thành một hàng ngang ngay dưới tiêu đề thay vì chiếm cả một cột, nên các hàng cài đặt
+ * có trọn chiều ngang 900; panel chứa hàng chỉ cao đúng bằng nội dung của tab.
+ */
 internal object SettingsLayout {
-    /** Y của tab thứ [index] ở cột danh mục bên trái (300, 440, 580, ...). */
-    fun tabY(index: Int): Int = 300 + index * 140
+    const val TAB_Y = 190
+    const val TAB_H = 96
+    const val TAB_W = 172
+    const val TAB_GAP = 10
 
-    const val TAB_X = 90
-    const val TAB_W = 270
-    const val TAB_H = 110
+    /** X của tab thứ [index] (90, 272, 454, ...). */
+    fun tabX(index: Int): Int = CONTENT_X + index * (TAB_W + TAB_GAP)
 
-    /** Vùng nội dung cuộn được bên phải: nhãn từ x=390 (rộng 350), control từ x=760 (rộng 220). */
-    const val CONTENT_X = 390
-    const val CONTENT_Y = 270
-    const val CONTENT_W = 600
-    const val CONTENT_H = 1320
-    const val LABEL_W = 350
-    const val CONTROL_X = 760
-    const val CONTROL_W = 220
-    const val ROW_H = 110
+    /** Vùng nội dung cuộn được, kết thúc trên nút Khôi phục (y=1680). */
+    const val CONTENT_X = 90
+    const val CONTENT_Y = 320
+    const val CONTENT_W = 900
+    const val CONTENT_H = 1330
+    const val ROW_H = 120
+    const val RESTORE_Y = 1680
 }
 
 /**
@@ -121,9 +130,8 @@ fun SettingsPanel(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        DesignCanvas(background = R.drawable.bg_settings, dim = 0.3f, modifier = modifier) {
+        DesignCanvas(background = R.drawable.bg_settings, dim = 0.35f, scrim = true, modifier = modifier) {
             SubScreenHeader(title = stringResource(R.string.lobby_settings), onBack = onDismiss)
-            SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 200, 984, 1420))
 
             SettingsTab.entries.forEachIndexed { i, entry ->
                 key(entry) {
@@ -132,8 +140,8 @@ fun SettingsPanel(
                         selected = entry == tab,
                         onClick = { tab = entry },
                         modifier = Modifier.at(
-                            SettingsLayout.TAB_X,
-                            SettingsLayout.tabY(i),
+                            SettingsLayout.tabX(i),
+                            SettingsLayout.TAB_Y,
                             SettingsLayout.TAB_W,
                             SettingsLayout.TAB_H,
                         ),
@@ -150,31 +158,36 @@ fun SettingsPanel(
                         SettingsLayout.CONTENT_H,
                     )
                     .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(LocalDesign.current.dp(24)),
             ) {
                 when (tab) {
                     SettingsTab.GENERAL -> {
                         if (name != null && onNameChange != null) {
-                            SectionLabel(stringResource(R.string.lan_your_name))
-                            GothicTextField(
-                                value = name,
-                                onValueChange = onNameChange,
-                                placeholder = stringResource(R.string.lan_your_name),
-                                modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(110)),
+                            SettingsGroup(title = stringResource(R.string.lan_your_name)) {
+                                GothicTextField(
+                                    value = name,
+                                    onValueChange = onNameChange,
+                                    placeholder = stringResource(R.string.lan_your_name),
+                                    modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(110)),
+                                )
+                            }
+                        }
+                        SettingsGroup {
+                            ToggleRow(
+                                label = stringResource(R.string.settings_haptic),
+                                checked = settings.hapticEnabled,
+                                onCheckedChange = { scope.launch { store.setHapticEnabled(it) } },
                             )
                         }
-                        ToggleRow(
-                            label = stringResource(R.string.settings_haptic),
-                            checked = settings.hapticEnabled,
-                            onCheckedChange = { scope.launch { store.setHapticEnabled(it) } },
-                        )
                     }
 
-                    SettingsTab.SOUND -> {
+                    SettingsTab.SOUND -> SettingsGroup {
                         ToggleRow(
                             label = stringResource(R.string.settings_music),
                             checked = settings.musicEnabled,
                             onCheckedChange = { scope.launch { store.setMusicEnabled(it) } },
                         )
+                        Hairline()
                         ToggleRow(
                             label = stringResource(R.string.settings_sound),
                             checked = settings.soundEnabled,
@@ -183,51 +196,60 @@ fun SettingsPanel(
                     }
 
                     SettingsTab.VISUAL -> {
-                        SectionLabel(stringResource(R.string.settings_board_palette))
-                        for (palette in BoardPalette.entries) {
-                            key(palette) {
-                                RadioRow(
-                                    label = stringResource(paletteLabel(palette)),
-                                    selected = palette == settings.boardPalette,
-                                    onClick = { scope.launch { store.setBoardPalette(palette) } },
-                                )
+                        SettingsGroup(title = stringResource(R.string.settings_board_palette)) {
+                            BoardPalette.entries.forEachIndexed { i, palette ->
+                                key(palette) {
+                                    if (i > 0) Hairline()
+                                    RadioRow(
+                                        label = stringResource(paletteLabel(palette)),
+                                        selected = palette == settings.boardPalette,
+                                        onClick = { scope.launch { store.setBoardPalette(palette) } },
+                                    )
+                                }
                             }
                         }
-                        SectionLabel(stringResource(R.string.settings_piece_theme))
-                        for (theme in PieceTheme.entries) {
-                            key(theme) {
-                                RadioRow(
-                                    label = stringResource(pieceThemeLabel(theme)),
-                                    selected = theme == settings.pieceTheme,
-                                    onClick = { scope.launch { store.setPieceTheme(theme) } },
-                                )
+                        SettingsGroup(title = stringResource(R.string.settings_piece_theme)) {
+                            PieceTheme.entries.forEachIndexed { i, theme ->
+                                key(theme) {
+                                    if (i > 0) Hairline()
+                                    RadioRow(
+                                        label = stringResource(pieceThemeLabel(theme)),
+                                        selected = theme == settings.pieceTheme,
+                                        onClick = { scope.launch { store.setPieceTheme(theme) } },
+                                    )
+                                }
                             }
                         }
                     }
 
-                    SettingsTab.CONTROLS -> ToggleRow(
-                        label = stringResource(R.string.settings_legal_moves),
-                        checked = settings.showLegalMoves,
-                        onCheckedChange = { scope.launch { store.setShowLegalMoves(it) } },
-                    )
+                    SettingsTab.CONTROLS -> SettingsGroup {
+                        ToggleRow(
+                            label = stringResource(R.string.settings_legal_moves),
+                            checked = settings.showLegalMoves,
+                            onCheckedChange = { scope.launch { store.setShowLegalMoves(it) } },
+                        )
+                    }
 
                     SettingsTab.OTHER -> {
-                        SectionLabel(stringResource(R.string.settings_data))
-                        GothicButton(
-                            label = stringResource(R.string.settings_reset_data),
-                            onClick = { confirmReset = true },
-                            art = ButtonArt.SECONDARY,
-                            textColor = GothicColors.Blood,
-                            modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(100)),
-                        )
-                        SectionLabel(stringResource(R.string.settings_credits_title))
-                        DesignText(
-                            text = stringResource(R.string.settings_credits_text),
-                            size = 30,
-                            align = TextAlign.Start,
-                            alignment = Alignment.TopStart,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        SettingsGroup(title = stringResource(R.string.settings_data)) {
+                            GothicButton(
+                                label = stringResource(R.string.settings_reset_data),
+                                onClick = { confirmReset = true },
+                                art = ButtonArt.SECONDARY,
+                                textColor = GothicColors.Alert,
+                                modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(100)),
+                            )
+                        }
+                        SettingsGroup(title = stringResource(R.string.settings_credits_title)) {
+                            DesignText(
+                                text = stringResource(R.string.settings_credits_text),
+                                size = 30,
+                                color = GothicColors.Muted,
+                                align = TextAlign.Start,
+                                alignment = Alignment.TopStart,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 }
             }
@@ -236,7 +258,7 @@ fun SettingsPanel(
                 label = stringResource(R.string.settings_restore_defaults),
                 onClick = { scope.launch { store.resetToDefaults() } },
                 art = ButtonArt.SECONDARY,
-                modifier = Modifier.at(170, 1650, 740, 100),
+                modifier = Modifier.at(170, SettingsLayout.RESTORE_Y, 740, 100),
             )
         }
     }
@@ -256,51 +278,45 @@ fun SettingsPanel(
     }
 }
 
-/** Một mục ở cột danh mục: nền `ui_tab_normal`, tab đang chọn dùng `ui_tab_selected` và chữ vàng. */
+/**
+ * Một tab ở hàng ngang: tab đang chọn là panel [PanelTone.SELECTED] (ánh đỏ, viền vàng, chữ vàng),
+ * tab khác chỉ là nền chìm viền mờ — không dùng khung PNG để tab không chiếm sự chú ý của nội dung.
+ */
 @Composable
 private fun CategoryTab(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    Box(modifier = modifier.clickable(role = Role.Tab, onClick = onClick)) {
-        SlicedArt(
-            res = if (selected) R.drawable.ui_tab_selected else R.drawable.ui_tab_normal,
-            slice = 0.45f,
-            modifier = Modifier.fillMaxSize(),
-        )
+    Box(
+        modifier = modifier
+            .quietPanel(if (selected) PanelTone.SELECTED else PanelTone.SUNKEN)
+            .clickable(role = Role.Tab, onClick = onClick),
+    ) {
         DesignText(
             text = label,
-            size = 34,
-            color = if (selected) GothicColors.Gold else GothicColors.Parchment,
+            size = 28,
+            color = if (selected) GothicColors.Gold else GothicColors.Muted,
             weight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
-            modifier = Modifier.fillMaxSize().padding(horizontal = LocalDesign.current.dp(24)),
+            maxLines = 2,
+            modifier = Modifier.fillMaxSize().padding(horizontal = LocalDesign.current.dp(8)),
         )
     }
 }
 
-/** Tiêu đề nhóm trong vùng nội dung, có `ui_separator` mảnh bên dưới. */
+/**
+ * Một nhóm cài đặt: tiêu đề nhóm (nếu có) rồi panel tối giản cao đúng bằng các hàng bên trong,
+ * nên tab ít mục không để lại một panel trống to.
+ */
 @Composable
-private fun SectionLabel(text: String) {
+private fun SettingsGroup(title: String? = null, content: @Composable () -> Unit) {
     val d = LocalDesign.current
-    Column(modifier = Modifier.fillMaxWidth().padding(top = d.dp(16))) {
-        DesignText(
-            text = text,
-            size = 36,
-            color = GothicColors.Gold,
-            weight = FontWeight.Bold,
-            align = TextAlign.Start,
-            alignment = Alignment.CenterStart,
-            maxLines = 1,
-            modifier = Modifier.fillMaxWidth().height(d.dp(70)),
-        )
-        ArtImage(
-            res = R.drawable.ui_separator,
-            maxEdge = ArtSizes.BUTTON,
-            trim = true,
-            modifier = Modifier.fillMaxWidth().height(d.dp(20)),
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (title != null) SectionTitle(title)
+        Column(
+            modifier = Modifier.fillMaxWidth().quietPanel()
+                .padding(horizontal = d.dp(36), vertical = d.dp(20)),
+        ) { content() }
     }
 }
 
-/** Một hàng cài đặt: nhãn rộng 350 bên trái, control rộng 220 bắt đầu từ x=760. */
+/** Một hàng cài đặt: nhãn chiếm phần còn lại, control rộng 160 sát phải. */
 @Composable
 private fun SettingRow(label: String, modifier: Modifier = Modifier, control: @Composable () -> Unit) {
     val d = LocalDesign.current
@@ -314,16 +330,11 @@ private fun SettingRow(label: String, modifier: Modifier = Modifier, control: @C
             align = TextAlign.Start,
             alignment = Alignment.CenterStart,
             maxLines = 2,
-            modifier = Modifier.width(d.dp(SettingsLayout.LABEL_W)).fillMaxHeight(),
-        )
-        Spacer(
-            Modifier.width(
-                d.dp(SettingsLayout.CONTROL_X - SettingsLayout.CONTENT_X - SettingsLayout.LABEL_W),
-            ),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         Box(
-            modifier = Modifier.width(d.dp(SettingsLayout.CONTROL_W)).fillMaxHeight(),
-            contentAlignment = Alignment.Center,
+            modifier = Modifier.width(d.dp(160)).fillMaxHeight(),
+            contentAlignment = Alignment.CenterEnd,
         ) { control() }
     }
 }

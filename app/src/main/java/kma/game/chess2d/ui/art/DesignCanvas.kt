@@ -19,6 +19,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
@@ -62,18 +63,32 @@ val LocalDesign = staticCompositionLocalOf { DesignScale(1f, 1f, 1f) }
  * toàn và căn giữa. Con đặt vị trí bằng [at] theo đúng toạ độ trong bản thiết kế, nên bố cục
  * giữ nguyên trên mọi máy; máy dài hơn 16:9 chỉ lộ thêm nền ở trên/dưới.
  *
- * @param dim độ phủ tối nền để chữ đọc được.
- * @param backLayer lớp vẽ ngay trên nền nhưng dưới khung thiết kế (hiệu ứng phủ tràn mép).
+ * @param dim độ phủ tối đều cả nền để chữ đọc được.
+ * @param scrim thêm lớp gradient tối ở dải tiêu đề và dải nút dưới cùng (màn thông tin): background
+ *        chỉ tạo không khí, không tranh với chữ, mà giữa màn vẫn giữ được chi tiết tranh.
  */
 @Composable
 fun DesignCanvas(
     @DrawableRes background: Int,
     modifier: Modifier = Modifier,
     dim: Float = 0.25f,
+    scrim: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
         ArtBackdrop(res = background, dim = dim, maxEdge = ArtSizes.SCREEN)
+        if (scrim) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.55f),
+                        0.18f to Color.Black.copy(alpha = 0.2f),
+                        0.7f to Color.Black.copy(alpha = 0.25f),
+                        1f to Color.Black.copy(alpha = 0.6f),
+                    ),
+                ),
+            )
+        }
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize().safeDrawingPadding(),
             contentAlignment = Alignment.Center,

@@ -25,6 +25,9 @@ import kma.game.chess2d.campaign.Reward
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.DesignCanvas
+import kma.game.chess2d.ui.art.Hairline
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.art.SlicedArt
@@ -56,8 +59,9 @@ internal object InventoryLayout {
 }
 
 /**
- * Túi đồ theo bản thiết kế: nền `bg_inventory`, panel lớn, lưới 4x4 `ui_inventory_slot`, ô khóa dùng
- * `ui_inventory_slot_locked`, mô tả món đang chọn trong `ui_tooltip`.
+ * Túi đồ: nền `bg_inventory`, lưới 4x4 ô tối giản (viền mờ; ô đang chọn ánh đỏ viền vàng), ô khóa chỉ
+ * còn biểu tượng ổ khóa mờ, mô tả món đang chọn trong panel tối giản ngay dưới lưới. Không dùng
+ * khung PNG cầu kỳ ở đây: vật phẩm mới là thứ cần nhìn.
  *
  * Ba ô đầu là vàng, pha lê và sách cổ (suy ra từ thưởng các tầng đã qua), sau đó là các di vật
  * mở theo tầng ([Relic]).
@@ -78,27 +82,26 @@ fun InventoryScreen(
         InventoryEntry(art.icon, art.name, art.description, null, relic.isUnlocked(clearedUpTo), relic.unlockFloor)
     }
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    DesignCanvas(background = R.drawable.bg_inventory, dim = 0.3f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_inventory, dim = 0.35f, scrim = true, modifier = modifier) {
         val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.inventory_title), onBack = onBack)
-        SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(48, 190, 984, 1500))
 
         entries.take(InventoryLayout.COLUMNS * InventoryLayout.ROWS).forEachIndexed { i, entry ->
             val x = InventoryLayout.slotX(i)
             val y = InventoryLayout.slotY(i)
             Box(
                 modifier = Modifier.at(x, y, InventoryLayout.SLOT, InventoryLayout.SLOT)
+                    .quietPanel(if (i == selected) PanelTone.SELECTED else PanelTone.SUNKEN)
                     .clickable(role = Role.Button) { selected = i },
                 contentAlignment = Alignment.Center,
             ) {
                 if (entry.unlocked) {
-                    ArtImage(R.drawable.ui_inventory_slot, maxEdge = ArtSizes.PIECE, trim = true, modifier = Modifier.fillMaxSize())
                     ArtImage(
                         res = entry.icon,
                         maxEdge = ArtSizes.PIECE,
                         trim = true,
                         contentDescription = stringResource(entry.name),
-                        modifier = Modifier.fillMaxSize().padding(d.dp(45)),
+                        modifier = Modifier.fillMaxSize().padding(d.dp(36)),
                     )
                     if (entry.count != null) {
                         DesignText(
@@ -108,33 +111,39 @@ fun InventoryScreen(
                             color = GothicColors.Gold,
                             alignment = Alignment.BottomEnd,
                             maxLines = 1,
-                            modifier = Modifier.fillMaxSize().padding(end = d.dp(28), bottom = d.dp(18)),
+                            modifier = Modifier.fillMaxSize().padding(end = d.dp(18), bottom = d.dp(10)),
                         )
                     }
                 } else {
-                    ArtImage(R.drawable.ui_inventory_slot_locked, maxEdge = ArtSizes.PIECE, trim = true, modifier = Modifier.fillMaxSize())
-                }
-                if (i == selected) {
-                    ArtImage(R.drawable.fx_move_highlight, maxEdge = ArtSizes.PIECE, trim = true, modifier = Modifier.fillMaxSize())
+                    ArtImage(
+                        R.drawable.icon_locked,
+                        maxEdge = ArtSizes.ICON,
+                        trim = true,
+                        alpha = 0.45f,
+                        modifier = Modifier.fillMaxSize().padding(d.dp(64)),
+                    )
                 }
             }
         }
 
         val current = entries.getOrNull(selected)
-        SlicedArt(res = R.drawable.ui_tooltip, slice = 0.5f, modifier = Modifier.at(90, 1170, 900, 300))
+        Box(modifier = Modifier.at(90, 1160, 900, 260).quietPanel())
         if (current != null) {
             Column(
-                modifier = Modifier.at(90, 1170, 900, 300).padding(horizontal = d.dp(120), vertical = d.dp(40)),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.at(90, 1160, 900, 260).padding(horizontal = d.dp(48), vertical = d.dp(32)),
+                horizontalAlignment = Alignment.Start,
             ) {
                 DesignText(
                     text = if (current.unlocked) stringResource(current.name) else stringResource(R.string.tower_floor_locked_title),
-                    size = 40,
+                    size = 38,
                     color = GothicColors.Gold,
                     weight = FontWeight.Bold,
+                    align = TextAlign.Start,
+                    alignment = Alignment.CenterStart,
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Hairline(modifier = Modifier.padding(vertical = d.dp(10)))
                 DesignText(
                     text = if (current.unlocked) {
                         stringResource(current.description)
@@ -142,6 +151,9 @@ fun InventoryScreen(
                         stringResource(R.string.inventory_locked, current.unlockFloor)
                     },
                     size = 28,
+                    color = GothicColors.Muted,
+                    align = TextAlign.Start,
+                    alignment = Alignment.TopStart,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -149,10 +161,11 @@ fun InventoryScreen(
         }
         DesignText(
             text = stringResource(R.string.inventory_hint),
-            size = 28,
+            size = 26,
             italic = true,
+            color = GothicColors.Muted,
             align = TextAlign.Center,
-            modifier = Modifier.at(90, 1500, 900, 80),
+            modifier = Modifier.at(90, 1450, 900, 80),
         )
     }
 }

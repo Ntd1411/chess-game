@@ -1,6 +1,10 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import kma.game.chess2d.ui.art.Hairline
+import kma.game.chess2d.ui.art.quietPanel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,10 +32,30 @@ import kma.game.chess2d.ui.art.SubScreenHeader
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
+/** Bố cục Hồ sơ theo đơn vị thiết kế 1080x1920. Hàm thuần để test không chồng lấn. */
+internal object ProfileLayout {
+    val Character = LobbyLayout.Box(300, 170, 480, 500)
+    val NamePlate = LobbyLayout.Box(240, 680, 600, 84)
+    val LevelPanel = LobbyLayout.Box(90, 790, 900, 190)
+    val StatsPanel = LobbyLayout.Box(90, 1010, 900, 760)
+
+    const val STAT_ROWS = 4
+    const val STAT_PAD = 30
+
+    /** Ô thống kê thứ [index] (2 cột x 4 hàng) nằm trọn trong [StatsPanel], cách viền [STAT_PAD]. */
+    fun statCell(index: Int): LobbyLayout.Box {
+        val p = StatsPanel
+        val w = (p.w - 2 * STAT_PAD) / 2
+        val h = (p.h - 2 * STAT_PAD) / STAT_ROWS
+        return LobbyLayout.Box(p.x + STAT_PAD + (index % 2) * w, p.y + STAT_PAD + (index / 2) * h, w, h)
+    }
+}
+
 /**
- * Màn Hồ sơ trên khung thiết kế 1080x1920: nhân vật toàn thân ở giữa, tên trên `ui_name_plate`,
- * cấp và thanh tiến độ lên cấp (`loading_bar_frame/fill`), rồi bảng thống kê hai cột trong
- * `ui_panel_main`.
+ * Màn Hồ sơ: nhân vật toàn thân và bảng tên `ui_name_plate` (khung cầu kỳ dành cho nhân vật
+ * chính), rồi hai panel tối giản: cấp + thanh lên cấp, và bảng thống kê 2x4. Mỗi ô thống kê có
+ * nhãn nhỏ màu phụ phía trên và số lớn phía dưới, ngăn bằng đường kẻ mảnh nên viền không bao giờ
+ * cắt qua chữ.
  *
  * Chỉ có phần "Thông tin" (thống kê). Các tab Trang phục/Kỹ năng/Ký ức trong spec chưa có hệ
  * thống nào đằng sau nên không dựng: một tab rỗng là ngõ cụt.
@@ -48,39 +72,59 @@ fun ProfileScreen(
     val total = PlayerStats.GAMES_PER_LEVEL
     val into = stats.pointsIntoLevel
 
-    DesignCanvas(background = R.drawable.bg_profile, dim = 0.35f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_profile, dim = 0.3f, scrim = true, modifier = modifier) {
         SubScreenHeader(title = stringResource(R.string.profile_title), onBack = onBack)
 
+        val ch = ProfileLayout.Character
         ArtImage(
             res = R.drawable.character_protagonist_fullbody,
             maxEdge = ArtSizes.BOARD,
             trim = true,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.at(190, 180, 700, 690),
+            modifier = Modifier.at(ch.x, ch.y, ch.w, ch.h),
         )
-        SlicedArt(res = R.drawable.ui_name_plate, slice = 0.5f, modifier = Modifier.at(200, 880, 680, 90))
+        val plate = ProfileLayout.NamePlate
+        SlicedArt(res = R.drawable.ui_name_plate, slice = 0.5f, modifier = Modifier.at(plate.x, plate.y, plate.w, plate.h))
         DesignText(
             text = name.ifBlank { stringResource(R.string.match_player_one) },
-            size = 42,
+            size = 40,
             color = GothicColors.Gold,
             weight = FontWeight.Bold,
             maxLines = 1,
-            modifier = Modifier.at(250, 880, 580, 90),
+            modifier = Modifier.at(plate.x + 60, plate.y, plate.w - 120, plate.h),
+        )
+
+        // Cấp: nhãn trái, tiến độ phải, thanh ở giữa, gợi ý nhỏ ở dưới.
+        val lv = ProfileLayout.LevelPanel
+        Box(modifier = Modifier.at(lv.x, lv.y, lv.w, lv.h).quietPanel())
+        DesignText(
+            text = stringResource(R.string.profile_level, stats.level),
+            size = 36,
+            color = GothicColors.Gold,
+            weight = FontWeight.Bold,
+            align = TextAlign.Start,
+            alignment = Alignment.CenterStart,
+            maxLines = 1,
+            modifier = Modifier.at(lv.x + 40, lv.y + 18, 420, 60),
         )
         DesignText(
-            text = stringResource(R.string.profile_level, stats.level) + " · " +
-                stringResource(R.string.profile_progress, into, total),
-            size = 32,
+            text = stringResource(R.string.profile_progress, into, total),
+            size = 28,
+            color = GothicColors.Muted,
+            align = TextAlign.End,
+            alignment = Alignment.CenterEnd,
             maxLines = 1,
-            modifier = Modifier.at(150, 980, 780, 56),
+            modifier = Modifier.at(lv.x + 460, lv.y + 18, 400, 60),
         )
-        ProgressBar(fraction = into.toFloat() / total, modifier = Modifier.at(210, 1045, 660, 48))
+        ProgressBar(fraction = into.toFloat() / total, modifier = Modifier.at(lv.x + 36, lv.y + 86, lv.w - 72, 40))
         DesignText(
             text = stringResource(R.string.profile_level_hint, total),
             size = 24,
-            color = GothicColors.Parchment.copy(alpha = 0.7f),
+            color = GothicColors.Muted,
+            align = TextAlign.Start,
+            alignment = Alignment.CenterStart,
             maxLines = 1,
-            modifier = Modifier.at(100, 1100, 880, 50),
+            modifier = Modifier.at(lv.x + 40, lv.y + 132, lv.w - 80, 44),
         )
 
         StatsPanel(stats = stats)
@@ -135,24 +179,38 @@ private fun StatsPanel(stats: PlayerStats) {
         stringResource(R.string.profile_play_time) to playTimeText,
     )
 
-    SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(60, 1170, 960, 650))
+    val p = ProfileLayout.StatsPanel
+    Box(modifier = Modifier.at(p.x, p.y, p.w, p.h).quietPanel())
+    // Đường kẻ ngăn cột và ngăn hàng, nằm giữa các ô nên không cắt qua nhãn hay số.
+    val first = ProfileLayout.statCell(0)
+    Box(
+        modifier = Modifier.at(first.right - 1, p.y + 50, 2, p.h - 100)
+            .background(GothicColors.GoldDim.copy(alpha = 0.45f)),
+    )
+    for (row in 1 until ProfileLayout.STAT_ROWS) {
+        val c = ProfileLayout.statCell(row * 2)
+        Hairline(modifier = Modifier.at(p.x + 50, c.y - 1, p.w - 100, 2))
+    }
     cells.forEachIndexed { i, (label, value) ->
-        val x = if (i % 2 == 0) 120 else 560
-        val y = 1215 + (i / 2) * 145
-        Column(modifier = Modifier.at(x, y, 400, 130)) {
+        val c = ProfileLayout.statCell(i)
+        Column(
+            modifier = Modifier.at(c.x, c.y, c.w, c.h).padding(horizontal = LocalDesign.current.dp(30)),
+            verticalArrangement = Arrangement.Center,
+        ) {
             DesignText(
                 text = label,
-                size = 28,
-                color = GothicColors.Gold,
+                size = 26,
+                color = GothicColors.Muted,
                 align = TextAlign.Start,
                 alignment = Alignment.CenterStart,
                 maxLines = 1,
-                modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(52)),
+                modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(46)),
             )
             DesignText(
                 text = value,
-                size = 40,
+                size = 44,
                 weight = FontWeight.Bold,
+                color = GothicColors.Parchment,
                 align = TextAlign.Start,
                 alignment = Alignment.CenterStart,
                 maxLines = 1,

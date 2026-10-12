@@ -29,6 +29,8 @@ import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.PanelTone
+import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
@@ -51,6 +53,12 @@ internal object LobbyLayout {
 
     /** Cột icon bên phải: Nhật ký, Túi đồ, Cài đặt, Lịch sử, Chọn chế độ. */
     val IconColumn = listOf(260, 380, 500, 620, 740).map { Box(900, it, 100, 100) }
+
+    /** Thanh nền tối gom năm icon thành một nhóm thay vì rải rời trên nền. */
+    val IconRail = Box(884, 244, 132, 612)
+
+    /** Ví (vàng + pha lê) gom trong một ô nhỏ ở góc phải. */
+    val Wallet = Box(670, 52, 230, 142)
 
     const val SAFE_MARGIN = 48
 }
@@ -84,9 +92,8 @@ fun MenuScreen(
     val profileLabel = stringResource(R.string.profile_open)
 
     DesignCanvas(background = R.drawable.bg_main_menu, dim = 0.15f, modifier = modifier) {
-        // Trang trí hai bên, nằm ngoài vùng nút (nút từ x=140 đến 940).
-        ArtImage(R.drawable.decor_main_menu_ornament, maxEdge = ArtSizes.PIECE, trim = true,
-            alpha = 0.85f, modifier = Modifier.at(8, 420, 120, 170))
+        // Chỉ giữ nến hai bên, nằm ngoài vùng nút (nút từ x=140 đến 940); bỏ hoa văn trang trí để
+        // sảnh bớt rối.
         ArtImage(R.drawable.decor_main_menu_candle, maxEdge = ArtSizes.PIECE, trim = true,
             modifier = Modifier.at(20, 1010, 100, 200))
         ArtImage(R.drawable.decor_main_menu_candle, maxEdge = ArtSizes.PIECE, trim = true,
@@ -126,6 +133,8 @@ fun MenuScreen(
         }
 
         // Ví: vàng và pha lê suy ra từ tiến độ Tháp.
+        val wallet = LobbyLayout.Wallet
+        Box(modifier = Modifier.at(wallet.x, wallet.y, wallet.w, wallet.h).quietPanel(PanelTone.SUNKEN))
         ArtImage(R.drawable.item_gold_coin, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.at(690, 65, 56, 56))
         DesignText(gold.toString(), size = 36, weight = FontWeight.Bold, color = GothicColors.Gold,
             align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
@@ -135,7 +144,9 @@ fun MenuScreen(
             align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
             modifier = Modifier.at(750, 125, 130, 60))
 
-        // Cột icon bên phải.
+        // Cột icon bên phải, gom trên một thanh nền tối.
+        val rail = LobbyLayout.IconRail
+        Box(modifier = Modifier.at(rail.x, rail.y, rail.w, rail.h).quietPanel(PanelTone.SUNKEN))
         val icons = listOf(
             Triple(R.drawable.icon_journal, R.string.journal_open, onOpenJournal),
             Triple(R.drawable.icon_inventory, R.string.inventory_open, onOpenInventory),
