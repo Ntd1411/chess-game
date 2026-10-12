@@ -79,12 +79,12 @@ class SubScreenLayoutTest {
     }
 
     @Test
-    fun lobbyIconRailWrapsIconColumn() {
-        val rail = LobbyLayout.IconRail
-        for (icon in LobbyLayout.IconColumn) {
-            assertTrue(icon.x >= rail.x && icon.right <= rail.right && icon.y >= rail.y && icon.bottom <= rail.bottom)
+    fun splashBlocksStackTopToBottom() {
+        with(SplashLayout) {
+            assertTrue(Logo.bottom <= LogoDivider.y + 20)
+            assertTrue(LogoDivider.bottom <= LoadingDivider.y)
+            assertTrue(LoadingDivider.bottom <= Bar.y + 10)
+            assertTrue(Label.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
         }
-        assertTrue(rail.right <= 1080 - LobbyLayout.SAFE_MARGIN)
-        assertTrue(LobbyLayout.Buttons.none { it.overlaps(rail) })
     }
 }

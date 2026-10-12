@@ -1,12 +1,16 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,21 +26,19 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import kma.game.chess2d.R
+import kma.game.chess2d.ui.art.ArtBar
 import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtPressable
 import kma.game.chess2d.ui.art.ArtSizes
-import kma.game.chess2d.ui.art.ButtonArt
 import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.PanelTone
-import kma.game.chess2d.ui.art.quietPanel
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
  * Khung bố trí sảnh chính theo bản thiết kế 1080x1920 (đơn vị thiết kế, không phải dp).
- * Tách ra để test kiểm được: nút không chồng nhau và nằm trong vùng an toàn.
+ * Tách ra để test kiểm được: thẻ không chồng nhau và nằm trong vùng an toàn.
  */
 internal object LobbyLayout {
     data class Box(val x: Int, val y: Int, val w: Int, val h: Int) {
@@ -45,30 +47,51 @@ internal object LobbyLayout {
         fun overlaps(o: Box): Boolean = x < o.right && o.x < right && y < o.bottom && o.y < bottom
     }
 
-    val Tower = Box(140, 1240, 800, 112)
-    val VsComputer = Box(140, 1365, 800, 108)
-    val TwoPlayers = Box(140, 1487, 390, 100)
-    val Lan = Box(550, 1487, 390, 100)
-    val Buttons = listOf(Tower, VsComputer, TwoPlayers, Lan)
+    // Góc trái: avatar, tên, thanh kinh nghiệm (canvas 2078x757 ≈ 2,75:1, thanh thật giữa canvas).
+    val Avatar = Box(48, 48, 150, 150)
+    val Name = Box(212, 52, 463, 62)
+    val XpBar = Box(206, 108, 360, 131)
 
-    /** Cột icon bên phải: Nhật ký, Túi đồ, Cài đặt, Lịch sử, Chọn chế độ. */
-    val IconColumn = listOf(260, 380, 500, 620, 740).map { Box(900, it, 100, 100) }
+    // Góc phải: hai ô tiền tệ, icon đè đầu trái ô, nút cộng cuối ô vàng.
+    val GoldPill = Box(730, 62, 280, 56)
+    val CrystalPill = Box(730, 140, 280, 56)
 
-    /** Thanh nền tối gom năm icon thành một nhóm thay vì rải rời trên nền. */
-    val IconRail = Box(884, 244, 132, 612)
+    /** Hai thẻ lớn (Tháp đỏ là lựa chọn chính, Đấu AI xanh), ba thẻ nhỏ bên dưới. */
+    val Tower = Box(60, 1210, 470, 310)
+    val VsComputer = Box(550, 1210, 470, 310)
+    val TwoPlayers = Box(60, 1545, 300, 224)
+    val Lan = Box(390, 1545, 300, 224)
+    val Spectate = Box(720, 1545, 300, 224)
+    val Buttons = listOf(Tower, VsComputer, TwoPlayers, Lan, Spectate)
 
-    /** Ví (vàng + pha lê) gom trong một ô nhỏ ở góc phải. */
-    val Wallet = Box(670, 52, 230, 142)
+    /**
+     * Sáu nút tròn `frame_side_button` chia hai bên nhân vật: trái là Nhật ký, Túi đồ, Thành tích;
+     * phải là Lịch sử, Chọn chế độ, Cài đặt.
+     */
+    val SideButtons = listOf(54, 918).flatMap { x -> listOf(300, 440, 580).map { y -> Box(x, y, 108, 108) } }
 
     const val SAFE_MARGIN = 48
 }
 
+/** Một thẻ chế độ trên sảnh. */
+private class LobbyCard(
+    val box: LobbyLayout.Box,
+    @DrawableRes val panel: Int,
+    @DrawableRes val icon: Int,
+    @StringRes val title: Int,
+    @StringRes val subtitle: Int?,
+    val onClick: () -> Unit,
+)
+
 /**
- * Sảnh chính theo bản thiết kế: avatar + tên + cấp ở góc trái, vàng và pha lê ở góc phải,
- * nhân vật toàn thân ở giữa (chạm để mở Hồ sơ), cột icon bên phải và bốn nút chế độ ở dưới.
+ * Sảnh chính: avatar trong `frame_player_avatar` + tên + thanh kinh nghiệm ở góc trái, hai ô tiền
+ * `panel_currency_counter` ở góc phải, nhân vật toàn thân đứng trong quầng sáng
+ * `decor_main_menu_glow` (chạm để mở Hồ sơ), sáu nút tròn hai bên và các thẻ chế độ bên dưới.
  *
- * Máy vs Máy nằm trong màn Chọn chế độ (icon menu ở cột phải) để sảnh chỉ có đúng bốn nút
- * như thiết kế.
+ * Thứ bậc thị giác: Tháp Cờ (thẻ đỏ, có viền góc `decor_mode_card_corners`) là lựa chọn chính;
+ * Đấu AI (thẻ xanh) ngang hàng nhưng không nhấn; Hai người / LAN / Máy vs Máy là thẻ nhỏ.
+ *
+ * @param levelProgress phần đã đi được của cấp hiện tại (0..1), vẽ trên thanh kinh nghiệm.
  */
 @Composable
 fun MenuScreen(
@@ -87,89 +110,54 @@ fun MenuScreen(
     onOpenJournal: () -> Unit,
     onOpenInventory: () -> Unit,
     modifier: Modifier = Modifier,
+    levelProgress: Float = 0f,
+    onOpenSpectate: () -> Unit = onOpenModes,
 ) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val profileLabel = stringResource(R.string.profile_open)
 
-    DesignCanvas(background = R.drawable.bg_main_menu, dim = 0.15f, modifier = modifier) {
-        // Chỉ giữ nến hai bên, nằm ngoài vùng nút (nút từ x=140 đến 940); bỏ hoa văn trang trí để
-        // sảnh bớt rối.
-        ArtImage(R.drawable.decor_main_menu_candle, maxEdge = ArtSizes.PIECE, trim = true,
-            modifier = Modifier.at(20, 1010, 100, 200))
-        ArtImage(R.drawable.decor_main_menu_candle, maxEdge = ArtSizes.PIECE, trim = true,
-            modifier = Modifier.at(960, 1010, 100, 200))
-
-        // Hạt sáng phía sau nhân vật, không phủ chữ.
-        ArtImage(R.drawable.decor_main_menu_particles, maxEdge = ArtSizes.BOARD, trim = true,
-            alpha = 0.6f, modifier = Modifier.at(220, 340, 640, 820))
+    DesignCanvas(background = R.drawable.bg_main_menu, dim = 0.12f, modifier = modifier) {
+        // Nhân vật trong quầng sáng, dưới mọi thành phần khác.
+        ArtImage(R.drawable.decor_main_menu_glow, maxEdge = ArtSizes.PIECE, trim = true,
+            alpha = 0.75f, modifier = Modifier.at(170, 300, 740, 760))
         ArtImage(
             res = R.drawable.character_protagonist_fullbody,
             maxEdge = ArtSizes.BOARD,
             trim = true,
             contentDescription = profileLabel,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.at(160, 300, 760, 900).clickable(role = Role.Button, onClick = onOpenProfile),
+            modifier = Modifier.at(180, 240, 720, 950).clickable(role = Role.Button, onClick = onOpenProfile),
         )
 
-        // Avatar + tên + cấp (chạm để mở Hồ sơ).
-        Box(modifier = Modifier.at(48, 56, 112, 112).clip(CircleShape).clickable(role = Role.Button, onClick = onOpenProfile)) {
-            PortraitInFrame(R.drawable.portrait_protagonist, contentDescription = profileLabel)
-        }
-        Column(modifier = Modifier.at(180, 58, 330, 100).clickable(onClick = onOpenProfile)) {
-            DesignText(
-                text = name.ifBlank { stringResource(R.string.match_player_one) },
-                size = 40,
-                weight = FontWeight.Bold,
-                color = GothicColors.Gold,
-                align = TextAlign.Start,
-                maxLines = 1,
-            )
-            DesignText(
-                text = stringResource(R.string.lobby_level, level),
-                size = 30,
-                align = TextAlign.Start,
-                maxLines = 1,
-            )
-        }
+        PlayerHeader(name = name, level = level, levelProgress = levelProgress, onOpenProfile = onOpenProfile)
+        CurrencyPill(LobbyLayout.GoldPill, R.drawable.icon_currency_gold, gold, GothicColors.Gold, onAdd = onOpenInventory)
+        CurrencyPill(LobbyLayout.CrystalPill, R.drawable.icon_currency_crystal, crystals, GothicColors.Parchment, onAdd = null)
 
-        // Ví: vàng và pha lê suy ra từ tiến độ Tháp.
-        val wallet = LobbyLayout.Wallet
-        Box(modifier = Modifier.at(wallet.x, wallet.y, wallet.w, wallet.h).quietPanel(PanelTone.SUNKEN))
-        ArtImage(R.drawable.item_gold_coin, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.at(690, 65, 56, 56))
-        DesignText(gold.toString(), size = 36, weight = FontWeight.Bold, color = GothicColors.Gold,
-            align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
-            modifier = Modifier.at(750, 60, 130, 60))
-        ArtImage(R.drawable.item_blue_crystal, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.at(690, 130, 56, 56))
-        DesignText(crystals.toString(), size = 36, weight = FontWeight.Bold,
-            align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
-            modifier = Modifier.at(750, 125, 130, 60))
-
-        // Cột icon bên phải, gom trên một thanh nền tối.
-        val rail = LobbyLayout.IconRail
-        Box(modifier = Modifier.at(rail.x, rail.y, rail.w, rail.h).quietPanel(PanelTone.SUNKEN))
-        val icons = listOf(
+        val sides = listOf(
             Triple(R.drawable.icon_journal, R.string.journal_open, onOpenJournal),
             Triple(R.drawable.icon_inventory, R.string.inventory_open, onOpenInventory),
-            Triple(R.drawable.icon_settings, R.string.lobby_settings) { showSettings = true },
+            Triple(R.drawable.icon_achievements, R.string.profile_open, onOpenProfile),
             Triple(R.drawable.icon_battle_history, R.string.history_open, onOpenHistory),
             Triple(R.drawable.icon_menu, R.string.modes_open, onOpenModes),
+            Triple(R.drawable.icon_settings_gear, R.string.lobby_settings) { showSettings = true },
         )
-        icons.forEachIndexed { i, (icon, label, action) ->
-            val box = LobbyLayout.IconColumn[i]
-            ArtImage(
-                res = icon,
-                maxEdge = ArtSizes.ICON,
-                trim = true,
-                contentDescription = stringResource(label),
-                modifier = Modifier.at(box.x, box.y, box.w, box.h).clip(CircleShape)
-                    .clickable(role = Role.Button, onClick = action),
-            )
+        sides.forEachIndexed { i, (icon, label, action) ->
+            SideButton(LobbyLayout.SideButtons[i], icon, stringResource(label), action)
         }
 
-        MenuButton(LobbyLayout.Tower, stringResource(R.string.menu_tower), ButtonArt.PRIMARY, onOpenTower)
-        MenuButton(LobbyLayout.VsComputer, stringResource(R.string.menu_vs_ai), ButtonArt.SECONDARY, onPlayComputer)
-        MenuButton(LobbyLayout.TwoPlayers, stringResource(R.string.menu_local), ButtonArt.SMALL, onPlayTwoPlayers)
-        MenuButton(LobbyLayout.Lan, stringResource(R.string.menu_lan), ButtonArt.SMALL, onPlayLan)
+        val cards = listOf(
+            LobbyCard(LobbyLayout.Tower, R.drawable.panel_mode_card_red, R.drawable.icon_story_mode,
+                R.string.menu_tower, R.string.mode_story_desc, onOpenTower),
+            LobbyCard(LobbyLayout.VsComputer, R.drawable.panel_mode_card_blue, R.drawable.icon_ai_battle,
+                R.string.menu_vs_ai, R.string.mode_ai_desc, onPlayComputer),
+            LobbyCard(LobbyLayout.TwoPlayers, R.drawable.panel_mode_card_small, R.drawable.icon_local_multiplayer,
+                R.string.menu_local, null, onPlayTwoPlayers),
+            LobbyCard(LobbyLayout.Lan, R.drawable.panel_mode_card_small, R.drawable.icon_lan_multiplayer,
+                R.string.menu_lan, null, onPlayLan),
+            LobbyCard(LobbyLayout.Spectate, R.drawable.panel_mode_card_small, R.drawable.icon_ai_vs_ai,
+                R.string.spectate_open, null, onOpenSpectate),
+        )
+        cards.forEachIndexed { i, card -> ModeCardView(card, highlight = i == 0) }
     }
 
     if (showSettings) {
@@ -181,20 +169,139 @@ fun MenuScreen(
     }
 }
 
+/** Avatar tròn trong `frame_player_avatar`, tên vàng, thanh kinh nghiệm có chữ cấp ở giữa. */
 @Composable
-private fun MenuButton(box: LobbyLayout.Box, label: String, art: ButtonArt, onClick: () -> Unit) {
-    GothicButton(
-        label = label,
-        onClick = onClick,
-        art = art,
-        fontSize = LocalDesign.current.sp(if (art == ButtonArt.SMALL) 30 else 38),
-        modifier = Modifier.at(box.x, box.y, box.w, box.h),
+private fun PlayerHeader(name: String, level: Int, levelProgress: Float, onOpenProfile: () -> Unit) {
+    val profileLabel = stringResource(R.string.profile_open)
+    val a = LobbyLayout.Avatar
+    Box(
+        modifier = Modifier.at(a.x, a.y, a.w, a.h).clip(CircleShape).clickable(role = Role.Button, onClick = onOpenProfile),
+    ) {
+        PortraitInFrame(
+            R.drawable.portrait_protagonist,
+            contentDescription = profileLabel,
+            frame = R.drawable.frame_player_avatar,
+        )
+    }
+    val n = LobbyLayout.Name
+    DesignText(
+        text = name.ifBlank { stringResource(R.string.match_player_one) },
+        size = 40,
+        weight = FontWeight.Bold,
+        color = GothicColors.Gold,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(n.x, n.y, n.w, n.h).clickable(onClick = onOpenProfile),
+    )
+    val bar = LobbyLayout.XpBar
+    ArtBar(
+        frame = R.drawable.bar_player_xp_empty,
+        fill = R.drawable.bar_player_xp_fill,
+        fraction = levelProgress,
+        fillOnTop = true,
+        modifier = Modifier.at(bar.x, bar.y, bar.w, bar.h),
+    )
+    DesignText(
+        text = stringResource(R.string.lobby_level, level),
+        size = 24,
+        weight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = Modifier.at(bar.x, bar.y + 40, bar.w, 56),
     )
 }
 
+/** Một ô tiền tệ: nền `panel_currency_counter`, icon đè đầu trái, số ở giữa, nút cộng tùy chọn. */
+@Composable
+private fun CurrencyPill(box: LobbyLayout.Box, @DrawableRes icon: Int, amount: Int, color: androidx.compose.ui.graphics.Color, onAdd: (() -> Unit)?) {
+    ArtImage(R.drawable.panel_currency_counter, maxEdge = ArtSizes.BUTTON, trim = true,
+        contentScale = ContentScale.FillBounds, modifier = Modifier.at(box.x, box.y, box.w, box.h))
+    ArtImage(icon, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.at(box.x - 32, box.y - 12, 80, 80))
+    DesignText(
+        text = amount.toString(),
+        size = 32,
+        weight = FontWeight.Bold,
+        color = color,
+        align = TextAlign.Start,
+        alignment = Alignment.CenterStart,
+        maxLines = 1,
+        modifier = Modifier.at(box.x + 62, box.y, box.w - 130, box.h),
+    )
+    if (onAdd != null) {
+        ArtImage(
+            R.drawable.button_currency_add,
+            maxEdge = ArtSizes.ICON,
+            trim = true,
+            contentDescription = stringResource(R.string.inventory_open),
+            modifier = Modifier.at(box.right - 58, box.y - 2, 60, 60).clip(CircleShape)
+                .clickable(role = Role.Button, onClick = onAdd),
+        )
+    }
+}
+
+/** Nút tròn hai bên: khung `frame_side_button`, icon nằm trong lòng khung. */
+@Composable
+private fun SideButton(box: LobbyLayout.Box, @DrawableRes icon: Int, label: String, onClick: () -> Unit) {
+    ArtPressable(onClick = onClick, modifier = Modifier.at(box.x, box.y, box.w, box.h).clip(CircleShape)) {
+        ArtImage(R.drawable.frame_side_button, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.fillMaxSize())
+        BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            ArtImage(
+                res = icon,
+                maxEdge = ArtSizes.ICON,
+                trim = true,
+                contentDescription = label,
+                modifier = Modifier.size(maxWidth * 0.56f),
+            )
+        }
+    }
+}
+
+/** Thẻ chế độ: khung ảnh, icon trên, tên (và mô tả ngắn ở thẻ lớn) bên dưới. */
+@Composable
+private fun ModeCardView(card: LobbyCard, highlight: Boolean) {
+    val d = LocalDesign.current
+    val big = card.subtitle != null
+    val box = card.box
+    ArtPressable(onClick = card.onClick, modifier = Modifier.at(box.x, box.y, box.w, box.h)) {
+        ArtImage(card.panel, maxEdge = ArtSizes.BUTTON, trim = true,
+            contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxSize())
+        if (highlight) {
+            ArtImage(R.drawable.decor_mode_card_corners, maxEdge = ArtSizes.BUTTON, trim = true,
+                contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxSize())
+        }
+        Column(
+            modifier = Modifier.fillMaxSize().padding(
+                horizontal = d.dp(if (big) 44 else 26),
+                vertical = d.dp(if (big) 30 else 22),
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(d.dp(4), Alignment.CenterVertically),
+        ) {
+            ArtImage(card.icon, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.size(d.dp(if (big) 112 else 92)))
+            DesignText(
+                text = stringResource(card.title),
+                size = if (big) 34 else 25,
+                color = GothicColors.Gold,
+                weight = FontWeight.Bold,
+                maxLines = if (big) 1 else 2,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            card.subtitle?.let {
+                DesignText(
+                    text = stringResource(it),
+                    size = 21,
+                    color = GothicColors.Parchment,
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
 /**
- * Chân dung vuông trong khung tròn `ui_character_frame`: khung rỗng giữa nên chân dung nằm
- * dưới, co vào ~82% ô (tương ứng 92/112 của bản thiết kế) và cắt tròn cho khớp lỗ khung.
+ * Chân dung vuông trong khung tròn (mặc định `ui_character_frame`): khung rỗng giữa nên chân dung
+ * nằm dưới, co vào ~82% ô (tương ứng 92/112 của bản thiết kế) và cắt tròn cho khớp lỗ khung.
  */
 @Composable
 fun PortraitInFrame(

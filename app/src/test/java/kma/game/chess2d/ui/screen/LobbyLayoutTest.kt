@@ -8,9 +8,10 @@ import org.junit.Test
 class LobbyLayoutTest {
 
     @Test
-    fun `nut che do chinh to hon nut phu`() {
+    fun `the che do chinh to hon the phu`() {
         assertTrue(LobbyLayout.Tower.h > LobbyLayout.TwoPlayers.h)
         assertTrue(LobbyLayout.VsComputer.h > LobbyLayout.Lan.h)
+        assertTrue(LobbyLayout.Tower.w > LobbyLayout.Spectate.w)
     }
 
     @Test
@@ -25,7 +26,8 @@ class LobbyLayoutTest {
 
     @Test
     fun `nut va icon nam trong vung an toan cua khung 1080x1920`() {
-        (LobbyLayout.Buttons + LobbyLayout.IconColumn).forEach { box ->
+        val header = with(LobbyLayout) { listOf(Avatar, Name, XpBar, GoldPill, CrystalPill) }
+        (LobbyLayout.Buttons + LobbyLayout.SideButtons + header).forEach { box ->
             assertTrue(box.x >= LobbyLayout.SAFE_MARGIN)
             assertTrue(box.right <= 1080 - LobbyLayout.SAFE_MARGIN)
             assertTrue(box.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
@@ -33,11 +35,32 @@ class LobbyLayoutTest {
     }
 
     @Test
-    fun `cot icon khong de len nut`() {
-        LobbyLayout.IconColumn.forEach { icon ->
+    fun `nut tron hai ben khong de len the va khong de nhau`() {
+        val sides = LobbyLayout.SideButtons
+        assertEquals(6, sides.size)
+        sides.forEach { icon ->
             LobbyLayout.Buttons.forEach { button -> assertFalse(icon.overlaps(button)) }
         }
-        assertEquals(5, LobbyLayout.IconColumn.size)
+        for (i in sides.indices) for (j in i + 1 until sides.size) assertFalse(sides[i].overlaps(sides[j]))
+        // Hai ô tiền tệ không đè tên người chơi.
+        assertFalse(LobbyLayout.GoldPill.overlaps(LobbyLayout.Name))
+        assertFalse(LobbyLayout.GoldPill.overlaps(LobbyLayout.CrystalPill))
+    }
+
+    @Test
+    fun `man chon che do va chon AI nam gon trong khung`() {
+        val cards = (0 until 5).map(ModeSelectLayout::card)
+        for (i in 0 until cards.size - 1) assertFalse(cards[i].overlaps(cards[i + 1]))
+        assertTrue(cards.last().bottom <= ModeSelectLayout.Ornament.y)
+        assertTrue(ModeSelectLayout.Ornament.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
+
+        val ai = with(AiSelectLayout) { listOf(Name, Stars, Description, Start) }
+        for (i in ai.indices) for (j in i + 1 until ai.size) assertFalse(ai[i].overlaps(ai[j]))
+        assertTrue(AiSelectLayout.Stars.bottom <= AiSelectLayout.THUMB_Y)
+        assertTrue(AiSelectLayout.THUMB_Y + AiSelectLayout.THUMB <= AiSelectLayout.Description.y)
+        assertTrue(AiSelectLayout.Start.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
+        assertEquals(1080, AiCarouselX.first() + AiCarouselX.last() + AiSelectLayout.THUMB)
+        for (i in 0 until AiCarouselX.size - 1) assertTrue(AiCarouselX[i] + AiSelectLayout.THUMB < AiCarouselX[i + 1])
     }
 
     @Test

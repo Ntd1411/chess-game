@@ -14,6 +14,16 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-12 21:50 GMT+7 — Thiết kế lại Splash, Sảnh chính, Chọn chế độ, Chọn đối thủ AI bằng bộ asset mới
+- Chuyển 53 ảnh từ `drawable/Splash`, `drawable/MainMenu`, `drawable/SelectModeAndSelectAI` ra `drawable/` (Android không nhận thư mục con); đổi `mode_card_story_art..png` thành `mode_card_story_art.png`; 15 ảnh cũ trùng tên (bg_splash, bg_main_menu, bg_mode_select, icon_back, portrait_protagonist, character_protagonist_fullbody, loading_bar_*, các icon chế độ…) được thay bằng bản mới
+- Thêm `ArtWidgets.kt`: `ArtBar` (thanh tiến độ từ cặp ảnh khung/ruột cùng canvas, ruột cắt ngang) và `ArtPressable` (vùng chạm thu nhỏ khi nhấn, mờ khi tắt)
+- Splash: logo `logo_chess`, hoa văn `splash_logo_divider`/`splash_loading_divider`, thanh tải mới; thêm `SplashLayout`
+- Sảnh chính: avatar `frame_player_avatar` + thanh kinh nghiệm `bar_player_xp_*`, ô tiền `panel_currency_counter` + nút cộng (mở Túi đồ), quầng sáng sau nhân vật, 6 nút tròn `frame_side_button` chia hai bên, thẻ chế độ `panel_mode_card_red/blue/small` (thêm thẻ Máy vs Máy); `MenuScreen` nhận thêm `levelProgress`, `onOpenSpectate`
+- Chọn chế độ: khung `frame_gothic_screen`, 5 thẻ tranh `mode_card_*_art` trong `frame_mode_card`, hoa văn `ornament_screen_bottom`; thêm `ModeSelectLayout`
+- Chọn đối thủ AI: nền `bg_ai_select`, nhân vật giữa (ảnh toàn thân hoặc chân dung trong `frame_character_thumb`), mũi tên lật, sao độ khó mới, ô khóa `overlay_character_locked`, panel `panel_ai_description`, nút `button_ai_start`; thêm `AiSelectLayout`
+- Nữ Hoàng Máu dùng `portrait_ai_blood_queen` + `character_ai_blood_queen`; Pháp Sư Cờ tạm dùng `portrait_ai_blue_queen`
+- Test: cập nhật `LobbyLayoutTest`, `SubScreenLayoutTest` cho bố cục mới
+
 ## 2026-10-09 21:15 GMT+7 — Hệ panel tối giản, gọn lại Hồ sơ/Cài đặt/Nhật ký/Túi đồ/Lịch sử/LAN/Sảnh
 - Thêm `QuietPanel.kt`: `Modifier.quietPanel(PanelTone.BASE/SUNKEN/SELECTED)` (nền tối gradient, viền vàng tối mảnh, góc nhỏ; chỉ SELECTED có ánh đỏ thẫm + viền vàng sáng), `Hairline`, `SectionTitle`; thêm màu `GoldDim`, `PanelTop`, `PanelBottom`, `Crimson`, `Muted`
 - `DesignCanvas` thêm `scrim` làm tối nền ở vùng nội dung

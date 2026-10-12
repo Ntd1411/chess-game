@@ -48,7 +48,7 @@ object AiCharacters {
         AiCharacter(
             id = "chess_mage",
             name = R.string.ai_mage_name,
-            portrait = R.drawable.portrait_silent_bishop,
+            portrait = R.drawable.portrait_ai_blue_queen,
             difficulty = Difficulty.EASY,
             style = R.string.ai_mage_style,
             personality = R.string.ai_mage_personality,
@@ -66,8 +66,8 @@ object AiCharacters {
         AiCharacter(
             id = "blood_queen",
             name = R.string.ai_queen_name,
-            portrait = R.drawable.portrait_golden_queen,
-            fullBody = R.drawable.character_golden_queen_fullbody,
+            portrait = R.drawable.portrait_ai_blood_queen,
+            fullBody = R.drawable.character_ai_blood_queen,
             difficulty = Difficulty.HARD,
             style = R.string.ai_queen_style,
             personality = R.string.ai_queen_personality,

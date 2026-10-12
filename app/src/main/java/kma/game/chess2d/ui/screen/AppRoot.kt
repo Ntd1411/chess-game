@@ -131,6 +131,7 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onPlayTwoPlayers = { screen = Screen.LOCAL_SETUP },
                 onPlayLan = { screen = Screen.LOBBY },
                 onOpenModes = { screen = Screen.MODES },
+                onOpenSpectate = { screen = Screen.SPECTATE },
                 onOpenHistory = { screen = Screen.HISTORY },
                 onOpenProfile = { screen = Screen.PROFILE },
                 onOpenJournal = { screen = Screen.JOURNAL },
@@ -296,6 +297,7 @@ private fun MenuRoute(
     onPlayTwoPlayers: () -> Unit,
     onPlayLan: () -> Unit,
     onOpenModes: () -> Unit,
+    onOpenSpectate: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenJournal: () -> Unit,
@@ -322,6 +324,8 @@ private fun MenuRoute(
         onOpenJournal = onOpenJournal,
         onOpenInventory = onOpenInventory,
         modifier = modifier,
+        levelProgress = stats.pointsIntoLevel.toFloat() / PlayerStats.GAMES_PER_LEVEL,
+        onOpenSpectate = onOpenSpectate,
     )
 }
 
