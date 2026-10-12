@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-12 22:00 GMT+7 — Viết README cho dự án
+- README.md mới (tiếng Việt): giới thiệu Tower of Chess, bảng tính năng các chế độ chơi và tính năng phụ
+- Mô tả cấu trúc module (:app, :engine, :ai, :net) và hệ thống UI (DesignCanvas, ArtCache, test *Layout)
+- Yêu cầu môi trường, lệnh build/cài đặt/test, LAN CLI, ký bản release và workflow CI, bảng tài liệu, quy ước đóng góp
+
 ## 2026-10-12 21:50 GMT+7 — Thiết kế lại Splash, Sảnh chính, Chọn chế độ, Chọn đối thủ AI bằng bộ asset mới
 - Chuyển 53 ảnh từ `drawable/Splash`, `drawable/MainMenu`, `drawable/SelectModeAndSelectAI` ra `drawable/` (Android không nhận thư mục con); đổi `mode_card_story_art..png` thành `mode_card_story_art.png`; 15 ảnh cũ trùng tên (bg_splash, bg_main_menu, bg_mode_select, icon_back, portrait_protagonist, character_protagonist_fullbody, loading_bar_*, các icon chế độ…) được thay bằng bản mới
 - Thêm `ArtWidgets.kt`: `ArtBar` (thanh tiến độ từ cặp ảnh khung/ruột cùng canvas, ruột cắt ngang) và `ArtPressable` (vùng chạm thu nhỏ khi nhấn, mờ khi tắt)
