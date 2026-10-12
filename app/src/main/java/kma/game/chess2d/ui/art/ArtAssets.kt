@@ -38,6 +38,7 @@ object ArtAssets {
         ArtSpec(R.drawable.board_tile_move, ArtSizes.OVERLAY),
         ArtSpec(R.drawable.board_tile_attack, ArtSizes.OVERLAY),
         ArtSpec(R.drawable.board_tile_check, ArtSizes.OVERLAY),
+        ArtSpec(R.drawable.board_tile_last_move, ArtSizes.OVERLAY),
         ArtSpec(R.drawable.chess_piece_white_king, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_white_queen, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_white_rook, ArtSizes.PIECE),

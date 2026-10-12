@@ -56,6 +56,68 @@ enum class ButtonArt(
 }
 
 /**
+ * Ảnh nút tròn ở hàng thao tác của ván đấu (`battle_button_*`). Nút mới có đủ ba trạng thái;
+ * bốn nút cũ (Đi lại, Gợi ý, Nước đi, Menu) chỉ có một ảnh nên [singleState] = true và bên vẽ
+ * tự làm mờ khi tắt.
+ */
+enum class BattleButton(
+    @DrawableRes val normal: Int,
+    @DrawableRes val pressed: Int = normal,
+    @DrawableRes val disabled: Int = normal,
+) {
+    UNDO(R.drawable.battle_button_undo),
+    HINT(R.drawable.battle_button_hint),
+    MOVE(R.drawable.battle_button_move),
+    MENU(R.drawable.battle_button_menu),
+    RESTART(
+        R.drawable.battle_button_restart_normal,
+        R.drawable.battle_button_restart_pressed,
+        R.drawable.battle_button_restart_disabled,
+    ),
+    FLIP(R.drawable.battle_button_flip_normal, R.drawable.battle_button_flip_pressed, R.drawable.battle_button_flip_disabled),
+    LEVEL(
+        R.drawable.battle_button_level_normal,
+        R.drawable.battle_button_level_pressed,
+        R.drawable.battle_button_level_disabled,
+    ),
+    MAP(R.drawable.battle_button_map_normal, R.drawable.battle_button_map_pressed, R.drawable.battle_button_map_disabled),
+    RESIGN(
+        R.drawable.battle_button_resign_normal,
+        R.drawable.battle_button_resign_pressed,
+        R.drawable.battle_button_resign_disabled,
+    ),
+    DRAW(R.drawable.battle_button_draw_normal, R.drawable.battle_button_draw_pressed, R.drawable.battle_button_draw_disabled),
+    REMATCH(
+        R.drawable.battle_button_rematch_normal,
+        R.drawable.battle_button_rematch_pressed,
+        R.drawable.battle_button_rematch_disabled,
+    ),
+    SYNC(R.drawable.battle_button_sync_normal, R.drawable.battle_button_sync_pressed, R.drawable.battle_button_sync_disabled),
+    SHARE(
+        R.drawable.battle_button_share_normal,
+        R.drawable.battle_button_share_pressed,
+        R.drawable.battle_button_share_disabled,
+    ),
+    LEAVE(
+        R.drawable.battle_button_leave_normal,
+        R.drawable.battle_button_leave_pressed,
+        R.drawable.battle_button_leave_disabled,
+    ),
+    ;
+
+    /** Chỉ có một ảnh cho mọi trạng thái. */
+    val singleState: Boolean get() = normal == pressed && normal == disabled
+
+    /** Ảnh cần vẽ cho trạng thái hiện tại: tắt ưu tiên hơn nhấn. */
+    @DrawableRes
+    fun resFor(isEnabled: Boolean, isPressed: Boolean): Int = when {
+        !isEnabled -> disabled
+        isPressed -> pressed
+        else -> normal
+    }
+}
+
+/**
  * Nút gothic vẽ từ bộ ảnh `button_*` với chữ đè ở giữa.
  *
  * Ảnh nút là khung 3:1 nhưng khung thiết kế thường tới 7:1, nên ảnh được vẽ kiểu nine-slice

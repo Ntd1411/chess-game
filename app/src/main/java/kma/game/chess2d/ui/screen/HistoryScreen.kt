@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,7 +94,7 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         return
     }
 
-    DesignCanvas(background = R.drawable.bg_journal, dim = 0.45f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, modifier = modifier) {
         val d = LocalDesign.current
         SubScreenHeader(title = stringResource(R.string.history_title), onBack = onBack)
         DesignText(
@@ -148,7 +152,10 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** Một dòng ván đã lưu: ngày, chế độ, kết quả, số nước và ba nút hành động. */
+/**
+ * Một dòng ván đã lưu trên nền `ui_list_row_normal` (đang nhấn thì `ui_list_row_pressed`): ngày, chế độ,
+ * kết quả, số nước và ba nút hành động. Chạm vào dòng cũng là xem lại.
+ */
 @Composable
 private fun MatchRow(
     record: MatchRecord,
@@ -157,10 +164,19 @@ private fun MatchRow(
     onDelete: () -> Unit,
 ) {
     val d = LocalDesign.current
-    Box(modifier = Modifier.fillMaxWidth().height(d.dp(250))) {
-        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.25f, modifier = Modifier.fillMaxSize())
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        modifier = Modifier.fillMaxWidth().height(d.dp(260))
+            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onReview),
+    ) {
+        SlicedArt(
+            res = if (pressed) R.drawable.ui_list_row_pressed else R.drawable.ui_list_row_normal,
+            slice = 0.3f,
+            modifier = Modifier.fillMaxSize(),
+        )
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(30), vertical = d.dp(20)),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(44), vertical = d.dp(24)),
             verticalArrangement = Arrangement.spacedBy(d.dp(8)),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
@@ -223,7 +239,7 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
     var ply by remember(record.id) { mutableStateOf(frames.lastIndex) }
 
     BackHandler(onBack = onBack)
-    DesignCanvas(background = R.drawable.bg_journal, dim = 0.45f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, modifier = modifier) {
         SubScreenHeader(
             title = stringResource(R.string.history_review_position, ply, frames.lastIndex),
             onBack = onBack,

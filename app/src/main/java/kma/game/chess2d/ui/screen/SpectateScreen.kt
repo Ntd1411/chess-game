@@ -32,6 +32,7 @@ import kma.game.chess2d.opponent.AiCharacters
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.spectate.SpectateViewModel
+import kma.game.chess2d.ui.art.BattleButton
 import kma.game.chess2d.ui.art.ButtonArt
 import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
@@ -225,13 +226,13 @@ private fun SpectateMatchScreen(
             MatchAction(
                 icon = Icons.Filled.KeyboardArrowUp,
                 label = stringResource(R.string.action_flip),
-                art = R.drawable.battle_button_move,
+                art = BattleButton.FLIP,
                 onClick = { flipped = !flipped },
             ),
             MatchAction(
                 icon = Icons.Filled.Home,
                 label = stringResource(R.string.action_menu),
-                art = R.drawable.battle_button_menu,
+                art = BattleButton.LEAVE,
                 onClick = onExit,
             ),
         ),

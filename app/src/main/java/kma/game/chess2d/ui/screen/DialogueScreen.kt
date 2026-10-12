@@ -1,5 +1,10 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
@@ -93,7 +98,21 @@ fun DialogueScreen(
             size = 36,
             align = TextAlign.Start,
             alignment = Alignment.TopStart,
-            modifier = Modifier.at(100, 1300, 860, 360),
+            modifier = Modifier.at(100, 1300, 800, 360),
+        )
+        // Dấu "chạm để đi tiếp" `icon_next` nhấp nháy nhẹ ở góc phải dưới ô chữ.
+        val pulse by rememberInfiniteTransition(label = "nextPulse").animateFloat(
+            initialValue = 0.45f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+            label = "nextAlpha",
+        )
+        ArtImage(
+            res = R.drawable.icon_next,
+            maxEdge = ArtSizes.ICON,
+            trim = true,
+            alpha = pulse,
+            modifier = Modifier.at(920, 1570, 46, 82),
         )
 
         GothicButton(

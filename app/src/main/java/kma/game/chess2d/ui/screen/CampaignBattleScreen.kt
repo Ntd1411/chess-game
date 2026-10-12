@@ -36,6 +36,7 @@ import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.puzzle.Puzzle
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.ui.art.BattleButton
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 import kotlinx.coroutines.delay
@@ -145,21 +146,29 @@ fun CampaignBattleRoute(
         backdrop = if (isBoss) R.drawable.bg_battle_boss else R.drawable.bg_battle_default,
         inCheck = state.game.status == GameStatus.CHECK,
         checkmate = state.game.status == GameStatus.CHECKMATE,
+        // Banner hiện trong nhịp dừng trước khi sang màn kết quả của tầng.
+        result = when (state.result) {
+            FloorResult.WON -> ResultBanner.WIN
+            FloorResult.LOST -> ResultBanner.LOSS
+            FloorResult.ONGOING -> null
+        },
         actions = listOf(
             MatchAction(
                 icon = Icons.Filled.Refresh,
                 label = stringResource(R.string.campaign_action_restart),
+                art = BattleButton.RESTART,
                 onClick = onRestart,
             ),
             MatchAction(
                 icon = Icons.Filled.Home,
                 label = stringResource(R.string.campaign_action_map),
+                art = BattleButton.MAP,
                 onClick = onExit,
             ),
             MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
-                art = R.drawable.battle_button_menu,
+                art = BattleButton.MENU,
                 onClick = { showPause = true },
             ),
         ),

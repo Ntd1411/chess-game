@@ -2,7 +2,10 @@ package kma.game.chess2d.ui.screen
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -31,6 +38,7 @@ import kma.game.chess2d.engine.CaptureTally
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
+import kma.game.chess2d.ui.art.BattleButton
 import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.LocalDesign
@@ -67,16 +75,36 @@ data class MatchPlayer(
  * Nút không dùng được ở chế độ hiện tại thì **không truyền vào danh sách**; [enabled] chỉ dành cho
  * nút đúng là của chế độ này nhưng tạm thời chưa bấm được, ví dụ Đi lại khi chưa có nước nào.
  *
- * @param art ảnh nút tròn có sẵn (`battle_button_undo/hint/move/menu`); `null` thì vẽ [icon] vàng
- *        trong khung `radio_unselected` cho hợp bộ.
+ * @param art ảnh nút tròn `battle_button_*`; `null` thì vẽ [icon] vàng trong khung `radio_unselected`.
  */
 data class MatchAction(
     val icon: ImageVector,
     val label: String,
     val enabled: Boolean = true,
-    @DrawableRes val art: Int? = null,
+    val art: BattleButton? = null,
     val onClick: () -> Unit,
 )
+
+/** Kết quả ván nhìn từ phía người chơi, vẽ bằng `ui_result_banner_*` khi ván kết thúc. */
+enum class ResultBanner(@DrawableRes val res: Int) {
+    WIN(R.drawable.ui_result_banner_win),
+    LOSS(R.drawable.ui_result_banner_loss),
+    DRAW(R.drawable.ui_result_banner_draw),
+    ;
+
+    companion object {
+        /**
+         * Banner cho người cầm quân [youWhite] khi ván có [winnerWhite]: `null` là hòa,
+         * [over] = false là ván chưa xong nên không có banner.
+         */
+        fun of(over: Boolean, winnerWhite: Boolean?, youWhite: Boolean): ResultBanner? = when {
+            !over -> null
+            winnerWhite == null -> DRAW
+            winnerWhite == youWhite -> WIN
+            else -> LOSS
+        }
+    }
+}
 
 /** "Máu" của mỗi bên suy từ quân đã mất: đủ 39 điểm quân (8 tốt, 2 mã, 2 tượng, 2 xe, hậu) là đầy. */
 object MatchHp {
@@ -104,6 +132,7 @@ internal fun actionSlotsX(count: Int): List<Int> {
  * @param headline dòng trạng thái ngắn giữa khung đối thủ và bàn cờ.
  * @param inCheck có vua đang bị chiếu: hiện `battle_check_indicator` + `fx_check` cạnh dòng trạng thái.
  * @param checkmate ván vừa kết thúc bằng chiếu hết: phủ `fx_checkmate` mờ lên giữa bàn cờ.
+ * @param result banner kết quả nằm ngang giữa bàn cờ khi ván đã xong.
  * @param notice ô thông báo cần người dùng quyết định, nổi lên trên bàn cờ.
  * @param belowBoard phần phụ dưới hàng nút.
  */
@@ -119,6 +148,7 @@ fun MatchScaffold(
     @DrawableRes backdrop: Int = R.drawable.bg_battle_default,
     inCheck: Boolean = false,
     checkmate: Boolean = false,
+    result: ResultBanner? = null,
     board: @Composable () -> Unit,
 ) {
     DesignCanvas(background = backdrop, dim = 0.2f, modifier = modifier) {
@@ -148,6 +178,13 @@ fun MatchScaffold(
         if (checkmate) {
             ArtImage(R.drawable.fx_checkmate, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.75f,
                 modifier = Modifier.at(290, 530, 500, 500))
+        }
+        // Chạm banner để cất đi, xem lại thế cờ cuối; ván mới (kết quả đổi) thì banner hiện lại.
+        var resultHidden by remember(result) { mutableStateOf(false) }
+        if (result != null && !resultHidden) {
+            ArtImage(result.res, maxEdge = ArtSizes.BOARD, trim = true,
+                modifier = Modifier.at(90, 600, 900, 360)
+                    .clickable(role = Role.Button) { resultHidden = true })
         }
         if (notice != null) {
             Box(modifier = Modifier.at(100, 340, 880, 860), contentAlignment = Alignment.TopCenter) { notice() }
@@ -275,17 +312,27 @@ private fun HpBar(hp: Float, modifier: Modifier = Modifier) {
 @Composable
 private fun ActionButton(action: MatchAction, x: Int) {
     val d = LocalDesign.current
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    // Nút có ảnh disabled riêng thì không làm mờ thêm; chỉ làm mờ nút một ảnh và nhãn chữ.
     val dim = if (action.enabled) 1f else 0.4f
+    val artDim = if (action.art != null && !action.art.singleState) 1f else dim
     Box(
         modifier = Modifier.at(x, ACTION_TOP, ACTION_SIZE, ACTION_SIZE)
             .clip(CircleShape)
-            .clickable(enabled = action.enabled, role = Role.Button, onClick = action.onClick)
-            .alpha(dim),
+            .clickable(
+                interactionSource = interaction,
+                indication = if (action.art != null && !action.art.singleState) null else LocalIndication.current,
+                enabled = action.enabled,
+                role = Role.Button,
+                onClick = action.onClick,
+            )
+            .alpha(artDim),
         contentAlignment = Alignment.Center,
     ) {
         if (action.art != null) {
-            ArtImage(action.art, maxEdge = ArtSizes.ICON, trim = true, contentDescription = action.label,
-                modifier = Modifier.fillMaxSize())
+            ArtImage(action.art.resFor(action.enabled, pressed), maxEdge = ArtSizes.ICON, trim = true,
+                contentDescription = action.label, modifier = Modifier.fillMaxSize())
         } else {
             ArtImage(R.drawable.radio_unselected, maxEdge = ArtSizes.ICON, trim = true, modifier = Modifier.fillMaxSize())
             Icon(

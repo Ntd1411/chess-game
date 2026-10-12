@@ -30,7 +30,7 @@ private class ModeCard(
 )
 
 /**
- * Chọn chế độ theo bản thiết kế: nền `bg_tower_map`, bốn thẻ `ui_panel_menu` cao 190 cách nhau
+ * Chọn chế độ theo bản thiết kế: nền `bg_mode_select`, bốn thẻ `ui_panel_menu` cao 190 cách nhau
  * 215 bắt đầu từ y=230, mỗi thẻ có icon (110x110) bên trái và tên + mô tả bên phải. Cả thẻ là
  * vùng chạm, không dùng nút kéo giãn. Thẻ thứ năm (Máy vs Máy) nối tiếp cùng nhịp.
  */
@@ -49,9 +49,9 @@ fun ModeSelectScreen(
         ModeCard(R.drawable.icon_ai_battle, R.string.menu_vs_ai, R.string.mode_ai_desc, onPlayComputer),
         ModeCard(R.drawable.icon_local_multiplayer, R.string.menu_local, R.string.mode_local_desc, onPlayTwoPlayers),
         ModeCard(R.drawable.icon_lan_multiplayer, R.string.menu_lan, R.string.mode_lan_desc, onPlayLan),
-        ModeCard(R.drawable.chess_piece_black_king, R.string.spectate_open, R.string.mode_spectate_desc, onOpenSpectate),
+        ModeCard(R.drawable.icon_spectate, R.string.spectate_open, R.string.mode_spectate_desc, onOpenSpectate),
     )
-    DesignCanvas(background = R.drawable.bg_tower_map, dim = 0.35f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_mode_select, dim = 0.3f, modifier = modifier) {
         SubScreenHeader(title = stringResource(R.string.modes_title), onBack = onBack, backY = 64)
         cards.forEachIndexed { i, card ->
             val y = 230 + i * 215

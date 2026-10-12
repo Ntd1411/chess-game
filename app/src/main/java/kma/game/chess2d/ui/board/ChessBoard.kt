@@ -96,7 +96,8 @@ fun ChessBoard(
         val moveOverlay = rememberTrimmedArt(R.drawable.board_tile_move, ArtSizes.OVERLAY)
         val attackOverlay = rememberTrimmedArt(R.drawable.board_tile_attack, ArtSizes.OVERLAY)
         val checkOverlay = rememberTrimmedArt(R.drawable.board_tile_check, ArtSizes.OVERLAY)
-        val lastMoveOverlay = rememberTrimmedArt(R.drawable.fx_move_highlight, ArtSizes.OVERLAY)
+        // Ô của nước vừa đi dùng đúng ảnh board_tile_last_move (lớp phủ bán trong suốt cùng bộ với các ô khác).
+        val lastMoveOverlay = rememberTrimmedArt(R.drawable.board_tile_last_move, ArtSizes.OVERLAY)
         val textured = palette.textured
 
         // Ô đang được kéo và khoảng đã kéo (đơn vị px). Kéo thả chỉ là một lối vào khác

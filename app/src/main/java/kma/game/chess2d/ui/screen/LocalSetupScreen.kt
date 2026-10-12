@@ -58,7 +58,7 @@ fun LocalSetupScreen(
     val defaultWhite = stringResource(R.string.match_player_one)
     val defaultBlack = stringResource(R.string.match_player_two)
 
-    DesignCanvas(background = R.drawable.bg_main_menu, dim = 0.6f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_local_setup, dim = 0.4f, modifier = modifier) {
         SubScreenHeader(title = stringResource(R.string.local_setup_title), onBack = onBack)
 
         PlayerPanel(
@@ -74,7 +74,7 @@ fun LocalSetupScreen(
         PlayerPanel(
             top = 580,
             title = stringResource(R.string.local_setup_player_two),
-            portrait = R.drawable.portrait_unknown_01,
+            portrait = R.drawable.portrait_player_two,
             white = false,
             value = blackInput,
             onValueChange = { blackInput = it.take(LocalSetup.MAX_NAME_LENGTH) },

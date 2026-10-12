@@ -5,6 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -158,7 +160,7 @@ fun LanLobbyScreen(
         if (hosting) {
             PlayerSlot(
                 box = LanLobbyLayout.OpponentSlot,
-                portrait = R.drawable.portrait_unknown_01,
+                portrait = R.drawable.portrait_lan_opponent,
                 name = stringResource(R.string.match_waiting_opponent),
                 status = stringResource(R.string.lan_room_waiting),
                 ready = false,
@@ -358,22 +360,37 @@ private fun timeControlShortLabel(control: TimeControl): Int = when (control) {
 }
 
 /**
- * Một phòng thấy được trong mạng, trên nền `ui_panel_sub`.
+ * Một phòng thấy được trong mạng, trên nền `ui_list_row_normal` (đang nhấn thì `ui_list_row_pressed`).
+ * Chạm cả dòng cũng là Vào phòng nếu phòng vào được.
  *
  * Nhãn nói rõ vì sao nút Vào bị khoá: phòng đầy, hay hai máy lệch phiên bản.
  */
 @Composable
 private fun RoomRow(room: RoomInfo, onJoin: () -> Unit) {
     val d = LocalDesign.current
-    Box(modifier = Modifier.fillMaxWidth().height(d.dp(140))) {
-        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.3f, modifier = Modifier.fillMaxSize())
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        modifier = Modifier.fillMaxWidth().height(d.dp(150)).clickable(
+            interactionSource = interaction,
+            indication = null,
+            enabled = room.joinable,
+            role = Role.Button,
+            onClick = onJoin,
+        ),
+    ) {
+        SlicedArt(
+            res = if (pressed) R.drawable.ui_list_row_pressed else R.drawable.ui_list_row_normal,
+            slice = 0.3f,
+            modifier = Modifier.fillMaxSize(),
+        )
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(24)),
+            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(36)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(d.dp(20)),
         ) {
             Box(modifier = Modifier.size(d.dp(100))) {
-                PortraitInFrame(portrait = R.drawable.portrait_unknown_02, dimmed = !room.joinable)
+                PortraitInFrame(portrait = R.drawable.portrait_lan_opponent, dimmed = !room.joinable)
             }
             Column(modifier = Modifier.weight(1f)) {
                 DesignText(

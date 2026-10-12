@@ -11,9 +11,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +39,10 @@ import kma.game.chess2d.game.PauseItem
 import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.ui.art.BattleButton
+import kma.game.chess2d.ui.art.ButtonArt
+import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.art.GothicDialog
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -122,7 +124,7 @@ fun GameScreen(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
                 label = stringResource(R.string.action_undo),
                 enabled = state.canUndo && !state.aiThinking,
-                art = R.drawable.battle_button_undo,
+                art = BattleButton.UNDO,
                 onClick = viewModel::undo,
             ),
         )
@@ -130,6 +132,7 @@ fun GameScreen(
             MatchAction(
                 icon = Icons.Filled.Refresh,
                 label = stringResource(R.string.action_new_game),
+                art = BattleButton.RESTART,
                 onClick = viewModel::newGame,
             ),
         )
@@ -141,6 +144,7 @@ fun GameScreen(
                     icon = Icons.Filled.Settings,
                     label = stringResource(R.string.action_level),
                     enabled = !state.aiThinking,
+                    art = BattleButton.LEVEL,
                     onClick = { showLevels = true },
                 ),
             )
@@ -149,7 +153,7 @@ fun GameScreen(
             MatchAction(
                 icon = Icons.Filled.KeyboardArrowUp,
                 label = stringResource(R.string.action_flip),
-                art = R.drawable.battle_button_move,
+                art = BattleButton.FLIP,
                 onClick = { flipped = !flipped },
             ),
         )
@@ -157,7 +161,7 @@ fun GameScreen(
             MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
-                art = R.drawable.battle_button_menu,
+                art = BattleButton.MENU,
                 onClick = { showPause = true },
             ),
         )
@@ -199,6 +203,7 @@ fun GameScreen(
         actions = actions,
         inCheck = state.status == GameStatus.CHECK,
         checkmate = state.status == GameStatus.CHECKMATE,
+        result = if (state.reviewPly == null) resultOf(state) else null,
         headline = state.reviewPly?.let {
             // Đang xem lại thì dòng trạng thái phải nói điều đó, không phải nói lượt ai:
             // bàn cờ đang không nhận đi, mà không nói thì người chơi tưởng app treo.
@@ -292,32 +297,56 @@ private fun LevelDialog(
     onChosen: (Difficulty) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.menu_difficulty)) },
-        text = {
-            Column {
-                for (level in Difficulty.entries) {
-                    LevelRow(
-                        label = stringResource(labelOf(level)),
-                        selected = level == current,
-                        onClick = { onChosen(level) },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
+    GothicDialog(onDismiss = onDismiss, title = stringResource(R.string.menu_difficulty)) {
+        for (level in Difficulty.entries) {
+            // Mức đang chọn là nút vàng, các mức khác là nút phụ.
+            GothicButton(
+                label = stringResource(labelOf(level)),
+                onClick = { onChosen(level) },
+                art = if (level == current) ButtonArt.PRIMARY else ButtonArt.SECONDARY,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+            )
+        }
+        GothicButton(
+            label = stringResource(R.string.action_cancel),
+            onClick = onDismiss,
+            art = ButtonArt.SMALL,
+            modifier = Modifier.fillMaxWidth(0.6f).height(48.dp),
+        )
+    }
 }
 
-/** Một dòng cấp độ; mức đang chọn được đánh dấu bằng dấu chấm đầu dòng. */
-@Composable
-private fun LevelRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Text(text = if (selected) "\u2022 $label" else label)
+/**
+ * Banner kết quả khi ván xong. Đấu máy thì người chơi cầm Trắng; hai người một máy thì luôn có
+ * một bên thắng nên chỉ phân biệt thắng và hòa.
+ */
+private fun resultOf(state: GameUiState): ResultBanner? {
+    val timeout = state.timeout
+    val over: Boolean
+    val winnerWhite: Boolean?
+    when {
+        timeout != null -> {
+            over = true
+            winnerWhite = if (timeout.drawn) null else !timeout.whiteFlagged
+        }
+
+        state.status == GameStatus.CHECKMATE -> {
+            over = true
+            winnerWhite = !state.whiteToMove
+        }
+
+        state.status == GameStatus.ONGOING || state.status == GameStatus.CHECK -> {
+            over = false
+            winnerWhite = null
+        }
+
+        else -> {
+            over = true
+            winnerWhite = null
+        }
     }
+    val youWhite = if (state.mode == GameMode.TWO_PLAYERS) winnerWhite ?: true else true
+    return ResultBanner.of(over, winnerWhite, youWhite)
 }
 
 /** Tên hiển thị của một cấp độ. */
@@ -331,7 +360,7 @@ internal fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
 private fun opponentPortrait(state: GameUiState): Int = when (state.mode) {
     GameMode.VS_COMPUTER -> AiCharacters.all.firstOrNull { it.difficulty == state.difficulty }
         ?.portrait ?: R.drawable.portrait_unknown_01
-    GameMode.TWO_PLAYERS -> R.drawable.portrait_unknown_01
+    GameMode.TWO_PLAYERS -> R.drawable.portrait_player_two
 }
 
 /** Còn dưới mức này (30 giây) thì đồng hồ đổi sang màu cảnh báo. */

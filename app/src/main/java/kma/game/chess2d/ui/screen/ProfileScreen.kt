@@ -48,7 +48,7 @@ fun ProfileScreen(
     val total = PlayerStats.GAMES_PER_LEVEL
     val into = stats.pointsIntoLevel
 
-    DesignCanvas(background = R.drawable.bg_settings, dim = 0.45f, modifier = modifier) {
+    DesignCanvas(background = R.drawable.bg_profile, dim = 0.35f, modifier = modifier) {
         SubScreenHeader(title = stringResource(R.string.profile_title), onBack = onBack)
 
         ArtImage(

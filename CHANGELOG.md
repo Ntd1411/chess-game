@@ -14,6 +14,16 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-09 20:30 GMT+7 — Gắn bộ asset mới: nút trận, nền, hộp thoại, banner kết quả
+- Thêm `BattleButton` (normal/pressed/disabled) cho hàng nút ván đấu; `MatchAction.art` đổi sang `BattleButton?`. Gán restart/level/flip/map/resign/draw/rematch/sync/share/leave cho ván thường, Tháp, LAN, Máy vs Máy
+- Banner `ui_result_banner_win/loss/draw` hiện giữa bàn cờ khi ván xong (chạm để cất); `ResultBanner.of` tính theo bên của người chơi
+- Thêm `GothicDialog`/`GothicConfirmDialog` (`ui_dialog_panel`, `ui_dialog_small`); thay Pause Menu (icon resume/restart/settings/leave), Phong cấp (`ui_promotion_slot_*` + ảnh quân), Đổi cấp, xác nhận LAN, xóa dữ liệu, tiếp tục ván cũ; ô thông báo LAN vẽ trên `ui_dialog_small`
+- Nền mới: Chọn chế độ `bg_mode_select`, Setup hai người `bg_local_setup`, Hồ sơ `bg_profile`, Lịch sử `bg_history`; thẻ Máy vs Máy dùng `icon_spectate`
+- Chân dung `portrait_player_two` (người chơi 2), `portrait_lan_opponent` (đối thủ LAN, ô chờ, danh sách phòng)
+- `GothicTextField` dùng `ui_text_field_normal/focused`; tab Cài đặt dùng `ui_tab_normal/selected`; dòng Lịch sử và dòng phòng LAN dùng `ui_list_row_normal/pressed` (chạm cả dòng = xem lại / vào phòng)
+- Bàn cờ tô ô nước vừa đi bằng `board_tile_last_move` (nạp trước ở splash); màn thoại có dấu `icon_next` nhấp nháy
+- Test mới `AssetStateTest` (trạng thái nút, banner, icon Pause). Chưa có font `font_title`/`font_body`
+
 ## 2026-10-09 19:45 GMT+7 — Vẽ lại Setup hai người, Hồ sơ và Lịch sử trên khung thiết kế
 - Setup hai người cùng máy: hai tấm `ui_panel_sub` có chân dung, quân Vua từng bên, ô nhập `GothicTextField`; bốn nút thời gian gothic; nút Bắt đầu chính
 - Hồ sơ: nhân vật toàn thân, tên trên `ui_name_plate`, thanh lên cấp `loading_bar_*`, bảng thống kê hai cột trong `ui_panel_main`

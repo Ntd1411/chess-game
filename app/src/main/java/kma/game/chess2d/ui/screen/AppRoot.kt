@@ -2,7 +2,7 @@ package kma.game.chess2d.ui.screen
 
 import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
+import kma.game.chess2d.ui.art.GothicConfirmDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -551,26 +551,21 @@ private fun ResumePrompt(onResume: (SavedGame) -> Unit) {
     val game = saved
     if (game == null || answered) return
 
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(stringResource(R.string.resume_title)) },
-        text = { Text(stringResource(R.string.resume_text, game.uciMoves.size)) },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    answered = true
-                    onResume(game)
-                },
-            ) { Text(stringResource(R.string.resume_continue)) }
+    // Không đóng được bằng chạm ngoài/Back: bỏ ván cũ phải là lựa chọn có ý.
+    GothicConfirmDialog(
+        title = stringResource(R.string.resume_title),
+        text = stringResource(R.string.resume_text, game.uciMoves.size),
+        confirmLabel = stringResource(R.string.resume_continue),
+        dismissLabel = stringResource(R.string.resume_discard),
+        onConfirm = {
+            answered = true
+            onResume(game)
         },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    answered = true
-                    scope.launch { store.clear() }
-                },
-            ) { Text(stringResource(R.string.resume_discard)) }
+        onDismiss = {
+            answered = true
+            scope.launch { store.clear() }
         },
+        dismissible = false,
     )
 }
 

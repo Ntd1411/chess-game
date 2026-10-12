@@ -10,6 +10,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -19,7 +24,8 @@ import kma.game.chess2d.R
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
- * Ô nhập chữ gothic: nền `ui_label_plate` kéo kiểu nine-slice, chữ giấy da, con trỏ vàng.
+ * Ô nhập chữ gothic: nền `ui_text_field_normal` (đang gõ thì `ui_text_field_focused`) kéo kiểu
+ * nine-slice, chữ giấy da, con trỏ vàng.
  * Thay cho `OutlinedTextField` của Material để ô nhập cùng bộ với panel và nút.
  *
  * @param fontSize cỡ chữ theo đơn vị thiết kế.
@@ -35,8 +41,13 @@ fun GothicTextField(
     enabled: Boolean = true,
 ) {
     val d = LocalDesign.current
+    var focused by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
-        SlicedArt(res = R.drawable.ui_label_plate, slice = 0.5f, modifier = Modifier.fillMaxSize())
+        SlicedArt(
+            res = if (focused) R.drawable.ui_text_field_focused else R.drawable.ui_text_field_normal,
+            slice = 0.5f,
+            modifier = Modifier.fillMaxSize(),
+        )
         Box(
             modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(56)),
             contentAlignment = Alignment.CenterStart,
@@ -57,7 +68,7 @@ fun GothicTextField(
                 keyboardOptions = keyboardOptions,
                 cursorBrush = SolidColor(GothicColors.Gold),
                 textStyle = TextStyle(color = GothicColors.Parchment, fontSize = d.sp(fontSize)),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
             )
         }
     }

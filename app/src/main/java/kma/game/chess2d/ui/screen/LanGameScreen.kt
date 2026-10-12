@@ -14,11 +14,18 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextAlign
+import kma.game.chess2d.ui.art.BattleButton
+import kma.game.chess2d.ui.art.ButtonArt
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.art.GothicConfirmDialog
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.art.SlicedArt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -101,6 +108,7 @@ fun LanGameScreen(
                 icon = Icons.Filled.Close,
                 label = stringResource(R.string.lan_action_resign),
                 enabled = state.connected && !state.finished,
+                art = BattleButton.RESIGN,
                 onClick = { confirmResign = true },
             ),
         )
@@ -109,6 +117,7 @@ fun LanGameScreen(
                 icon = Icons.Filled.ThumbUp,
                 label = stringResource(R.string.lan_action_draw),
                 enabled = state.connected && !state.finished && !state.waitingDrawReply,
+                art = BattleButton.DRAW,
                 onClick = onOfferDraw,
             ),
         )
@@ -117,6 +126,7 @@ fun LanGameScreen(
                 icon = Icons.Filled.PlayArrow,
                 label = stringResource(R.string.lan_action_rematch),
                 enabled = state.connected && state.finished && !state.waitingRematchReply,
+                art = BattleButton.REMATCH,
                 onClick = onOfferRematch,
             ),
         )
@@ -125,6 +135,7 @@ fun LanGameScreen(
                 icon = Icons.Filled.Refresh,
                 label = stringResource(R.string.lan_action_sync),
                 enabled = state.connected,
+                art = BattleButton.SYNC,
                 onClick = onRequestSync,
             ),
         )
@@ -135,6 +146,7 @@ fun LanGameScreen(
                 icon = Icons.Filled.Share,
                 label = stringResource(R.string.history_export_pgn),
                 enabled = state.moves.isNotEmpty(),
+                art = BattleButton.SHARE,
                 onClick = { exportLanPgn(context, state) },
             ),
         )
@@ -144,6 +156,7 @@ fun LanGameScreen(
             MatchAction(
                 icon = Icons.AutoMirrored.Filled.ExitToApp,
                 label = stringResource(R.string.lan_action_leave),
+                art = BattleButton.LEAVE,
                 onClick = { if (state.finished || !state.connected) onLeave() else confirmLeave = true },
             ),
         )
@@ -155,7 +168,7 @@ fun LanGameScreen(
             subtitle = opponentSubtitle(state, clock),
             piece = Piece.of(Piece.KING, !state.youPlayWhite),
             active = state.connected && !state.finished && !state.yourTurn,
-            portrait = R.drawable.portrait_unknown_01,
+            portrait = R.drawable.portrait_lan_opponent,
         ),
         you = MatchPlayer(
             name = state.lobby.localName,
@@ -168,6 +181,7 @@ fun LanGameScreen(
         backdrop = R.drawable.bg_lan_lobby,
         inCheck = state.status == GameStatus.CHECK,
         checkmate = state.status == GameStatus.CHECKMATE,
+        result = lanResult(state),
         headline = headline(state),
         notice = state.notice?.let { notice ->
             {
@@ -305,40 +319,62 @@ private fun NoticeCard(
     onRetry: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    // Nằm trong khung thiết kế của MatchScaffold nên kích thước tính theo đơn vị 1080x1920.
+    val d = LocalDesign.current
+    Box(modifier = Modifier.fillMaxWidth()) {
+        SlicedArt(res = R.drawable.ui_dialog_small, slice = 0.22f, modifier = Modifier.matchParentSize())
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = d.dp(40), vertical = d.dp(32)),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(d.dp(12)),
         ) {
-            Text(
+            DesignText(
                 text = text,
-                style = MaterialTheme.typography.bodySmall,
+                size = 28,
+                align = TextAlign.Start,
+                alignment = Alignment.CenterStart,
                 modifier = Modifier.weight(1f),
             )
             if (offerRetry) {
-                TextButton(onClick = onRetry) {
-                    Text(stringResource(R.string.lan_action_retry))
-                }
+                GothicButton(
+                    label = stringResource(R.string.lan_action_retry),
+                    onClick = onRetry,
+                    art = ButtonArt.SMALL,
+                    modifier = Modifier.width(d.dp(190)).height(d.dp(80)),
+                )
             }
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_dismiss))
-            }
+            GothicButton(
+                label = stringResource(R.string.action_dismiss),
+                onClick = onDismiss,
+                art = ButtonArt.SMALL,
+                modifier = Modifier.width(d.dp(190)).height(d.dp(80)),
+            )
         }
     }
 }
 
 @Composable
 private fun ConfirmDialog(text: String, onAccept: () -> Unit, onDecline: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDecline,
-        text = { Text(text) },
-        confirmButton = {
-            TextButton(onClick = onAccept) { Text(stringResource(R.string.action_yes)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDecline) { Text(stringResource(R.string.action_no)) }
-        },
+    GothicConfirmDialog(
+        text = text,
+        confirmLabel = stringResource(R.string.action_yes),
+        dismissLabel = stringResource(R.string.action_no),
+        onConfirm = onAccept,
+        onDismiss = onDecline,
     )
+}
+
+/** Banner kết quả nhìn từ phía mình; `null` khi ván chưa xong. */
+private fun lanResult(state: LanUiState): ResultBanner? {
+    if (!state.finished) return null
+    val winnerWhite: Boolean? = when {
+        state.outcome == LanOutcome.DRAW_AGREED -> null
+        state.outcome == LanOutcome.RESIGNATION -> state.resignedByWhite?.let { !it }
+        state.outcome == LanOutcome.TIMEOUT -> state.flaggedWhite?.let { !it }
+        state.status == GameStatus.CHECKMATE -> !state.whiteToMove
+        else -> null
+    }
+    return ResultBanner.of(over = true, winnerWhite = winnerWhite, youWhite = state.youPlayWhite)
 }
 
 /**

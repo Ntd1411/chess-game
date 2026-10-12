@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import kma.game.chess2d.ui.art.GothicConfirmDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -242,34 +242,29 @@ fun SettingsPanel(
     }
 
     if (confirmReset) {
-        AlertDialog(
-            onDismissRequest = { confirmReset = false },
-            title = { Text(stringResource(R.string.settings_reset_title)) },
-            text = { Text(stringResource(R.string.settings_reset_text)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmReset = false
-                        scope.launch { DataReset.resetAll(context) }
-                    },
-                ) { Text(stringResource(R.string.settings_reset_confirm)) }
+        GothicConfirmDialog(
+            title = stringResource(R.string.settings_reset_title),
+            text = stringResource(R.string.settings_reset_text),
+            confirmLabel = stringResource(R.string.settings_reset_confirm),
+            dismissLabel = stringResource(R.string.action_cancel),
+            onConfirm = {
+                confirmReset = false
+                scope.launch { DataReset.resetAll(context) }
             },
-            dismissButton = {
-                TextButton(onClick = { confirmReset = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
+            onDismiss = { confirmReset = false },
         )
     }
 }
 
-/** Một mục ở cột danh mục: tab đang chọn nằm trên `button_secondary_normal`, chữ vàng. */
+/** Một mục ở cột danh mục: nền `ui_tab_normal`, tab đang chọn dùng `ui_tab_selected` và chữ vàng. */
 @Composable
 private fun CategoryTab(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
     Box(modifier = modifier.clickable(role = Role.Tab, onClick = onClick)) {
-        if (selected) {
-            SlicedArt(res = R.drawable.button_secondary_normal, slice = 0.5f, modifier = Modifier.fillMaxSize())
-        }
+        SlicedArt(
+            res = if (selected) R.drawable.ui_tab_selected else R.drawable.ui_tab_normal,
+            slice = 0.45f,
+            modifier = Modifier.fillMaxSize(),
+        )
         DesignText(
             text = label,
             size = 34,
