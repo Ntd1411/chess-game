@@ -2,11 +2,6 @@ package kma.game.chess2d.ui.screen
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,30 +9,20 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import kma.game.chess2d.R
 import kma.game.chess2d.ui.art.ArtAssets
 import kma.game.chess2d.ui.art.ArtBar
-import kma.game.chess2d.ui.theme.GothicColors
 import kma.game.chess2d.ui.art.ArtCache
-import kma.game.chess2d.ui.art.ArtImage
-import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.DesignCanvas
-import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
 import kma.game.chess2d.ui.art.at
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 
 /**
- * Màn mở đầu theo bản thiết kế 1080x1920: nền `bg_splash`, logo `logo_chess` (đã gồm vương miện)
- * với hoa văn `splash_logo_divider` bên dưới, rồi hoa văn `splash_loading_divider`, thanh tải
- * `loading_bar_*` và nhãn trạng thái. Không dùng chân dung hay panel.
+ * Màn mở đầu: chỉ gồm nền `bg_splash` (đã vẽ sẵn logo "Tower of Chess") và thanh tải
+ * `splash_loading_frame` + `splash_loading_fill`. Không có chữ nào khác.
  *
  * Thanh tiến độ phản ánh việc thật: trong lúc hiện splash, app giải mã trước nền sảnh, nút,
  * bàn cờ và quân cờ vào [ArtCache] để màn sau mở ra là có ảnh ngay. Splash ở lại tối thiểu
@@ -71,63 +56,29 @@ fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         onDone()
     }
 
-    DesignCanvas(background = R.drawable.bg_splash, dim = 0.1f, modifier = modifier) {
-        val logo = SplashLayout.Logo
-        ArtImage(
-            res = R.drawable.logo_chess,
-            maxEdge = ArtSizes.LOGO,
-            trim = true,
-            alpha = alpha,
-            contentDescription = stringResource(R.string.app_name),
-            modifier = Modifier.at(logo.x, logo.y, logo.w, logo.h),
-        )
-        val logoDivider = SplashLayout.LogoDivider
-        ArtImage(
-            res = R.drawable.splash_logo_divider,
-            maxEdge = ArtSizes.BUTTON,
-            trim = true,
-            alpha = alpha,
-            modifier = Modifier.at(logoDivider.x, logoDivider.y, logoDivider.w, logoDivider.h),
-        )
-
-        val loadingDivider = SplashLayout.LoadingDivider
-        ArtImage(
-            res = R.drawable.splash_loading_divider,
-            maxEdge = ArtSizes.BUTTON,
-            trim = true,
-            alpha = alpha,
-            modifier = Modifier.at(loadingDivider.x, loadingDivider.y, loadingDivider.w, loadingDivider.h),
-        )
-        // Khung và ruột cùng canvas 3:1; ruột thật nằm từ 2,2% đến 97,7% chiều ngang.
+    DesignCanvas(background = R.drawable.bg_splash, dim = 0f, modifier = modifier) {
+        // Khung và ruột cùng canvas 1536x1024; ruột thật nằm từ 4,0% đến 95,8% chiều ngang.
         val bar = SplashLayout.Bar
         ArtBar(
-            frame = R.drawable.loading_bar_frame,
-            fill = R.drawable.loading_bar_fill,
+            frame = R.drawable.splash_loading_frame,
+            fill = R.drawable.splash_loading_fill,
             fraction = shownProgress,
-            fillStart = 0.022f,
-            fillEnd = 0.977f,
+            fillStart = SplashLayout.FILL_START,
+            fillEnd = SplashLayout.FILL_END,
             modifier = Modifier.at(bar.x, bar.y, bar.w, bar.h).alpha(alpha),
-        )
-        val label = SplashLayout.Label
-        DesignText(
-            text = stringResource(R.string.splash_loading, (shownProgress * 100).roundToInt()),
-            size = 28,
-            color = GothicColors.Muted,
-            maxLines = 1,
-            modifier = Modifier.at(label.x, label.y, label.w, label.h).alpha(alpha),
         )
     }
 }
 
-/** Bố cục splash (đơn vị thiết kế 1080x1920): logo, hoa văn dưới logo, hoa văn + thanh tải + nhãn. */
+/** Bố cục splash (đơn vị thiết kế 1080x1920): chỉ có thanh tải ở phần dưới màn hình. */
 internal object SplashLayout {
-    val Logo = LobbyLayout.Box(190, 520, 700, 560)
-    val LogoDivider = LobbyLayout.Box(240, 1090, 600, 144)
-    val LoadingDivider = LobbyLayout.Box(290, 1440, 500, 48)
-
-    /** Canvas 2172x724 của `loading_bar_*` ≈ 3:1; thanh thật nằm giữa, cao khoảng 37%. */
-    val Bar = LobbyLayout.Box(190, 1480, 700, 233)
-    val Label = LobbyLayout.Box(190, 1690, 700, 52)
+    /**
+     * Canvas 1536x1024 (3:2) của `splash_loading_*`; khung nhìn thấy chiếm 32–63% chiều cao
+     * canvas, nên phần khung thật nằm khoảng y 1553–1707.
+     */
+    val Bar = LobbyLayout.Box(160, 1390, 760, 507)
+    const val FILL_START = 0.040f
+    const val FILL_END = 0.958f
 }
 
 private const val MIN_SPLASH_MILLIS = 1400L

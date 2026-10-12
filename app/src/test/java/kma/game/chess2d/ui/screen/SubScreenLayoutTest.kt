@@ -79,12 +79,13 @@ class SubScreenLayoutTest {
     }
 
     @Test
-    fun splashBlocksStackTopToBottom() {
+    fun splashBarIsCenteredInLowerScreen() {
         with(SplashLayout) {
-            assertTrue(Logo.bottom <= LogoDivider.y + 20)
-            assertTrue(LogoDivider.bottom <= LoadingDivider.y)
-            assertTrue(LoadingDivider.bottom <= Bar.y + 10)
-            assertTrue(Label.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
+            assertEquals(1080, Bar.x * 2 + Bar.w)
+            // Khung nhìn thấy (32–63% chiều cao canvas) nằm trong vùng an toàn phía dưới.
+            assertTrue(Bar.y + Bar.h * 0.32f > 1920 * 0.75f)
+            assertTrue(Bar.y + Bar.h * 0.63f <= 1920 - LobbyLayout.SAFE_MARGIN)
+            assertTrue(FILL_START < FILL_END)
         }
     }
 }

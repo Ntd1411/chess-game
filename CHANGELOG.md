@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 00:30 GMT+7 — Làm lại màn Splash bằng bộ 3 ảnh mới, không còn chữ
+- Thay `bg_splash.png` bằng nền mới (đã vẽ sẵn logo Tower of Chess); ảnh cũ chuyển ra `app/build/old_res`
+- Thêm `splash_loading_frame.png` và `splash_loading_fill.png` (từ thư mục `drawable/splash`, đã chuyển ra `drawable/` vì Android không nhận thư mục con)
+- `SplashScreen` chỉ còn nền + thanh tải (bỏ logo, hai hoa văn và nhãn phần trăm), bỏ lớp làm tối nền; `SplashLayout` chỉ còn `Bar` và vùng ruột 4,0–95,8%
+- Cập nhật test `SubScreenLayoutTest` cho bố cục splash mới
+
 ## 2026-10-12 22:00 GMT+7 — Viết README cho dự án
 - README.md mới (tiếng Việt): giới thiệu Tower of Chess, bảng tính năng các chế độ chơi và tính năng phụ
 - Mô tả cấu trúc module (:app, :engine, :ai, :net) và hệ thống UI (DesignCanvas, ArtCache, test *Layout)
