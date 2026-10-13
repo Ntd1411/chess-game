@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 19:49 GMT+7 — Áp dụng hai font người dùng cung cấp vào toàn bộ chữ giao diện
+- Đóng gói `font_normal.ttf` (UTM NguyenHa 02) và `font_bold.ttf` (UTM NguyenHa 01), khai báo `GameFontFamily` với hai độ đậm Normal/Bold
+- Cập nhật đủ 15 kiểu chữ Material; nội dung dùng font thường, tiêu đề và nhãn dùng font đậm, giữ nguyên cỡ chữ
+- Áp dụng font cho `DesignText`, nút gothic, ô nhập và hộp thoại có TextStyle riêng; không thay font glyph quân cờ và chữ đã nằm trong ảnh
+- Bổ sung test cấu hình typography và tính hợp lệ của font, kiểm tra ký tự tiếng Việt
+
 ## 2026-10-13 19:36 GMT+7 — Căn ruột thanh loading khớp với lòng khung Splash
 - Chỉnh `splash_loading_fill.png` trên canvas gốc 1536x1024: thu ngang còn 85%, thu dọc còn 90%, dịch lên 0,5% chiều cao để ruột không tràn ra hoa văn hai đầu
 - Cập nhật vùng cắt tiến độ thành 10,9–89,1%; giữ nguyên khung, vị trí thanh và logic chờ loading hoàn tất

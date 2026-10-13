@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import kma.game.chess2d.R
+import kma.game.chess2d.ui.theme.GameFontFamily
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
@@ -166,6 +167,7 @@ fun GothicButton(
             color = if (enabled) textColor else textColor.copy(alpha = 0.5f),
             fontSize = size,
             lineHeight = size * 1.1f,
+            fontFamily = GameFontFamily,
             fontWeight = FontWeight.Bold,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,

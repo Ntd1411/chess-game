@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kma.game.chess2d.R
+import kma.game.chess2d.ui.theme.GameFontFamily
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
@@ -68,6 +69,7 @@ fun GothicDialog(
                         text = title,
                         color = GothicColors.Gold,
                         fontSize = 24.sp,
+                        fontFamily = GameFontFamily,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         style = TextStyle(shadow = Shadow(Color.Black, blurRadius = 8f)),
@@ -85,6 +87,7 @@ fun DialogText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         color = GothicColors.Parchment,
+        fontFamily = GameFontFamily,
         fontSize = 17.sp,
         lineHeight = 23.sp,
         textAlign = TextAlign.Center,

@@ -2,13 +2,10 @@ package kma.game.chess2d.ui.theme
 
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 
 /**
  * Bảng màu Material cố định theo phong cách gothic.
@@ -45,22 +42,6 @@ private val GothicColorScheme = darkColorScheme(
     error = GothicColors.Alert,
     onError = GothicColors.Ink,
 )
-
-/** Tiêu đề dùng font serif cho cảm giác sách cổ; chữ thân giữ sans để dễ đọc. */
-private val GothicTypography: Typography = Typography().let { base ->
-    fun androidx.compose.ui.text.TextStyle.serif() =
-        copy(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold)
-    base.copy(
-        displayLarge = base.displayLarge.serif(),
-        displayMedium = base.displayMedium.serif(),
-        displaySmall = base.displaySmall.serif(),
-        headlineLarge = base.headlineLarge.serif(),
-        headlineMedium = base.headlineMedium.serif(),
-        headlineSmall = base.headlineSmall.serif(),
-        titleLarge = base.titleLarge.serif(),
-        titleMedium = base.titleMedium.serif(),
-    )
-}
 
 /**
  * Theme của toàn app: luôn tối và luôn gothic.

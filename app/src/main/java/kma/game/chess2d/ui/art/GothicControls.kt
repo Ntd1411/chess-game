@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import kma.game.chess2d.R
+import kma.game.chess2d.ui.theme.GameFontFamily
 import kma.game.chess2d.ui.theme.GothicColors
 
 /**
@@ -67,7 +68,11 @@ fun GothicTextField(
                 enabled = enabled,
                 keyboardOptions = keyboardOptions,
                 cursorBrush = SolidColor(GothicColors.Gold),
-                textStyle = TextStyle(color = GothicColors.Parchment, fontSize = d.sp(fontSize)),
+                textStyle = TextStyle(
+                    fontFamily = GameFontFamily,
+                    color = GothicColors.Parchment,
+                    fontSize = d.sp(fontSize),
+                ),
                 modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
             )
         }

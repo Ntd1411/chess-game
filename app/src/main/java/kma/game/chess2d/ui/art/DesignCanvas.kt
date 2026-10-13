@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kma.game.chess2d.R
+import kma.game.chess2d.ui.theme.GameFontFamily
 import kma.game.chess2d.ui.theme.GothicColors
 import kotlin.math.min
 
@@ -137,6 +138,7 @@ fun DesignText(
             color = color,
             fontSize = d.sp(size),
             lineHeight = d.sp(size.toFloat() * 1.25f),
+            fontFamily = GameFontFamily,
             fontWeight = weight,
             fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
             textAlign = align,
