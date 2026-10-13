@@ -272,19 +272,22 @@ private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modif
             onClick = { ply = (ply - 1).coerceAtLeast(0) },
             enabled = ply > 0,
             art = ButtonArt.SECONDARY,
-            modifier = Modifier.at(90, 1300, 440, 110),
+            fontSize = 10.sp,
+            modifier = Modifier.at(90, 1300, 440, 220),
         )
         GothicButton(
             label = stringResource(R.string.history_next),
             onClick = { ply = (ply + 1).coerceAtMost(frames.lastIndex) },
             enabled = ply < frames.lastIndex,
             art = ButtonArt.SECONDARY,
-            modifier = Modifier.at(550, 1300, 440, 110),
+            fontSize = 10.sp,
+            modifier = Modifier.at(550, 1300, 440, 220),
         )
         GothicButton(
             label = stringResource(R.string.history_back),
             onClick = onBack,
-            modifier = Modifier.at(150, 1460, 780, 110),
+            fontSize = 10.sp,
+            modifier = Modifier.at(150, 1460, 780, 220),
         )
     }
 }
