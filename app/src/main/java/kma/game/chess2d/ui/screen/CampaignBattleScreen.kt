@@ -1,6 +1,7 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -66,14 +67,20 @@ fun CampaignBattleRoute(
     modifier: Modifier = Modifier,
     viewModel: CampaignViewModel = viewModel(),
 ) {
-    // Dựng ván ngay trong lúc vẽ (không đợi LaunchedEffect) để khung hình đầu đã là ván mới,
-    // không thấy nhầm kết quả của tầng trước. Gọi lại với cùng khóa thì không làm gì.
-    remember(floor.number, attempt) { viewModel.start(floor, attempt, puzzles) }
+    // Initialize only after composition succeeds, before attaching the AI loop.
+    var initialized by remember(viewModel, floor.number, attempt) { mutableStateOf(false) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     DisposableEffect(viewModel, floor.number, attempt) {
+        viewModel.start(floor, attempt, puzzles)
+        initialized = true
         viewModel.attach()
         onDispose { viewModel.detach() }
+    }
+    // Never render or report a previous attempt's result during initialization.
+    if (!initialized) {
+        androidx.compose.foundation.layout.Box(modifier.fillMaxSize().background(kma.game.chess2d.ui.theme.GothicColors.Ink))
+        return
     }
 
     LaunchedEffect(state.result, state.floorNumber, floor.number, attempt) {

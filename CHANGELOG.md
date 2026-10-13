@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:28 GMT+7 — Sửa lỗi Compose khi mở ván đấu tầng
+- Lint phát hiện remember trả Unit ở mã cũ. Chuyển khởi tạo sang DisposableEffect trước attach AI, chặn render/báo kết quả trước khi khởi tạo, giữ khóa tầng/lượt và detach. Không sửa engine hay luật chiến dịch.
+- Kiểm tra cuối: assembleDebug, 277 app unit test và lintDebug qua (vẫn có cảnh báo). Engine 78 test qua, AI 24 qua/1 bỏ qua, LAN 35 qua. Chưa QA thiết bị.
+
 ## 2026-10-14 05:20 GMT+7 — Vẽ nốt cửa sổ phong cấp
 - Dialog tối viền vàng, bốn ô quân tự vẽ và Hủy. Chỉ hiển thị nước phong cấp engine cung cấp theo thứ tự Hậu/Xe/Tượng/Mã, không tự chọn Hậu và không sửa luật cờ.
 - Kiểm tra: assembleDebug và 276 app unit test qua; chưa QA thiết bị.

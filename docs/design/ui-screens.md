@@ -162,6 +162,9 @@ Ván LAN giữ MatchScaffold và board, thông báo dùng card tối chữ sáng
 ### Vẽ nốt cửa sổ phong cấp
 Phong cấp dùng dialog/card Compose và ảnh quân có sẵn. Chọn gửi đúng Move từ pending options, Hủy hoặc đóng chỉ huỷ lựa chọn như trước.
 
+### Sửa lỗi Compose khi mở ván đấu tầng
+Màn đấu tầng dùng khung gameplay đã vẽ trước, khởi tạo ván sau composition thành công. Chặn khung cũ trong bước khởi tạo, giữ ID tầng/lượt để xoay máy không reset ván.
+
 ## Sơ đồ điều hướng
 
 ```
