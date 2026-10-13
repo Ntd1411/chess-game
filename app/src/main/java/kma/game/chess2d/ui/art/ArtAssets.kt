@@ -2,7 +2,7 @@ package kma.game.chess2d.ui.art
 
 import kma.game.chess2d.R
 
-/** Cạnh dài tối đa (px) dùng khi nạp từng nhóm asset. Mọi nơi dùng ảnh phải dùng đúng hằng này để chia sẻ cache. */
+/** Cạnh dài tối đa (px) dùng khi nạp từng nhóm asset. Dùng cùng hằng để chia sẻ cache. */
 object ArtSizes {
     const val SCREEN = 1280
     const val LOGO = 1280
@@ -14,36 +14,32 @@ object ArtSizes {
     const val ICON = 256
 }
 
-/** Danh sách ảnh nạp trước ở splash: nền và trang trí sảnh, nút, bàn cờ và quân cờ. */
+/** Nạp trước ảnh trong splash; menu được nạp cuối để còn trong cache khi chuyển màn. */
 object ArtAssets {
-    val preload: List<ArtSpec> = listOf(
-        ArtSpec(R.drawable.bg_splash, ArtSizes.SCREEN),
-        ArtSpec(R.drawable.logo_chess, ArtSizes.LOGO),
-        ArtSpec(R.drawable.bg_main_menu, ArtSizes.SCREEN),
-        ArtSpec(R.drawable.character_protagonist_fullbody, ArtSizes.BOARD),
-        ArtSpec(R.drawable.decor_main_menu_glow, ArtSizes.PIECE),
-        ArtSpec(R.drawable.portrait_protagonist, ArtSizes.PORTRAIT),
-        ArtSpec(R.drawable.frame_player_avatar, ArtSizes.PIECE),
-        ArtSpec(R.drawable.bar_player_xp_empty, ArtSizes.BUTTON),
-        ArtSpec(R.drawable.bar_player_xp_fill, ArtSizes.BUTTON),
+    val mainMenu: List<ArtSpec> = listOf(
+        ArtSpec(R.drawable.main_menu_background, ArtSizes.SCREEN),
+        ArtSpec(R.drawable.main_menu_header_frame, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_avatar, ArtSizes.PORTRAIT),
+        ArtSpec(R.drawable.main_menu_exp_fill, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_mode_tower, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_mode_ai, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_mode_local, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_mode_lan, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_mode_spectate, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.main_menu_journal, ArtSizes.ICON),
+        ArtSpec(R.drawable.main_menu_inventory, ArtSizes.ICON),
+        ArtSpec(R.drawable.main_menu_achievements, ArtSizes.ICON),
+        ArtSpec(R.drawable.main_menu_history, ArtSizes.ICON),
+        ArtSpec(R.drawable.main_menu_settings, ArtSizes.ICON),
         ArtSpec(R.drawable.panel_currency_counter, ArtSizes.BUTTON),
         ArtSpec(R.drawable.icon_currency_gold, ArtSizes.ICON),
         ArtSpec(R.drawable.icon_currency_crystal, ArtSizes.ICON),
-        ArtSpec(R.drawable.button_currency_add, ArtSizes.ICON),
-        ArtSpec(R.drawable.frame_side_button, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_settings_gear, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_journal, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_inventory, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_achievements, ArtSizes.ICON),
-        ArtSpec(R.drawable.panel_mode_card_red, ArtSizes.BUTTON),
-        ArtSpec(R.drawable.panel_mode_card_blue, ArtSizes.BUTTON),
-        ArtSpec(R.drawable.panel_mode_card_small, ArtSizes.BUTTON),
-        ArtSpec(R.drawable.decor_mode_card_corners, ArtSizes.BUTTON),
-        ArtSpec(R.drawable.icon_story_mode, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_ai_battle, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_local_multiplayer, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_lan_multiplayer, ArtSizes.ICON),
-        ArtSpec(R.drawable.icon_ai_vs_ai, ArtSizes.ICON),
+    )
+
+    val preload: List<ArtSpec> = listOf(
+        ArtSpec(R.drawable.bg_splash, ArtSizes.SCREEN),
+        ArtSpec(R.drawable.splash_loading_frame, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.splash_loading_fill, ArtSizes.BUTTON),
         ArtSpec(R.drawable.button_primary_normal, ArtSizes.BUTTON),
         ArtSpec(R.drawable.button_primary_pressed, ArtSizes.BUTTON),
         ArtSpec(R.drawable.button_secondary_normal, ArtSizes.BUTTON),
@@ -67,5 +63,5 @@ object ArtAssets {
         ArtSpec(R.drawable.chess_piece_black_bishop, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_black_knight, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_black_pawn, ArtSizes.PIECE),
-    )
+    ) + mainMenu
 }

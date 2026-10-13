@@ -123,6 +123,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    // Decode WebP assets in JVM ImageIO tests without adding an app runtime dependency.
+    testImplementation("org.sejda.imageio:webp-imageio:0.1.6")
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
 }

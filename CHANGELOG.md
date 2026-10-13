@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 22:46 GMT+7 — Chuyển hai ảnh thanh loading Splash sang WebP lossless
+- Giữ nguyên canvas 1536x1024 và toàn bộ pixel RGBA, bao gồm vùng trong suốt; xác minh bằng Pillow sau khi giải mã WebP
+- Giữ bản PNG gốc trong app/build/splash_png_backup, loại PNG khỏi drawable để tránh trùng resource
+- Cập nhật SplashAssetAlignmentTest để đọc WebP qua ImageIO plugin chỉ dành cho unit test; toàn bộ :app:testDebugUnitTest và :app:assembleDebug thành công
+- Dung lượng frame giảm 1.266.215 → 651.910 byte (48,52%), fill giảm 74.081 → 27.566 byte (62,79%)
+
 ## 2026-10-13 20:09 GMT+7 — Thay bộ font UTM bằng FZ Poppins và chuẩn hóa tên tài nguyên
 - Đổi tên 18 file font sang `fz_poppins_*.ttf` đúng chuẩn Android (chữ thường, gạch dưới, không khoảng trắng), bỏ tham chiếu hai font UTM đã được người dùng xóa
 - Khai báo đủ 9 độ đậm Thin–Black cùng các bản Italic thật trong `GameFontFamily`; toàn bộ chữ Material, DesignText, nút, hộp thoại và ô nhập dùng bộ font mới

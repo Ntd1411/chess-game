@@ -10,8 +10,14 @@ class SplashAssetAlignmentTest {
     @Test
     fun fillFitsFrameOpeningOnSharedCanvas() {
         val dir = File("src/main/res/drawable")
-        val frame = ImageIO.read(File(dir, "splash_loading_frame.png"))
-        val fill = ImageIO.read(File(dir, "splash_loading_fill.png"))
+        val frame = requireNotNull(ImageIO.read(File(dir, "splash_loading_frame.webp"))) {
+            "ImageIO WebP reader must decode the splash frame"
+        }
+        val fill = requireNotNull(ImageIO.read(File(dir, "splash_loading_fill.webp"))) {
+            "ImageIO WebP reader must decode the splash fill"
+        }
+        assertTrue("PNG frame must not duplicate the WebP resource", !File(dir, "splash_loading_frame.png").exists())
+        assertTrue("PNG fill must not duplicate the WebP resource", !File(dir, "splash_loading_fill.png").exists())
         assertEquals(1536, frame.width)
         assertEquals(1024, frame.height)
         assertEquals(frame.width, fill.width)

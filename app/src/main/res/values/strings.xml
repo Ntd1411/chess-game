@@ -405,4 +405,20 @@
     <string name="local_time_minutes">%1$d phút</string>
     <string name="status_timeout_win">%1$s thắng — đối thủ hết giờ</string>
     <string name="status_timeout_draw">Hòa — hết giờ nhưng đối thủ không đủ quân chiếu hết</string>
+    <!-- Main menu: nhãn phủ lên bộ artwork mới. -->
+    <string name="main_menu_tower">Khám Phá\nTháp Cờ</string>
+    <string name="main_menu_local">Hai Người\nCùng Máy</string>
+    <string name="main_menu_lan">Hai Người\nQua LAN</string>
+    <string name="main_menu_journal">Nhật Ký</string>
+    <string name="main_menu_inventory">Túi Đồ</string>
+    <string name="main_menu_achievements">Thành Tựu</string>
+    <string name="main_menu_history">Lịch Sử</string>
+    <string name="main_menu_settings">Cài Đặt</string>
+    <string name="main_menu_tower_short">Tháp Cờ</string>
+    <string name="main_menu_ai_short">Đấu AI</string>
+    <string name="main_menu_local_short">2 Người</string>
+    <string name="main_menu_lan_short">LAN</string>
+    <string name="main_menu_spectate_short">AI vs AI</string>
+    <string name="main_menu_local_tiny">2P</string>
+    <string name="main_menu_spectate_tiny">Auto</string>
 </resources>
