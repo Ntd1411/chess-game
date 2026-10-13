@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 20:09 GMT+7 — Thay bộ font UTM bằng FZ Poppins và chuẩn hóa tên tài nguyên
+- Đổi tên 18 file font sang `fz_poppins_*.ttf` đúng chuẩn Android (chữ thường, gạch dưới, không khoảng trắng), bỏ tham chiếu hai font UTM đã được người dùng xóa
+- Khai báo đủ 9 độ đậm Thin–Black cùng các bản Italic thật trong `GameFontFamily`; toàn bộ chữ Material, DesignText, nút, hộp thoại và ô nhập dùng bộ font mới
+- Phân cấp chữ: Regular cho nội dung/ô nhập, Medium cho nhãn nhỏ, SemiBold cho tiêu đề phụ/nhãn lớn, Bold cho tiêu đề chính và nút; giữ nguyên cỡ chữ và font glyph quân cờ
+- Cập nhật test kiểm tra đủ 18 ánh xạ độ đậm/kiểu nghiêng, tên file hợp lệ và hỗ trợ ký tự tiếng Việt; test app và build debug thành công
+
 ## 2026-10-13 19:49 GMT+7 — Áp dụng hai font người dùng cung cấp vào toàn bộ chữ giao diện
 - Đóng gói `font_normal.ttf` (UTM NguyenHa 02) và `font_bold.ttf` (UTM NguyenHa 01), khai báo `GameFontFamily` với hai độ đậm Normal/Bold
 - Cập nhật đủ 15 kiểu chữ Material; nội dung dùng font thường, tiêu đề và nhãn dùng font đậm, giữ nguyên cỡ chữ
