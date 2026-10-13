@@ -14,6 +14,18 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 02:42 GMT+7 — Vẽ lại màn Hai người cùng máy đồng bộ với Máy vs Máy
+- Dùng card tối viền vàng mảnh, avatar tròn, nhãn bên Trắng/Đen và ô tên tự vẽ bằng Compose; nhóm thời gian bốn mức thành lưới 2×2 dễ đọc
+- Header/back sát mép trên vùng an toàn; nút Bắt đầu/Quay lại neo dưới, phần nội dung cuộn độc lập và tránh bàn phím. Next chuyển sang tên người chơi 2, Done đóng bàn phím
+- Giữ tên mặc định, giới hạn 20 ký tự, chuẩn hóa tên và logic đồng hồ/ván đấu; dùng chung header/nút đơn giản với Máy vs Máy, không thay đổi chức năng spectate
+- Kiểm tra: assembleDebug, LocalClockTest, toàn bộ test spectate và git diff --check đều đạt; chưa kiểm tra trực quan/bàn phím trên thiết bị hoặc emulator
+
+## 2026-10-14 02:30 GMT+7 — Làm lại màn chọn Máy vs Máy bằng card và nút tự vẽ đơn giản
+- Thay khung/nút ảnh ở bước chọn hai AI bằng card tối viền vàng mảnh, avatar tròn và ba nút Dễ/Vừa/Khó có trạng thái chọn rõ ràng
+- Đưa nút quay lại và tiêu đề lên sát mép trên vùng an toàn; neo hai nút Bắt đầu/Quay lại sát mép dưới thực của màn hình thay vì khung 1080×1920 căn giữa
+- Nội dung hai AI cuộn độc lập trên màn nhỏ, giữ hai nút dưới luôn hiện; giữ nguyên độ khó được chọn qua xoay màn và không đổi logic ván xem/điều khiển AI
+- Kiểm tra: assembleDebug, test spectate và git diff --check đều đạt; chưa kiểm tra trực quan trên thiết bị/emulator
+
 ## 2026-10-14 02:20 GMT+7 — Chỉnh ba vấn đề lời thoại và lời chào boss tái đấu
 - Thoại Aria tầng 45 nói rõ vòng lặp bắt đầu khi thất bại ở đỉnh tháp, không phải vừa đến đỉnh; đổi câu hỏi của Người Lữ Hành sang cách nói trung tính, không gọi Aria là “bà”
 - Hiệp Sĩ tầng 35 và Nữ Hoàng Máu tầng 42 có lời chào tái đấu riêng; giữ lời chào mặc định ở lần đầu và màn chọn AI

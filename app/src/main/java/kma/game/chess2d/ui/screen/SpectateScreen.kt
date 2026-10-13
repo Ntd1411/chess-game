@@ -1,5 +1,17 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,12 +20,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,17 +48,16 @@ import kma.game.chess2d.opponent.AiCharacters
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.spectate.SpectateViewModel
+import kma.game.chess2d.ui.art.ArtBackdrop
+import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.BattleButton
 import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.DesignCanvas
-import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
-import kma.game.chess2d.ui.art.SubScreenHeader
-import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.theme.GothicColors
+import kma.game.chess2d.ui.theme.GameFontFamily
 
 /**
  * Nhánh Máy vs Máy: chọn độ mạnh hai AI rồi ngồi xem chúng đấu.
@@ -77,11 +93,7 @@ fun SpectateRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
 private fun portraitFor(level: Difficulty): Int =
     AiCharacters.all.firstOrNull { it.difficulty == level }?.portrait ?: R.drawable.portrait_unknown_01
 
-/**
- * Bước chọn cấp độ cho AI Trắng và AI Đen, dựng trên khung 1080x1920 như các màn phụ khác:
- * mỗi bên là một tấm `ui_panel_main` có chân dung nhân vật máy và ba nút cấp độ (nút đang chọn
- * là nút chính), dưới cùng là nút Bắt đầu và nút Quay lại.
- */
+/** Edge-anchored setup: safe header/footer and independently scrollable AI cards. */
 @Composable
 private fun SpectateSetupScreen(
     onStart: (Difficulty, Difficulty) -> Unit,
@@ -91,79 +103,113 @@ private fun SpectateSetupScreen(
     var white by rememberSaveable { mutableStateOf(Difficulty.MEDIUM) }
     var black by rememberSaveable { mutableStateOf(Difficulty.MEDIUM) }
 
-    DesignCanvas(background = R.drawable.bg_battle_default, dim = 0.4f, modifier = modifier) {
-        SubScreenHeader(title = stringResource(R.string.spectate_setup_title), onBack = onBack)
-        DesignText(
-            text = stringResource(R.string.spectate_setup_hint),
-            size = 30,
-            maxLines = 3,
-            modifier = Modifier.at(90, 180, 900, 110),
-        )
-        LevelPanel(
-            top = 320,
-            title = stringResource(R.string.spectate_white_ai),
-            current = white,
-            onChosen = { white = it },
-        )
-        LevelPanel(
-            top = 820,
-            title = stringResource(R.string.spectate_black_ai),
-            current = black,
-            onChosen = { black = it },
-        )
-        GothicButton(
-            label = stringResource(R.string.spectate_start),
-            onClick = { onStart(white, black) },
-            modifier = Modifier.at(150, 1400, 780, 110),
-        )
-        GothicButton(
-            label = stringResource(R.string.spectate_back),
-            onClick = onBack,
-            art = ButtonArt.SECONDARY,
-            modifier = Modifier.at(150, 1530, 780, 100),
-        )
+    Box(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
+        ArtBackdrop(R.drawable.bg_battle_default, dim = 0.6f)
+        // Anchor to the actual safe screen edges, not the centered 1080x1920 canvas.
+        Column(
+            modifier = Modifier.fillMaxSize().safeDrawingPadding()
+                .padding(horizontal = 16.dp).padding(top = 4.dp, bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            SimpleSetupHeader(
+                title = stringResource(R.string.spectate_setup_title),
+                backLabel = stringResource(R.string.spectate_back),
+                onBack = onBack,
+            )
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.spectate_setup_hint),
+                        color = GothicColors.Parchment,
+                        fontFamily = GameFontFamily,
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                    )
+                    LevelPanel(
+                        title = stringResource(R.string.spectate_white_ai),
+                        current = white,
+                        onChosen = { white = it },
+                    )
+                    LevelPanel(
+                        title = stringResource(R.string.spectate_black_ai),
+                        current = black,
+                        onChosen = { black = it },
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SimpleSetupButton(
+                    label = stringResource(R.string.spectate_start),
+                    onClick = { onStart(white, black) },
+                    primary = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                SimpleSetupButton(
+                    label = stringResource(R.string.spectate_back),
+                    onClick = onBack,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
     }
 }
 
-/** Tấm chọn cấp độ của một bên: chân dung, tên bên và hàng ba nút cấp độ. */
+/** A drawn dark card with a circular portrait and a three-choice difficulty selector. */
 @Composable
 private fun LevelPanel(
-    top: Int,
     title: String,
     current: Difficulty,
     onChosen: (Difficulty) -> Unit,
 ) {
-    SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(60, top, 960, 440))
-    PortraitInFrame(
-        portrait = portraitFor(current),
-        contentDescription = title,
-        modifier = Modifier.at(110, top + 50, 220, 220),
-    )
-    DesignText(
-        text = title,
-        size = 44,
-        color = GothicColors.Gold,
-        weight = FontWeight.Bold,
-        align = TextAlign.Start,
-        alignment = Alignment.CenterStart,
-        maxLines = 1,
-        modifier = Modifier.at(370, top + 70, 610, 80),
-    )
-    DesignText(
-        text = stringResource(labelOf(current)),
-        size = 32,
-        align = TextAlign.Start,
-        alignment = Alignment.CenterStart,
-        maxLines = 1,
-        modifier = Modifier.at(370, top + 160, 610, 70),
-    )
-    Difficulty.entries.forEachIndexed { i, level ->
-        GothicButton(
-            label = stringResource(labelOf(level)),
-            onClick = { onChosen(level) },
-            art = if (level == current) ButtonArt.PRIMARY else ButtonArt.SECONDARY,
-            modifier = Modifier.at(100 + i * 300, top + 300, 280, 100),
-        )
+    val shape = RoundedCornerShape(16.dp)
+    val opponent = AiCharacters.all.first { it.difficulty == current }
+    Column(
+        modifier = Modifier.fillMaxWidth().clip(shape)
+            .background(GothicColors.Ink.copy(alpha = 0.86f))
+            .border(1.dp, GothicColors.Gold.copy(alpha = 0.4f), shape)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ArtImage(
+                res = portraitFor(current), maxEdge = ArtSizes.PORTRAIT,
+                contentDescription = stringResource(opponent.name),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(72.dp).clip(CircleShape)
+                    .border(1.dp, GothicColors.Gold.copy(alpha = 0.6f), CircleShape),
+            )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(title, color = GothicColors.Gold, fontFamily = GameFontFamily,
+                    fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                Text(stringResource(opponent.name), color = GothicColors.Muted,
+                    fontFamily = GameFontFamily, fontSize = 14.sp)
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Difficulty.entries.forEach { level ->
+                SimpleSetupButton(
+                    label = stringResource(labelOf(level)),
+                    onClick = { onChosen(level) },
+                    selected = level == current,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
     }
 }
 

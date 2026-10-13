@@ -400,6 +400,7 @@
     <string name="local_setup_player_one">Người chơi 1 — quân Trắng</string>
     <string name="local_setup_player_two">Người chơi 2 — quân Đen</string>
     <string name="local_setup_name_hint">Tên (để trống dùng tên mặc định)</string>
+    <string name="local_setup_name_label">Tên người chơi</string>
     <string name="local_setup_time">Thời gian mỗi bên</string>
     <string name="local_setup_time_note">Đồng hồ chỉ chạy sau nước đi đầu tiên. Ván có giờ không cho Đi lại.</string>
     <string name="local_setup_start">BẮT ĐẦU</string>

@@ -86,12 +86,17 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     `THAM GIA PHÒNG` (nhập IP hoặc tìm phòng trong LAN); sau khi kết nối hiện
     Player 1 vs Player 2 → `BẮT ĐẦU TRẬN ĐẤU`; có thể auto-discover phòng trong cùng
     mạng
-14. **Local Multiplayer (2 người cùng máy)** — màn setup: Người chơi 1 (chọn quân
-    Trắng, tên), Người chơi 2 (chọn quân Đen, tên); tùy chọn thời gian (Không giới
-    hạn/5/10/30 phút), bật/tắt gợi ý, hiệu ứng; nút `BẮT ĐẦU` → vào Chess Battle
-15. **AI vs AI** (= mode xem/spectate) — chọn AI Trắng vs AI Đen (hiển thị tên + sao
-    độ khó mỗi bên); khi chạy, bàn cờ có thêm: Pause, tốc độ ×1/×2/×4, Auto play,
-    Move history
+14. **Local Multiplayer (2 người cùng máy)** — màn setup dùng hai card tự vẽ tối
+    viền vàng, avatar tròn và ô tên; Người chơi 1 cầm Trắng, Người chơi 2 cầm Đen.
+    Chọn Không giới hạn/5/10/30 phút trong lưới nút 2×2. Header/back neo sát trên;
+    Bắt đầu/Quay lại neo dưới vùng an toàn; nội dung cuộn và tránh bàn phím. Next
+    chuyển ô tên tiếp theo, Done đóng bàn phím; tên trống dùng mặc định. Gợi ý/hiệu
+    ứng vẫn lấy từ cài đặt chung; Bắt đầu mở Chess Battle như trước.
+15. **AI vs AI** (= mode xem/spectate) — bước chọn dùng hai card tối viền mảnh,
+    avatar tròn/tên AI và ba nút tự vẽ Dễ/Vừa/Khó. Nút back/tiêu đề neo sát mép trên
+    vùng an toàn; hai nút Bắt đầu/Quay lại neo sát mép dưới. Nội dung card cuộn trên
+    màn nhỏ, footer luôn hiện và không phụ thuộc khung thiết kế căn giữa. Khi chạy,
+    bàn cờ vẫn có Pause, tốc độ ×1/×2/×4, Auto play và Move history như trước.
 16. **Settings** — tabs: Chung (ngôn ngữ, rung, thông báo) / Âm thanh (nhạc nền,
     hiệu ứng, âm quân cờ) / Hình ảnh (chất lượng hiệu ứng, hiệu ứng phép thuật, FPS)
     / Điều khiển (hiển thị nước đi hợp lệ, xác nhận nước đi, gợi ý) / Khác (lưu dữ
