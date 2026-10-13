@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -21,14 +20,6 @@ import kma.game.chess2d.campaign.NodeKind
 import kma.game.chess2d.campaign.Reward
 import kma.game.chess2d.campaign.TowerCatalog
 import kma.game.chess2d.ui.art.ArtImage
-import kma.game.chess2d.ui.art.ArtSizes
-import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.DesignCanvas
-import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.GothicButton
-import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
-import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
 internal fun victorySubtitleRes(floor: Floor): Int = when {
@@ -68,71 +59,24 @@ private fun RewardItem(@DrawableRes icon: Int, count: Int) {
     }
 }
 
-/**
- * Màn Thất bại theo bản thiết kế: nền `bg_defeat`, khói mờ ở giữa, ornament, tiêu đề, panel lý do
- * thua và hai nút Thử lại / Về sảnh. Chỉ dùng một lớp hạt (`decor_defeat_particles`) cho đỡ rối.
- */
+internal fun defeatReasonRes(reason: LossReason): Int = when (reason) {
+    LossReason.CHECKMATE -> R.string.defeat_reason_checkmate
+    LossReason.DRAW -> R.string.defeat_reason_draw
+}
+
 @Composable
-fun DefeatScreen(
-    floor: Floor,
-    reason: LossReason,
-    onRetry: () -> Unit,
-    onLobby: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    DesignCanvas(background = R.drawable.bg_defeat, dim = 0.2f, modifier = modifier) {
-        val d = LocalDesign.current
-        ArtImage(R.drawable.decor_defeat_smoke, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.3f,
-            modifier = Modifier.at(140, 360, 800, 1060))
-        ArtImage(R.drawable.decor_defeat_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.45f,
-            modifier = Modifier.at(0, 120, 300, 420))
-        ArtImage(R.drawable.decor_defeat_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.45f,
-            modifier = Modifier.at(780, 1680, 300, 220))
-        ArtImage(R.drawable.decor_defeat_ornament, maxEdge = ArtSizes.BUTTON, trim = true,
-            modifier = Modifier.at(140, 650, 800, 140))
-        DesignText(
-            text = stringResource(R.string.defeat_title),
-            size = 104,
-            color = GothicColors.Blood,
-            weight = FontWeight.Bold,
-            maxLines = 1,
-            modifier = Modifier.at(100, 790, 880, 140),
-        )
-
-        SlicedArt(res = R.drawable.ui_panel_sub, slice = 0.2f, modifier = Modifier.at(100, 980, 880, 230))
-        Column(
-            modifier = Modifier.at(100, 980, 880, 230).padding(horizontal = d.dp(70), vertical = d.dp(28)),
-            verticalArrangement = Arrangement.spacedBy(d.dp(4)),
-        ) {
-            DesignText(stringResource(R.string.defeat_floor, floor.number), size = 32, color = GothicColors.Gold,
-                weight = FontWeight.Bold, maxLines = 1, modifier = Modifier.fillMaxWidth())
-            DesignText(
-                text = stringResource(
-                    when (reason) {
-                        LossReason.CHECKMATE -> R.string.defeat_reason_checkmate
-                        LossReason.DRAW -> R.string.defeat_reason_draw
-                    },
-                ),
-                size = 28,
-                maxLines = 2,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            DesignText(stringResource(R.string.defeat_encourage), size = 26, italic = true, maxLines = 2,
-                color = GothicColors.Parchment.copy(alpha = 0.8f), modifier = Modifier.fillMaxWidth())
+fun DefeatScreen(floor: Floor, reason: LossReason, onRetry: () -> Unit, onLobby: () -> Unit, modifier: Modifier = Modifier) {
+    SimpleSetupPage(R.drawable.bg_defeat, stringResource(R.string.defeat_title), stringResource(R.string.action_back), onLobby, modifier,
+        footer = {
+            SimpleSetupButton(stringResource(R.string.defeat_retry), onRetry, Modifier.fillMaxWidth(), primary = true)
+            SimpleSetupButton(stringResource(R.string.result_to_lobby), onLobby, Modifier.fillMaxWidth())
+        }) {
+        ArtImage(R.drawable.badge_defeat, trim = true, modifier = Modifier.size(120.dp).align(androidx.compose.ui.Alignment.CenterHorizontally))
+        SimpleSetupCard {
+            Text(stringResource(R.string.defeat_floor, floor.number), color = GothicColors.Gold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(floor.title, color = GothicColors.Muted, fontSize = 15.sp)
+            Text(stringResource(defeatReasonRes(reason)), color = GothicColors.Parchment, fontSize = 18.sp)
+            Text(stringResource(R.string.defeat_encourage), color = GothicColors.Muted, fontSize = 15.sp)
         }
-
-        GothicButton(
-            label = stringResource(R.string.defeat_retry),
-            onClick = onRetry,
-            fontSize = d.sp(40),
-            modifier = Modifier.at(150, 1320, 780, 110),
-        )
-        GothicButton(
-            label = stringResource(R.string.result_to_lobby),
-            onClick = onLobby,
-            art = ButtonArt.SECONDARY,
-            fontSize = d.sp(36),
-            modifier = Modifier.at(150, 1450, 780, 100),
-        )
     }
 }

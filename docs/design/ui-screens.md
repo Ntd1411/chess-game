@@ -147,6 +147,9 @@ Hội thoại dùng card tối viền vàng, portrait có sẵn và chữ sáng 
 ### Vẽ lại Chiến thắng
 Chiến thắng dùng card phần thưởng tối viền vàng, số vàng/pha lê/sách thật và nút tự vẽ. Không đổi logic cộng thưởng hoặc mở tầng, vẫn Tiếp tục về bản đồ.
 
+### Vẽ lại Thất bại
+Thất bại dùng card tối viền vàng và chữ sáng, giữ nền/huy hiệu. Thử lại và Về sảnh tự vẽ, không đổi luật thất bại hay việc mở lượt mới.
+
 ## Sơ đồ điều hướng
 
 ```

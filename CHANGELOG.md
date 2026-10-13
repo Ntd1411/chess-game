@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:12 GMT+7 — Vẽ lại Thất bại
+- Card tự vẽ đọc rõ tên tầng, lý do và lời động viên, huy hiệu giữ từ asset. Nội dung cuộn với nút Thử lại/Về sảnh neo dưới. Giữ hai lý do thua và callback chơi lại.
+- Kiểm tra: assembleDebug và 273 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:10 GMT+7 — Vẽ lại Chiến thắng
 - Giữ nền/huy hiệu, card phần thưởng tự vẽ với số liệu thật, nội dung cuộn và hai nút Tiếp tục/Về sảnh neo dưới. Giữ thông báo tầng cuối/tầng mở và luồng ghi tiến độ.
 - Kiểm tra: assembleDebug và 272 app unit test qua; chưa QA thiết bị.
