@@ -1,14 +1,11 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.layout.height
@@ -85,10 +82,6 @@ fun GameScreen(
     val appearance by appearanceStore.settings.collectAsStateWithLifecycle(
         initialValue = AppSettings(),
     )
-    // Lật bàn là lựa chọn của người đang ngồi xem, không phải trạng thái của ván, nên
-    // giữ ở màn hình bằng rememberSaveable chứ không đẩy vào ViewModel. Dùng lại đúng cờ
-    // `flipped` của bàn cờ LAN nên không phải thêm đường vẽ nào mới.
-    var flipped by rememberSaveable { mutableStateOf(false) }
 
     // Dựng lại ván cũ trước khi đồng bộ lựa chọn: ViewModel tự chọn đúng chế độ và cấp
     // độ của ván đó, và chính nó cũng chặn việc dựng lại lần thứ hai khi xoay máy.
@@ -151,22 +144,6 @@ fun GameScreen(
         }
         add(
             MatchAction(
-                icon = Icons.Filled.KeyboardArrowUp,
-                label = stringResource(R.string.action_flip),
-                art = BattleButton.FLIP,
-                onClick = { flipped = !flipped },
-            ),
-        )
-        add(
-            MatchAction(
-                icon = Icons.Filled.Settings,
-                label = stringResource(R.string.pause_settings),
-                art = BattleButton.SETTINGS,
-                onClick = { showSettings = true },
-            ),
-        )
-        add(
-            MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
                 art = BattleButton.MENU,
@@ -222,15 +199,9 @@ fun GameScreen(
             stringResource(R.string.moves_reviewing, it + 1)
         } ?: timeoutLabel(state) ?: statusLabel(state),
         modifier = modifier,
-        belowBoard = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                MoveList(
-                    sanMoves = state.sanMoves,
-                    reviewPly = state.reviewPly,
-                    onSelectPly = viewModel::reviewAt,
-                )
-            }
-        },
+        sanMoves = state.sanMoves,
+        reviewPly = state.reviewPly,
+        onSelectPly = viewModel::reviewAt,
     ) {
         ChessBoard(
             pieces = state.pieces,
@@ -240,7 +211,7 @@ fun GameScreen(
             lastMoveTo = state.lastMoveTo,
             checkedKingSquare = state.checkedKingSquare,
             onSquareTap = viewModel::onSquareTap,
-            flipped = flipped,
+            flipped = false,
             palette = appearance.boardPalette,
             pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),

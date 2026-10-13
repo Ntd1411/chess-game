@@ -1,177 +1,126 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import kma.game.chess2d.R
+import kma.game.chess2d.engine.Engine
+import kma.game.chess2d.engine.Fen
+import kma.game.chess2d.ui.art.DesignText
+import kma.game.chess2d.ui.art.LocalDesign
+import kma.game.chess2d.ui.theme.GothicColors
 
-/**
- * Danh sách nước đi hai cột kèm chế độ xem lại (mục 7.2): mỗi dòng là một nước đôi
- * Trắng – Đen, bấm vào một nước là xem thế cờ ngay sau nước đó.
- *
- * Nhận sẵn ký hiệu SAN từ [kma.game.chess2d.game.GameUiState] chứ không tự sinh: sinh
- * SAN cần thế cờ trước từng nước, đó là việc của engine và ViewModel, không phải
- * việc của một hàm vẽ.
- *
- * Không dùng LazyColumn vì khung ván đấu đã cuộn dọc sẵn; lồng hai vùng cuộn cùng
- * chiều vào nhau chỉ làm ngón tay của người chơi bị tranh chấp.
- *
- * @param sanMoves danh sách nước đã đi theo thứ tự, Trắng ở các chỉ số chẵn.
- * @param reviewPly nước đang xem lại, `null` khi đang ở thế hiện tại.
- * @param onSelectPly báo lên ViewModel nước vừa chọn; `null` nghĩa là về thế hiện tại.
- */
+/** Labels retain PGN numbering, including games starting with Black from a custom FEN. */
+internal fun moveStripLabels(sanMoves: List<String>, firstMoveNumber: Int = 1, whiteStarts: Boolean = true): List<String> =
+    sanMoves.mapIndexed { index, san ->
+        val white = (index % 2 == 0) == whiteStarts
+        val number = firstMoveNumber + (index + if (whiteStarts) 0 else 1) / 2
+        when {
+            white -> "$number. $san"
+            index == 0 -> "$number... $san"
+            else -> san
+        }
+    }
+
+/** Follow new moves only at the live end, never pull the user away while browsing older moves. */
+internal fun moveStripScrollTarget(
+    moveCount: Int,
+    reviewPly: Int?,
+    previousMoveCount: Int,
+    lastVisibleIndex: Int,
+    previousReviewPly: Int?,
+): Int? = when {
+    moveCount == 0 -> null
+    reviewPly != null -> reviewPly.coerceIn(0, moveCount - 1)
+    previousReviewPly != null || previousMoveCount == 0 || moveCount < previousMoveCount -> moveCount - 1
+    lastVisibleIndex >= previousMoveCount - 2 -> moveCount - 1
+    else -> null
+}
+
+/** One swipeable SAN strip. Review taps are enabled only when the caller supports board review. */
 @Composable
 fun MoveList(
     sanMoves: List<String>,
     modifier: Modifier = Modifier,
     reviewPly: Int? = null,
-    onSelectPly: (Int?) -> Unit = {},
+    onSelectPly: ((Int?) -> Unit)? = null,
+    startFen: String = Engine.START_FEN,
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+    val d = LocalDesign.current
+    val shape = RoundedCornerShape(d.dp(18))
+    val initial = remember(startFen) { Fen.parse(startFen) }
+    val labels = remember(sanMoves, startFen) {
+        moveStripLabels(sanMoves, initial.fullmoveNumber, initial.whiteToMove)
+    }
+    val scroll = rememberLazyListState()
+    var previousCount by remember { mutableStateOf(0) }
+    var previousReview by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(sanMoves.size, reviewPly) {
+        val lastVisible = scroll.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        val target = moveStripScrollTarget(sanMoves.size, reviewPly, previousCount, lastVisible, previousReview)
+        if (target != null) scroll.animateScrollToItem(target)
+        previousCount = sanMoves.size
+        previousReview = reviewPly
+    }
+
+    Box(modifier = modifier.background(GothicColors.Ink.copy(alpha = 0.95f), shape)
+        .border(d.dp(2), GothicColors.GoldDim.copy(alpha = 0.45f), shape)) {
+        if (sanMoves.isEmpty()) {
+            DesignText(text = stringResource(R.string.moves_empty), size = 28, color = GothicColors.Muted,
+                modifier = Modifier.fillMaxSize(), maxLines = 1)
+        } else {
+            Row(modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(10)),
                 verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.moves_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                // Nút thoát xem lại chỉ hiện khi đang xem lại: đó cũng là cách báo cho người
-                // chơi biết vì sao bàn cờ đang không cho đi.
-                if (reviewPly != null) {
-                    TextButton(onClick = { onSelectPly(null) }) {
-                        Text(stringResource(R.string.moves_back_to_live))
+                horizontalArrangement = Arrangement.spacedBy(d.dp(10))) {
+                if (reviewPly != null && onSelectPly != null) {
+                    DesignText(text = stringResource(R.string.moves_back_to_live), size = 28,
+                        color = GothicColors.Gold, weight = FontWeight.Bold, maxLines = 1,
+                        modifier = Modifier.height(d.dp(64))
+                            .clickable(role = Role.Button) { onSelectPly(null) }
+                            .padding(horizontal = d.dp(12)))
+                }
+                LazyRow(state = scroll, modifier = Modifier.weight(1f).fillMaxHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(d.dp(8))) {
+                    itemsIndexed(labels, key = { index, _ -> index }) { index, label ->
+                        val selected = reviewPly == index
+                        val latest = reviewPly == null && index == sanMoves.lastIndex
+                        val chipShape = RoundedCornerShape(d.dp(12))
+                        val click = if (onSelectPly == null) Modifier else Modifier.clickable(role = Role.Button) {
+                            onSelectPly(if (selected) null else index)
+                        }
+                        DesignText(text = label, size = 30, maxLines = 1,
+                            weight = if (selected || latest) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selected || latest) GothicColors.Gold else GothicColors.Parchment,
+                            modifier = Modifier.height(d.dp(60))
+                                .background(if (selected || latest) GothicColors.Gold.copy(alpha = 0.14f)
+                                    else GothicColors.Ink, chipShape)
+                                .then(click).padding(horizontal = d.dp(16)))
                     }
                 }
             }
-
-            if (sanMoves.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.moves_empty),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                return@Column
-            }
-
-            // Đi từng bước 2: nước của Trắng và nước trả lời của Đen nằm chung một dòng,
-            // giống cách biên bản cờ vẫn đánh số — và cũng là cách PGN đánh số ở Chặng 3.
-            for (index in sanMoves.indices step 2) {
-                MoveRow(
-                    number = index / 2 + 1,
-                    whitePly = index,
-                    white = sanMoves[index],
-                    black = sanMoves.getOrNull(index + 1),
-                    reviewPly = reviewPly,
-                    onSelectPly = onSelectPly,
-                )
-            }
         }
     }
 }
-
-/** Một dòng: số thứ tự, nước của Trắng, nước của Đen. */
-@Composable
-private fun MoveRow(
-    number: Int,
-    whitePly: Int,
-    white: String,
-    black: String?,
-    reviewPly: Int?,
-    onSelectPly: (Int?) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = "$number.",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.width(NUMBER_WIDTH.dp),
-        )
-        // Hai cột chia đôi phần còn lại bằng weight, nhờ vậy cột Đen không nhảy qua
-        // nhảy lại khi nước của Trắng dài ngắn khác nhau ("e4" so với "Qxd7+").
-        MoveCell(
-            text = white,
-            ply = whitePly,
-            reviewPly = reviewPly,
-            onSelectPly = onSelectPly,
-            modifier = Modifier.weight(1f),
-        )
-        if (black == null) {
-            // Giữ chỗ trống cho nước của Đen chưa đi, để dòng cuối không bị trải rộng ra.
-            Text(text = "", modifier = Modifier.weight(1f))
-        } else {
-            MoveCell(
-                text = black,
-                ply = whitePly + 1,
-                reviewPly = reviewPly,
-                onSelectPly = onSelectPly,
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-/**
- * Một ô nước đi bấm được.
- *
- * Bấm lại đúng nước đang xem thì về thế hiện tại, nhờ vậy không cần đi tìm nút
- * thoát mới ra khỏi chế độ xem lại được.
- */
-@Composable
-private fun MoveCell(
-    text: String,
-    ply: Int,
-    reviewPly: Int?,
-    onSelectPly: (Int?) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val selected = ply == reviewPly
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = if (selected) {
-            MaterialTheme.colorScheme.onSecondaryContainer
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        modifier = modifier
-            .background(
-                color = if (selected) {
-                    MaterialTheme.colorScheme.secondaryContainer
-                } else {
-                    Color.Transparent
-                },
-                shape = MaterialTheme.shapes.small,
-            )
-            .clickable { onSelectPly(if (selected) null else ply) }
-            .padding(horizontal = 4.dp, vertical = 2.dp),
-    )
-}
-
-/** Bề ngang cố định cho số thứ tự để hai cột nước đi luôn thẳng hàng. */
-private const val NUMBER_WIDTH = 28

@@ -25,6 +25,7 @@ class AssetStateTest {
             BattleButton.UNDO, BattleButton.HINT, BattleButton.MOVE, BattleButton.MENU,
             BattleButton.RESTART, BattleButton.SETTINGS, BattleButton.RESIGN,
             BattleButton.DRAW, BattleButton.REMATCH, BattleButton.LEAVE,
+            BattleButton.CONTINUE, BattleButton.LEVEL,
         ), single)
         for (b in BattleButton.entries - single) {
             assertEquals(3, setOf(b.normal, b.pressed, b.disabled).size)

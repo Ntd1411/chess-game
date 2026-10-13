@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -177,7 +176,6 @@ private fun SpectateMatchScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val game = state.game
-    var flipped by rememberSaveable { mutableStateOf(false) }
 
     // Vòng lặp AI chạy khi màn hình đang hiện và dừng khi app xuống nền: không để hai AI
     // nghĩ ngầm (tốn pin) khi không ai xem. Ván được giữ nguyên nên quay lại là đi tiếp.
@@ -226,13 +224,8 @@ private fun SpectateMatchScreen(
             captured = game.takenFromBlack,
             advantage = game.materialBalance,
         ),
+        sanMoves = game.sanMoves,
         actions = listOf(
-            MatchAction(
-                icon = Icons.Filled.KeyboardArrowUp,
-                label = stringResource(R.string.action_flip),
-                art = BattleButton.FLIP,
-                onClick = { flipped = !flipped },
-            ),
             MatchAction(
                 icon = Icons.Filled.Home,
                 label = stringResource(R.string.action_menu),
@@ -262,7 +255,6 @@ private fun SpectateMatchScreen(
                     onToggleAuto = viewModel::toggleAutoPlay,
                     onCycleSpeed = viewModel::cycleSpeed,
                 )
-                MoveList(sanMoves = game.sanMoves)
             }
         },
     ) {
@@ -274,7 +266,7 @@ private fun SpectateMatchScreen(
             lastMoveTo = game.lastMoveTo,
             checkedKingSquare = game.checkedKingSquare,
             onSquareTap = {},
-            flipped = flipped,
+            flipped = false,
             palette = appearance.boardPalette,
             pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),

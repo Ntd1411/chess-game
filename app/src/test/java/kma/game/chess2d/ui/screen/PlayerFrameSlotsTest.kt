@@ -9,37 +9,32 @@ import org.junit.Test
 
 class PlayerFrameSlotsTest {
     @Test
-    fun mappedSlotsStayInsideEachFrameAndDoNotOverlap() {
-        for (upper in listOf(true, false)) {
-            val slots = GamePlayLayout.player(upper)
-            val rects = listOf(slots.avatar, slots.name, slots.subtitle, slots.clock, slots.captures)
-            assertTrue(slots.height <= GamePlayLayout.FRAME_HEIGHT)
-            assertEquals(slots.avatar.w, slots.avatar.h, 0.001f)
-            rects.forEach {
-                assertTrue(it.x >= 0 && it.y >= 0)
-                assertTrue(it.right <= GamePlayLayout.FRAME_WIDTH && it.bottom <= slots.height)
-            }
-            for (i in rects.indices) for (j in i + 1 until rects.size) {
-                assertFalse("Slots $i/$j overlap in upper=$upper", rects[i].overlaps(rects[j]))
-            }
-            assertTrue("Captured pieces belong below the name", slots.captures.y > slots.subtitle.bottom)
+    fun drawnPlayerCardSlotsFitWithoutOverlap() {
+        val slots = GamePlayLayout.player
+        val rects = listOf(slots.avatar, slots.name, slots.subtitle, slots.clock, slots.captures)
+        assertEquals(GamePlayLayout.FRAME_HEIGHT.toFloat(), slots.height, 0f)
+        assertEquals(slots.avatar.w, slots.avatar.h, 0f)
+        rects.forEach {
+            assertTrue(it.x >= 0 && it.y >= 0)
+            assertTrue(it.right <= GamePlayLayout.FRAME_WIDTH && it.bottom <= slots.height)
         }
+        for (i in rects.indices) for (j in i + 1 until rects.size) {
+            assertFalse("Slots $i/$j overlap", rects[i].overlaps(rects[j]))
+        }
+        assertTrue(slots.captures.y > slots.subtitle.bottom)
+        assertTrue(slots.clock.x > slots.name.right)
+        assertTrue(slots.clock.w >= 200 && slots.clock.h >= 100)
     }
 
     @Test
-    fun avatarsAreCenteredOnTheTransparentCircularOpenings() {
-        for (upper in listOf(true, false)) {
-            val name = if (upper) "top" else "bottom"
-            val image = requireNotNull(ImageIO.read(File("src/main/res/drawable/game_play_frame_player_$name.webp")))
-            val avatar = GamePlayLayout.player(upper).avatarSource
-            val x = (avatar.x + avatar.w / 2).toInt()
-            val y = (avatar.y + avatar.h / 2).toInt()
-            assertEquals("Avatar opening must remain transparent", 0, image.getRGB(x, y) ushr 24)
-        }
+    fun playerAndTimerRenderingNoLongerDependsOnFrameArtwork() {
+        val source = File("src/main/java/kma/game/chess2d/ui/screen/MatchScaffold.kt").readText()
+        assertFalse(source.contains("R.drawable.game_play_frame_player_top"))
+        assertFalse(source.contains("R.drawable.game_play_frame_player_bottom"))
     }
 
     @Test
-    fun squareBoardFitsTheNewArtworkOpeningWithoutCoveringTheBorder() {
+    fun squareBoardFitsTheArtworkOpeningWithoutCoveringTheBorder() {
         val image = requireNotNull(ImageIO.read(File("src/main/res/drawable/chess_board_frame.webp")))
         assertEquals(1024, image.width)
         assertEquals(1024, image.height)

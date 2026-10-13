@@ -175,7 +175,7 @@ fun CampaignBattleRoute(
         ),
         headline = headline,
         modifier = modifier,
-        belowBoard = null,
+        sanMoves = state.game.sanMoves,
     ) {
         ChessBoard(
             pieces = state.game.pieces,

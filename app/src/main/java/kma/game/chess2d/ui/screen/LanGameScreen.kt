@@ -100,6 +100,7 @@ fun LanGameScreen(
     val clock = rememberTickingClock(state)
     val opponentMillis = playerClockMillis(state, clock, forYou = false)
     val yourMillis = playerClockMillis(state, clock, forYou = true)
+    val sanMoves = remember(state.startFen, state.moves) { lanSanMoves(state.startFen, state.moves) }
     val captures = remember(state.startFen, state.moves) {
         CaptureTally.of(state.startFen, state.moves.map { Move(it) })
     }
@@ -193,6 +194,8 @@ fun LanGameScreen(
             advantage = if (state.youPlayWhite) captures.materialBalance else -captures.materialBalance,
         ),
         actions = actions,
+        sanMoves = sanMoves,
+        moveStartFen = state.startFen,
         backdrop = R.drawable.bg_lan_lobby,
         inCheck = state.status == GameStatus.CHECK,
         checkmate = state.status == GameStatus.CHECKMATE,

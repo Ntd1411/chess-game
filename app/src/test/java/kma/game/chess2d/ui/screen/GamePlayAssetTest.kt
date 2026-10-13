@@ -22,6 +22,11 @@ class GamePlayAssetTest {
         "game_play_button_resign" to (1274 to 1234),
         "game_play_button_settings" to (1277 to 1231),
         "game_play_button_draw" to (1275 to 1234),
+        "game_play_button_continue" to (1254 to 1254),
+        "game_play_button_undo" to (1254 to 1254),
+        "game_play_button_level" to (1254 to 1254),
+        "game_play_button_menu" to (1254 to 1254),
+        "setting_line" to (1536 to 1024),
         "chess_piece_black_bishop" to (683 to 1024),
         "chess_piece_black_king" to (683 to 1024),
         "chess_piece_black_knight" to (1024 to 1024),
@@ -37,9 +42,9 @@ class GamePlayAssetTest {
     )
 
     @Test
-    fun allTwentyWebpAssetsDecodeWithOriginalCanvasAndAlpha() {
+    fun allWebpAssetsDecodeWithOriginalCanvasAndAlpha() {
         val dir = File("src/main/res/drawable")
-        assertEquals(20, sizes.size)
+        assertEquals(25, sizes.size)
         assertFalse("Android drawable resources must not have nested asset folders", File(dir, "game_play").exists())
         for ((name, size) in sizes) {
             val file = File(dir, "$name.webp")
@@ -61,12 +66,19 @@ class GamePlayAssetTest {
         assertEquals(12, ids.toSet().size)
         assertTrue(ArtAssets.preload.map { it.res }.containsAll(ids))
         assertTrue(ArtAssets.preload.map { it.res }.containsAll(ArtAssets.gamePlay.map { it.res }))
-        assertEquals(9, ArtAssets.gamePlay.size)
+        assertEquals(11, ArtAssets.gamePlay.size)
+        assertFalse(ArtAssets.gamePlay.any { it.res == R.drawable.game_play_frame_player_top ||
+            it.res == R.drawable.game_play_frame_player_bottom })
         assertEquals(ArtAssets.mainMenu, ArtAssets.preload.takeLast(ArtAssets.mainMenu.size))
     }
 
     @Test
     fun gameplayButtonsMatchTheirExistingActions() {
+        assertEquals(R.drawable.game_play_button_continue, BattleButton.CONTINUE.normal)
+        assertEquals(R.drawable.game_play_button_continue, iconFor(kma.game.chess2d.game.PauseItem.RESUME))
+        assertEquals(R.drawable.game_play_button_undo, BattleButton.UNDO.normal)
+        assertEquals(R.drawable.game_play_button_level, BattleButton.LEVEL.normal)
+        assertEquals(R.drawable.game_play_button_menu, BattleButton.MENU.normal)
         assertEquals(R.drawable.game_play_button_replay, BattleButton.RESTART.normal)
         assertEquals(R.drawable.game_play_button_replay, BattleButton.REMATCH.normal)
         assertEquals(R.drawable.game_play_button_resign, BattleButton.RESIGN.normal)
@@ -77,8 +89,10 @@ class GamePlayAssetTest {
 
     @Test
     fun framesBoardActionsAndDetailsHaveSeparateVerticalBands() {
-        assertTrue(GamePlayLayout.OPPONENT_TOP >= 0)
-        assertTrue(GamePlayLayout.OPPONENT_TOP + GamePlayLayout.FRAME_HEIGHT < GamePlayLayout.BOARD_TOP)
+        assertTrue(GamePlayLayout.MOVES_TOP >= 0)
+        assertTrue(GamePlayLayout.MOVES_TOP + GamePlayLayout.MOVES_HEIGHT < GamePlayLayout.OPPONENT_TOP)
+        assertTrue(GamePlayLayout.OPPONENT_TOP + GamePlayLayout.FRAME_HEIGHT < GamePlayLayout.HEADLINE_TOP)
+        assertTrue(GamePlayLayout.HEADLINE_TOP + GamePlayLayout.HEADLINE_HEIGHT < GamePlayLayout.BOARD_TOP)
         assertTrue(GamePlayLayout.BOARD_TOP + 960 < GamePlayLayout.PLAYER_TOP)
         assertTrue(GamePlayLayout.PLAYER_TOP + GamePlayLayout.FRAME_HEIGHT < GamePlayLayout.ACTIONS_TOP)
         assertTrue(GamePlayLayout.ACTIONS_TOP + 110 + 4 + 56 < GamePlayLayout.DETAILS_TOP)

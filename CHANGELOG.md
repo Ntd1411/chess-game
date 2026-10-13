@@ -14,6 +14,28 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 01:01 GMT+7 — Tự vẽ player/timer đơn giản và đưa nước đi lên dải ngang đầu màn chơi
+- Thay frame ảnh bằng hai card cùng bố cục, nền tối bo góc và viền mảnh; avatar tròn, tên và quân đã ăn căn trái, timer chữ monospace lớn bên phải
+- Nhấn viền/timer vàng cho bên đang tới lượt, cảnh báo đỏ khi ít giờ; giữ nguyên đồng hồ thật và ký hiệu ∞ cho ván không giới hạn, không nạp trước hai frame ảnh cũ
+- Chuyển danh sách SAN lên đầu màn thành LazyRow vuốt ngang, nhấn nước offline để xem lại và có nút về thế hiện tại; theo nước mới khi ở cuối nhưng không giật cuộn khi đang đọc nước cũ
+- Áp dụng dải nước đi cho offline, campaign, spectate và LAN; dựng SAN của LAN trên bàn cờ riêng, nhớ kết quả theo lịch sử nước đi và giữ số nước đúng với FEN bắt đầu bằng Đen
+- Cập nhật test bố cục card, timer, các vùng không chồng nhau, số nước/điều kiện cuộn và SAN LAN; build debug thành công, toàn bộ 230 test còn đúng 1 lỗi Hồ sơ có sẵn ngoài phạm vi
+
+## 2026-10-14 00:45 GMT+7 — Chuyển setting_line về đúng Menu/Pause của gameplay
+- Hoàn tác toàn bộ thay đổi giao diện Cài đặt từ lượt trước, trả lại panel, đường phân cách và khoảng cách hàng ban đầu
+- Dùng setting_line làm khung các dòng Tiếp tục/Khởi động lại/Cài đặt/Rời trận trong Pause Menu; giữ hai đầu hoa văn bằng nine-slice
+- Căn icon và chữ trong cùng hàng bấm được, chiều cao 56dp và khoảng cách 8dp; giữ nguyên callback và hành vi Back/chạm ngoài để tiếp tục ván
+- Giữ nguyên sửa lỗi frame player, asset nút mới và việc bỏ nút Lật bàn/Cài đặt khỏi hàng thao tác gameplay
+- Build debug và các test liên quan đến Pause Menu, Cài đặt, asset và crop frame đều thành công
+
+## 2026-10-14 00:32 GMT+7 — Sửa frame player ẩn, thay asset nút gameplay và thu gọn Cài đặt
+- Cắt vùng artwork trong BitmapPainter, ánh xạ tọa độ theo bitmap đã sample thay vì dùng ảnh quá khổ và offset trong Box bị ép kích thước; giữ nguyên vị trí avatar, tên, đồng hồ và quân đã ăn
+- Chuyển setting_line và bốn nút Tiếp tục/Đi lại/Đổi cấp AI/Menu sang WebP lossless, xác minh pixel RGBA và lưu PNG gốc trong app/build/gameplay_controls_backup
+- Dùng setting_line làm nền từng hàng Cài đặt; giảm chiều cao hàng 200 xuống 144, khoảng cách hàng 8 và nhóm 16, căn đều lề nhãn và cột control
+- Bỏ nút Lật bàn và Cài đặt khỏi hàng thao tác màn chơi; Cài đặt vẫn truy cập qua Pause Menu, đồng hồ vẫn dừng khi mở overlay
+- Bổ sung test crop theo nhiều mức sample, kiểm tra pixel frame hiển thị, asset và bố cục Cài đặt; build debug và các nhóm test liên quan thành công
+- Toàn bộ 224 test còn 1 lỗi có sẵn ở SubScreenLayoutTest.profileBlocksDoNotOverlap; không sửa trang Hồ sơ ngoài phạm vi
+
 ## 2026-10-13 23:56 GMT+7 — Căn gameplay theo hai frame player mới và khung bàn cờ mới
 - Chuyển hai frame PNG 1536x1024 sang WebP lossless, xác minh từng pixel RGBA; sao lưu trong app/build/player_frames_v2_backup
 - Căn avatar tròn, tên sát trái, đồng hồ và hàng quân đã ăn theo tọa độ artwork; bàn cờ đặt đúng vùng rỗng của khung mới, không nine-slice

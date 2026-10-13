@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import kma.game.chess2d.ui.theme.GothicColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 /** Một ảnh cần nạp và cỡ cạnh dài tối đa cần dùng (px) khi hiển thị. */
 data class ArtSpec(@DrawableRes val res: Int, val maxEdge: Int)
@@ -192,6 +193,31 @@ fun rememberTrimmedArt(@DrawableRes res: Int, maxEdge: Int): TrimmedArt? {
     return art
 }
 
+/** A crop in original source pixels, remapped after bitmap sampling instead of oversized layout offsets. */
+data class ArtRegion(
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+    val canvasWidth: Int,
+    val canvasHeight: Int,
+) {
+    init {
+        require(canvasWidth > 0 && canvasHeight > 0)
+        require(x >= 0 && y >= 0 && width > 0 && height > 0)
+        require(x + width <= canvasWidth && y + height <= canvasHeight)
+    }
+
+    fun sampledBounds(bitmapWidth: Int, bitmapHeight: Int): IntRect {
+        require(bitmapWidth > 0 && bitmapHeight > 0)
+        val left = (x.toFloat() * bitmapWidth / canvasWidth).roundToInt().coerceIn(0, bitmapWidth - 1)
+        val top = (y.toFloat() * bitmapHeight / canvasHeight).roundToInt().coerceIn(0, bitmapHeight - 1)
+        val right = ((x + width).toFloat() * bitmapWidth / canvasWidth).roundToInt().coerceIn(left + 1, bitmapWidth)
+        val bottom = ((y + height).toFloat() * bitmapHeight / canvasHeight).roundToInt().coerceIn(top + 1, bitmapHeight)
+        return IntRect(left, top, right, bottom)
+    }
+}
+
 /**
  * Thay cho `Image(painterResource(...))` với asset lớn: nạp ở cỡ vừa đủ, chưa xong thì vẽ trống.
  *
@@ -210,7 +236,9 @@ fun ArtImage(
     colorFilter: ColorFilter? = null,
     filterQuality: FilterQuality = FilterQuality.Medium,
     trim: Boolean = false,
+    sourceRegion: ArtRegion? = null,
 ) {
+    require(!trim || sourceRegion == null) { "Use automatic trim or a source region, not both" }
     if (trim) {
         val art = rememberTrimmedArt(res, maxEdge) ?: return
         val painter = remember(art) {
@@ -233,6 +261,15 @@ fun ArtImage(
         return
     }
     val image = rememberArt(res, maxEdge) ?: return
+    if (sourceRegion != null) {
+        val painter = remember(image, sourceRegion, filterQuality) {
+            val rect = sourceRegion.sampledBounds(image.width, image.height)
+            BitmapPainter(image, IntOffset(rect.left, rect.top), IntSize(rect.width, rect.height), filterQuality)
+        }
+        Image(painter = painter, contentDescription = contentDescription, modifier = modifier,
+            contentScale = contentScale, alignment = alignment, alpha = alpha, colorFilter = colorFilter)
+        return
+    }
     Image(
         bitmap = image,
         contentDescription = contentDescription,
