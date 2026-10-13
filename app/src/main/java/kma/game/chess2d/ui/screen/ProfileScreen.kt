@@ -30,6 +30,8 @@ import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.art.SlicedArt
 import kma.game.chess2d.ui.art.SubScreenHeader
+import kma.game.chess2d.ui.art.BackIcon
+import kma.game.chess2d.ui.art.ScreenTitle
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
@@ -74,7 +76,8 @@ fun ProfileScreen(
     val into = stats.pointsIntoLevel
 
     DesignCanvas(background = R.drawable.bg_profile, dim = 0.3f, scrim = true, modifier = modifier) {
-        SubScreenHeader(title = stringResource(R.string.profile_title), onBack = onBack)
+        BackIcon(onClick = onBack, modifier = Modifier.at(48, 20, 88, 88))
+        ScreenTitle(text = stringResource(R.string.profile_title), modifier = Modifier.at(180, 20, 720, 100))
 
         val ch = ProfileLayout.Character
         ArtImage(

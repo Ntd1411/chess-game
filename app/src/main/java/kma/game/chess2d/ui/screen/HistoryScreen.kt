@@ -31,6 +31,8 @@ import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.art.SlicedArt
+import kma.game.chess2d.ui.art.BackIcon
+import kma.game.chess2d.ui.art.ScreenTitle
 import kma.game.chess2d.ui.art.SubScreenHeader
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
@@ -45,6 +47,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
 import kma.game.chess2d.engine.Board
@@ -98,7 +102,8 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, scrim = true, modifier = modifier) {
         val d = LocalDesign.current
-        SubScreenHeader(title = stringResource(R.string.history_title), onBack = onBack)
+        BackIcon(onClick = onBack, modifier = Modifier.at(48, 20, 88, 88))
+        ScreenTitle(text = stringResource(R.string.history_title), modifier = Modifier.at(180, 20, 720, 100))
         DesignText(
             text = stringResource(
                 R.string.history_stats,
@@ -120,7 +125,8 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 onClick = { scope.launch { withContext(Dispatchers.IO) { dao.deleteAll() } } },
                 art = ButtonArt.SECONDARY,
                 textColor = GothicColors.Blood,
-                modifier = Modifier.at(150, 1690, 780, 100),
+                fontSize = 10.sp,
+                modifier = Modifier.at(150, 1690, 780, 200),
             )
         }
 
@@ -372,4 +378,70 @@ private fun modeLabel(mode: String): Int = when (mode) {
     GameMode.TWO_PLAYERS.name -> R.string.history_mode_two_players
     GameMode.VS_COMPUTER.name -> R.string.history_mode_vs_computer
     else -> R.string.history_mode_lan
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Preview support
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+private object HistoryPreviewData {
+    val winRecord = MatchRecord(
+        id = 1,
+        playedAtMillis = 1728849600000L,
+        mode = GameMode.VS_COMPUTER.name,
+        startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        moves = "e2e4 e7e5 g1f3 b8c6 f1c4 g8f6 b1c3 f8c5",
+        result = MatchResult.WIN,
+    )
+
+    val lossRecord = MatchRecord(
+        id = 2,
+        playedAtMillis = 1728763200000L,
+        mode = GameMode.TWO_PLAYERS.name,
+        startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        moves = "e2e4 e7e5 g1f3 b8c6",
+        result = MatchResult.LOSS,
+    )
+
+    val drawRecord = MatchRecord(
+        id = 3,
+        playedAtMillis = 1728676800000L,
+        mode = "LAN",
+        startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        moves = "e2e4 e7e5 g1f3 g8f6",
+        result = MatchResult.DRAW,
+    )
+}
+
+@Preview(name = "Match Row - Win", showBackground = true)
+@Composable
+private fun MatchRowPreview_Win() {
+    MatchRow(
+        record = HistoryPreviewData.winRecord,
+        onReview = {},
+        onExport = {},
+        onDelete = {},
+    )
+}
+
+@Preview(name = "Match Row - Loss", showBackground = true)
+@Composable
+private fun MatchRowPreview_Loss() {
+    MatchRow(
+        record = HistoryPreviewData.lossRecord,
+        onReview = {},
+        onExport = {},
+        onDelete = {},
+    )
+}
+
+@Preview(name = "Match Row - Draw", showBackground = true)
+@Composable
+private fun MatchRowPreview_Draw() {
+    MatchRow(
+        record = HistoryPreviewData.drawRecord,
+        onReview = {},
+        onExport = {},
+        onDelete = {},
+    )
 }
