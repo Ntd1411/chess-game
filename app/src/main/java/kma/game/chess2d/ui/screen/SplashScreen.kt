@@ -11,15 +11,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import kma.game.chess2d.ui.art.ArtImage
+import kma.game.chess2d.ui.art.ArtSizes
+import kma.game.chess2d.ui.theme.GothicColors
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import kma.game.chess2d.R
 import kma.game.chess2d.ui.art.ArtAssets
-import kma.game.chess2d.ui.art.ArtBar
 import kma.game.chess2d.ui.art.ArtCache
-import kma.game.chess2d.ui.art.DesignCanvas
-import kma.game.chess2d.ui.art.at
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
@@ -53,7 +61,7 @@ fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         shown = true
         val startedAt = System.currentTimeMillis()
         ArtCache.preload(context, ArtAssets.preload) { done, total ->
-            progress = done.toFloat() / total
+            progress = splashFraction(done, total)
         }
         progress = 1f
         val remaining = MIN_SPLASH_MILLIS - (System.currentTimeMillis() - startedAt)
@@ -65,30 +73,21 @@ fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
         currentOnDone()
     }
 
-    DesignCanvas(background = R.drawable.bg_splash, dim = 0f, modifier = modifier) {
-        // Khung và ruột cùng canvas 1536x1024; ruột đã căn vào lòng khung (10,9–89,1%).
-        val bar = SplashLayout.Bar
-        ArtBar(
-            frame = R.drawable.splash_loading_frame,
-            fill = R.drawable.splash_loading_fill,
-            fraction = shownProgress,
-            fillStart = SplashLayout.FILL_START,
-            fillEnd = SplashLayout.FILL_END,
-            modifier = Modifier.at(bar.x, bar.y, bar.w, bar.h).alpha(alpha),
-        )
+    Box(modifier.fillMaxSize().background(GothicColors.Ink)) {
+        ArtImage(R.drawable.bg_splash, maxEdge = ArtSizes.SCREEN, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().alpha(alpha))
+        Column(Modifier.align(Alignment.BottomCenter).safeDrawingPadding().widthIn(max = SplashLayout.MAX_BAR_WIDTH_DP.dp)
+            .fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
+            LinearProgressIndicator(progress = { shownProgress.coerceIn(0f, 1f) }, color = GothicColors.Gold,
+                trackColor = GothicColors.Gold.copy(alpha = 0.2f), modifier = Modifier.fillMaxWidth().height(SplashLayout.BAR_HEIGHT_DP.dp).clip(CircleShape).alpha(alpha))
+        }
     }
 }
 
-/** Bố cục splash (đơn vị thiết kế 1080x1920): chỉ có thanh tải ở phần dưới màn hình. */
 internal object SplashLayout {
-    /**
-     * Canvas 1536x1024 (3:2) của `splash_loading_*`; khung nhìn thấy chiếm 32–63% chiều cao
-     * canvas, nên phần khung thật nằm khoảng y 1553–1707.
-     */
-    val Bar = LobbyLayout.Box(160, 1390, 760, 507)
-    const val FILL_START = 0.109f
-    const val FILL_END = 0.891f
+    const val MAX_BAR_WIDTH_DP = 480
+    const val BAR_HEIGHT_DP = 6
 }
+internal fun splashFraction(done: Int, total: Int): Float = if (total <= 0) 1f else (done.toFloat() / total).coerceIn(0f, 1f)
 
 private const val MIN_SPLASH_MILLIS = 1400L
 private const val FADE_MILLIS = 500

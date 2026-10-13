@@ -150,6 +150,9 @@ Chiến thắng dùng card phần thưởng tối viền vàng, số vàng/pha l
 ### Vẽ lại Thất bại
 Thất bại dùng card tối viền vàng và chữ sáng, giữ nền/huy hiệu. Thử lại và Về sảnh tự vẽ, không đổi luật thất bại hay việc mở lượt mới.
 
+### Vẽ lại Splash
+Splash không dùng khung/ruột ảnh cho thanh tải, giữ logo không crop và thanh tiến độ vàng. Tiến độ phản ánh preload thật, không giả chạy theo thời gian.
+
 ## Sơ đồ điều hướng
 
 ```

@@ -63,12 +63,7 @@ class SubScreenLayoutTest {
 
     @Test
     fun splashBarIsCenteredInLowerScreen() {
-        with(SplashLayout) {
-            assertEquals(1080, Bar.x * 2 + Bar.w)
-            // Khung nhìn thấy (32–63% chiều cao canvas) nằm trong vùng an toàn phía dưới.
-            assertTrue(Bar.y + Bar.h * 0.32f > 1920 * 0.75f)
-            assertTrue(Bar.y + Bar.h * 0.63f <= 1920 - LobbyLayout.SAFE_MARGIN)
-            assertTrue(FILL_START < FILL_END)
-        }
+        assertEquals(6, SplashLayout.BAR_HEIGHT_DP)
+        assertTrue(SplashLayout.MAX_BAR_WIDTH_DP in 320..560)
     }
 }

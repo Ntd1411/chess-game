@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:14 GMT+7 — Vẽ lại Splash
+- Giữ nền/logo sẵn có, thanh tải Compose tự vẽ neo dưới vùng an toàn. Tiến độ vẫn lấy preload thật, giữ fade và thời gian chờ tối thiểu/giữ 100 phần trăm trước khi vào menu.
+- Kiểm tra: assembleDebug và 274 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:12 GMT+7 — Vẽ lại Thất bại
 - Card tự vẽ đọc rõ tên tầng, lý do và lời động viên, huy hiệu giữ từ asset. Nội dung cuộn với nút Thử lại/Về sảnh neo dưới. Giữ hai lý do thua và callback chơi lại.
 - Kiểm tra: assembleDebug và 273 app unit test qua; chưa QA thiết bị.
