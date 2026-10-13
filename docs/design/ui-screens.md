@@ -110,10 +110,12 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     vùng an toàn; hai nút Bắt đầu/Quay lại neo sát mép dưới. Nội dung card cuộn trên
     màn nhỏ, footer luôn hiện và không phụ thuộc khung thiết kế căn giữa. Khi chạy,
     bàn cờ vẫn có Pause, tốc độ ×1/×2/×4, Auto play và Move history như trước.
-16. **Settings** — tabs: Chung (ngôn ngữ, rung, thông báo) / Âm thanh (nhạc nền,
-    hiệu ứng, âm quân cờ) / Hình ảnh (chất lượng hiệu ứng, hiệu ứng phép thuật, FPS)
-    / Điều khiển (hiển thị nước đi hợp lệ, xác nhận nước đi, gợi ý) / Khác (lưu dữ
-    liệu, reset dữ liệu, credits)
+16. **Settings** — dialog toàn màn giữ ván bên dưới, nền gothic và card/nút tự
+    vẽ tối–vàng. Năm tab ngang vuốt được; nội dung cuộn, Khôi phục mặc định/Quay
+    lại neo dưới và tránh bàn phím. Chung: tên (khi mở từ sảnh), rung; Âm thanh:
+    nhạc nền/tiếng quân; Hình ảnh: năm màu bàn/bốn bộ quân; Điều khiển: nước hợp
+    lệ; Khác: xoá dữ liệu có xác nhận và giới thiệu. Hàng switch/radio bấm cả
+    hàng, tối thiểu 56dp, không dùng setting_line hay control chưa có tác dụng.
 17. **Pause Menu** — cửa sổ Compose tự vẽ nền đen, góc bo và viền vàng mảnh, không
     dùng khung/nút ảnh. Tiếp tục là nút vàng nổi bật; Khởi động lại/Cài đặt là dòng
     tối; Rời trận ngăn bằng đường kẻ và nền đỏ nhẹ. Icon vector, chữ căn trái, vùng

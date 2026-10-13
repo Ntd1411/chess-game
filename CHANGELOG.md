@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:36 GMT+7 — Vẽ lại Cài đặt
+- Dialog toàn màn giữ ván bên dưới; tab ngang cuộn, card tối–vàng và hàng switch/radio tự vẽ bấm cả hàng, tối thiểu 56dp; footer và bàn phím dùng vùng an toàn
+- Giữ đủ năm tab và mọi setter thật; tên có IME Done, khôi phục chỉ cài đặt, xoá dữ liệu vẫn cần xác nhận với cảnh báo đầy đủ
+- Thay test tọa độ cũ, giữ kiểm tra độc lập với setting_line và thêm test nhãn toàn bộ palette/bộ quân; assembleDebug và toàn bộ 264 app unit test qua; chưa QA hình ảnh/tương tác/bàn phím trên thiết bị
+
 ## 2026-10-14 04:32 GMT+7 — Vẽ lại màn Lịch sử và Xem lại
 - Thẻ tối viền vàng co theo nội dung, danh sách cuộn có key và thống kê; header/footer ở vùng an toàn, giữ nút xem lại/xuất PGN/xoá và hiện tên đối thủ nếu có
 - Xem lại dùng bàn cờ vuông co theo chiều rộng/cao, nút trước/sau tự khoá tại biên; giữ palette/bộ quân từ cài đặt và kiểm tra nước bằng engine

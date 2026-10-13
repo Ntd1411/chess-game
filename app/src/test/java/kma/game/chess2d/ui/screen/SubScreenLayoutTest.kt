@@ -11,18 +11,16 @@ import org.junit.Test
 class SubScreenLayoutTest {
 
     @Test
-    fun settingsTabsFitOneRowAboveContent() {
-        assertEquals(listOf(90, 272, 454), (0..2).map(SettingsLayout::tabX))
-        val last = SettingsLayout.tabX(SettingsTab.entries.size - 1) + SettingsLayout.TAB_W
-        assertTrue(last <= SettingsLayout.CONTENT_X + SettingsLayout.CONTENT_W)
-        assertTrue(SettingsLayout.TAB_Y + SettingsLayout.TAB_H <= SettingsLayout.CONTENT_Y)
+    fun settingsRetainsFiveDistinctScrollableTabs() {
+        assertEquals(5, SettingsTab.entries.size)
+        assertEquals(5, SettingsTab.entries.map { it.label }.toSet().size)
+        assertTrue(SettingsLayout.TAB_MIN_DP >= 48)
     }
 
     @Test
-    fun settingsContentStaysInsideSafeArea() {
-        assertTrue(SettingsLayout.CONTENT_X >= 48)
-        assertTrue(SettingsLayout.CONTENT_X + SettingsLayout.CONTENT_W <= 1032)
-        assertTrue(SettingsLayout.CONTENT_Y + SettingsLayout.CONTENT_H <= SettingsLayout.RESTORE_Y)
+    fun settingsRowsKeepComfortableTapTargets() {
+        assertTrue(SettingsLayout.ROW_MIN_DP in 48..64)
+        assertEquals(560, SettingsLayout.MAX_WIDTH_DP)
     }
 
     @Test

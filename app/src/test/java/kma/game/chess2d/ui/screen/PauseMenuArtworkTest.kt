@@ -38,7 +38,7 @@ class PauseMenuArtworkTest {
 
     @Test
     fun settingsPanelRemainsIndependentOfTheGameplayMenu() {
-        assertEquals(200, SettingsLayout.ROW_H)
+        assertEquals(56, SettingsLayout.ROW_MIN_DP)
         val source = File("src/main/java/kma/game/chess2d/ui/screen/SettingsPanel.kt").readText()
         assertFalse(source.contains("R.drawable.setting_line"))
     }
