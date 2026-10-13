@@ -87,8 +87,10 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     để lộ danh tính. Card khóa ghi tầng mở. Chi tiết cuộn gồm portrait, sao, lời
     thoại, độ khó/phong cách/tính cách/tốc độ và ngày đầu gặp/số lần đối đầu. Back
     từ chi tiết về lưới, rồi mới về menu; dữ liệu gặp và điều kiện mở không đổi.
-12. **Inventory** — nêu trong sơ đồ điều hướng, chưa có spec chi tiết riêng (cần hỏi
-    thêm khi tới lượt làm)
+12. **Inventory** — nền gothic, ô vuông tự vẽ tối viền vàng, lưới co giãn 1–4 cột.
+    Giữ icon vật phẩm và số lượng ví; di vật khóa dùng icon khóa, chọn vẫn xem tầng
+    mở. Mô tả không giới hạn ba dòng và cuộn cùng lưới. Header/back sát trên, Quay
+    lại neo dưới vùng an toàn; thứ tự, số lượng và điều kiện nhận di vật không đổi.
 13. **LAN Multiplayer** — card/nút tự vẽ tối viền vàng, giữ nền/chân dung. Header
     sát trên; Mở phòng và Về sảnh neo dưới. Nội dung cuộn gồm địa chỉ + sao chép,
     người chơi, ba thể thức giờ, danh sách phòng và nhập IP thủ công có IME Go.

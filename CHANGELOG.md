@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:24 GMT+7 — Vẽ lại màn Túi đồ
+- Dùng ô vuông tự vẽ tối viền vàng, trạng thái chọn rõ và lưới co giãn 1–4 cột; nội dung/mô tả cuộn, header và Quay lại neo vùng an toàn
+- Giữ icon, ba số lượng ví và đủ 13 di vật theo thứ tự cũ, điều kiện mở không đổi; ô khóa xem được tầng mở, mô tả không bị cắt ba dòng
+- Thay test lưới tọa độ cũ và thêm test số lượng/biên mở di vật; assembleDebug và các test InventoryPresentationTest/LobbyLayoutTest/TowerRewardsTest thành công; chưa QA trên thiết bị
+
 ## 2026-10-14 04:15 GMT+7 — Cân bằng chiều cao tất cả thẻ Nhật ký
 - Mọi thẻ chừa hai dòng tên và một dòng tầng mở, kể cả thẻ đã gặp/chưa rõ; badge trạng thái luôn một dòng, dùng line-height chung để không lệch giữa thẻ khóa và thẻ mở
 - Giữ portrait vuông, lưới co giãn và khả năng tăng kích thước theo cỡ chữ; không đổi trạng thái/mở khóa hay nội dung chi tiết

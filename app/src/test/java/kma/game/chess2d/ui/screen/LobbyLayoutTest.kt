@@ -24,12 +24,14 @@ class LobbyLayoutTest {
     }
 
     @Test
-    fun `luoi tui do 4x4 nam gon trong panel`() {
-        val last = InventoryLayout.COLUMNS * InventoryLayout.ROWS - 1
-        assertTrue(InventoryLayout.slotX(0) >= 48)
-        assertTrue(InventoryLayout.slotX(last) + InventoryLayout.SLOT <= 48 + 984)
-        assertEquals(InventoryLayout.slotX(0), 1080 - (InventoryLayout.slotX(3) + InventoryLayout.SLOT))
-        assertTrue(InventoryLayout.slotY(last) + InventoryLayout.SLOT < 1170)
+    fun inventoryGridFitsAvailableWidth() {
+        for (width in 72..560) {
+            val columns = InventoryLayout.columnsFor(width.toFloat())
+            assertTrue(columns in 1..4)
+            assertTrue(columns * InventoryLayout.MIN_SLOT_DP + (columns - 1) * InventoryLayout.GAP_DP <= width)
+        }
+        assertEquals(3, InventoryLayout.columnsFor(288f))
+        assertEquals(4, InventoryLayout.columnsFor(320f))
     }
 
     @Test
