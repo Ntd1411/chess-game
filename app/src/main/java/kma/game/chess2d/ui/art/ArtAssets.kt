@@ -36,6 +36,18 @@ object ArtAssets {
         ArtSpec(R.drawable.icon_currency_crystal, ArtSizes.ICON),
     )
 
+    val gamePlay: List<ArtSpec> = listOf(
+        ArtSpec(R.drawable.game_play_background, ArtSizes.SCREEN),
+        ArtSpec(R.drawable.chess_board_frame, ArtSizes.BOARD),
+        ArtSpec(R.drawable.game_play_frame_player_top, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.game_play_frame_player_bottom, ArtSizes.BUTTON),
+        ArtSpec(R.drawable.game_play_button_replay, ArtSizes.ICON),
+        ArtSpec(R.drawable.game_play_button_resign, ArtSizes.ICON),
+        ArtSpec(R.drawable.game_play_button_draw, ArtSizes.ICON),
+        ArtSpec(R.drawable.game_play_button_settings, ArtSizes.ICON),
+        ArtSpec(R.drawable.game_play_button_exit, ArtSizes.ICON),
+    )
+
     val preload: List<ArtSpec> = listOf(
         ArtSpec(R.drawable.bg_splash, ArtSizes.SCREEN),
         ArtSpec(R.drawable.splash_loading_frame, ArtSizes.BUTTON),
@@ -63,5 +75,5 @@ object ArtAssets {
         ArtSpec(R.drawable.chess_piece_black_bishop, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_black_knight, ArtSizes.PIECE),
         ArtSpec(R.drawable.chess_piece_black_pawn, ArtSizes.PIECE),
-    ) + mainMenu
+    ) + gamePlay + mainMenu
 }

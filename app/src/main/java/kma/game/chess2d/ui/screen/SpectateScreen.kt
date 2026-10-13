@@ -209,6 +209,8 @@ private fun SpectateMatchScreen(
             active = !game.whiteToMove,
             portrait = portraitFor(state.blackLevel),
             hp = MatchHp.fromLost(game.takenFromBlack),
+            captured = game.takenFromWhite,
+            advantage = -game.materialBalance,
         ),
         you = MatchPlayer(
             name = whiteName,
@@ -221,6 +223,8 @@ private fun SpectateMatchScreen(
             active = game.whiteToMove,
             portrait = portraitFor(state.whiteLevel),
             hp = MatchHp.fromLost(game.takenFromWhite),
+            captured = game.takenFromBlack,
+            advantage = game.materialBalance,
         ),
         actions = listOf(
             MatchAction(
@@ -242,7 +246,7 @@ private fun SpectateMatchScreen(
             statusLabel(game)
         },
         modifier = modifier,
-        backdrop = R.drawable.bg_battle_default,
+        backdrop = R.drawable.game_play_background,
         inCheck = game.status == GameStatus.CHECK,
         checkmate = game.status == GameStatus.CHECKMATE,
         belowBoard = {
@@ -258,8 +262,6 @@ private fun SpectateMatchScreen(
                     onToggleAuto = viewModel::toggleAutoPlay,
                     onCycleSpeed = viewModel::cycleSpeed,
                 )
-                CapturedRow(captured = game.takenFromBlack, advantage = game.materialBalance)
-                CapturedRow(captured = game.takenFromWhite, advantage = -game.materialBalance)
                 MoveList(sanMoves = game.sanMoves)
             }
         },

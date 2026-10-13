@@ -54,7 +54,7 @@ enum class PieceTheme {
     LETTER,
 
     /**
-     * Ảnh PNG vẽ sẵn cho từng quân (bộ AI-generated, đã xác nhận dùng thoải mái —
+     * Ảnh WebP vẽ sẵn cho từng quân (bộ AI-generated, đã xác nhận dùng thoải mái —
      * không vướng yêu cầu license ở mục 6). Không dùng glyphOf: [PieceGlyph] rẽ
      * nhánh sang [pieceImageRes] trước khi gọi glyphOf.
      */
@@ -80,7 +80,7 @@ enum class PieceTheme {
 /**
  * Resource ảnh cho [piece] khi dùng [PieceTheme.IMAGE].
  *
- * Bộ ảnh gothic mới trong res/drawable/ với tên chess_piece_<mau>_<loai>.png. Quân Đen có viền vàng
+ * Bộ ảnh gameplay WebP lossless trong res/drawable/ với tên chess_piece_<mau>_<loai>.webp. Quân Đen có viền vàng
  * và đỏ nên vẫn nổi trên ô obsidian, không cần bản "bright" riêng như bộ cũ.
  */
 @DrawableRes

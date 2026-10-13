@@ -68,7 +68,7 @@ private fun labelFor(item: PauseItem): Int = when (item) {
 /** Icon đầu dòng của từng mục. */
 internal fun iconFor(item: PauseItem): Int = when (item) {
     PauseItem.RESUME -> R.drawable.icon_resume
-    PauseItem.RESTART -> R.drawable.icon_restart
-    PauseItem.SETTINGS -> R.drawable.icon_settings
-    PauseItem.LEAVE -> R.drawable.icon_leave
+    PauseItem.RESTART -> R.drawable.game_play_button_replay
+    PauseItem.SETTINGS -> R.drawable.game_play_button_settings
+    PauseItem.LEAVE -> R.drawable.game_play_button_exit
 }

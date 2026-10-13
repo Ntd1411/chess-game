@@ -1,23 +1,21 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -29,6 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +43,6 @@ import kma.game.chess2d.ui.art.BattleButton
 import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
 import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.board.pieceImageRes
 import kma.game.chess2d.ui.theme.GothicColors
@@ -67,6 +67,8 @@ data class MatchPlayer(
     val clockLow: Boolean = false,
     @DrawableRes val portrait: Int? = null,
     val hp: Float? = null,
+    val captured: List<Byte> = emptyList(),
+    val advantage: Int = 0,
 )
 
 /**
@@ -124,9 +126,9 @@ internal fun actionSlotsX(count: Int): List<Int> {
 
 /**
  * Khung ván đấu dùng chung cho mọi chế độ, theo bản thiết kế Chess Battle 1080x1920:
- * khung đối thủ `battle_enemy_frame` phía trên (chân dung, tên, thanh máu, đồng hồ trong
- * `battle_timer_frame`), bàn cờ 912x912 trong `chess_board_frame`, khung mình `battle_player_frame`,
- * hàng nút tròn ở y=1510 và vùng phụ cuộn được ở đáy (quân đã ăn, danh sách nước đi).
+ * hai khung `game_play_frame_player_top/bottom` chứa chân dung tròn, tên, quân đã ăn và đồng hồ,
+ * bàn cờ đặt trong vùng rỗng của `chess_board_frame`, hàng nút tròn và vùng phụ cuộn được ở đáy
+ * (quân đã ăn, danh sách nước đi), đặt theo [GamePlayLayout].
  * Nút không bao giờ che hàng cuối bàn cờ.
  *
  * @param headline dòng trạng thái ngắn giữa khung đối thủ và bàn cờ.
@@ -145,7 +147,7 @@ fun MatchScaffold(
     headline: String? = null,
     notice: (@Composable () -> Unit)? = null,
     belowBoard: (@Composable () -> Unit)? = null,
-    @DrawableRes backdrop: Int = R.drawable.bg_battle_default,
+    @DrawableRes backdrop: Int = R.drawable.game_play_background,
     inCheck: Boolean = false,
     checkmate: Boolean = false,
     result: ResultBanner? = null,
@@ -154,13 +156,13 @@ fun MatchScaffold(
     DesignCanvas(background = backdrop, dim = 0.2f, modifier = modifier) {
         // Đọc tỷ lệ bên trong DesignCanvas: bên ngoài chỉ có giá trị mặc định 1:1.
         val d = LocalDesign.current
-        PlayerFrame(player = opponent, frame = R.drawable.battle_enemy_frame, top = 56, height = 150)
+        PlayerFrame(player = opponent, upper = true, top = GamePlayLayout.OPPONENT_TOP)
 
         if (inCheck) {
             ArtImage(R.drawable.fx_check, maxEdge = ArtSizes.OVERLAY, trim = true, alpha = 0.8f,
-                modifier = Modifier.at(60, 212, 84, 84))
+                modifier = Modifier.at(60, 266, 60, 60))
             ArtImage(R.drawable.battle_check_indicator, maxEdge = ArtSizes.ICON, trim = true,
-                modifier = Modifier.at(70, 222, 64, 64))
+                modifier = Modifier.at(68, 274, 44, 44))
         }
         if (headline != null) {
             DesignText(
@@ -169,12 +171,15 @@ fun MatchScaffold(
                 weight = FontWeight.Bold,
                 color = if (inCheck) GothicColors.Blood else GothicColors.Parchment,
                 maxLines = 2,
-                modifier = Modifier.at(150, 214, 780, 80),
+                modifier = Modifier.at(150, 282, 780, 40),
             )
         }
 
-        SlicedArt(res = R.drawable.chess_board_frame, slice = 0.12f, modifier = Modifier.at(60, 300, 960, 960))
-        Box(modifier = Modifier.at(84, 324, 912, 912)) { board() }
+        ArtImage(R.drawable.chess_board_frame, maxEdge = ArtSizes.BOARD, trim = false,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.at(60, GamePlayLayout.BOARD_TOP, GamePlayLayout.BOARD_SIZE, GamePlayLayout.BOARD_SIZE))
+        val boardRect = GamePlayLayout.board
+        Box(modifier = Modifier.at(boardRect.x, boardRect.y, boardRect.w, boardRect.h)) { board() }
         if (checkmate) {
             ArtImage(R.drawable.fx_checkmate, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.75f,
                 modifier = Modifier.at(290, 530, 500, 500))
@@ -190,14 +195,14 @@ fun MatchScaffold(
             Box(modifier = Modifier.at(100, 340, 880, 860), contentAlignment = Alignment.TopCenter) { notice() }
         }
 
-        PlayerFrame(player = you, frame = R.drawable.battle_player_frame, top = 1290, height = 140)
+        PlayerFrame(player = you, upper = false, top = GamePlayLayout.PLAYER_TOP)
 
         val xs = actionSlotsX(actions.size)
         actions.forEachIndexed { i, action -> ActionButton(action, x = xs[i]) }
 
         if (belowBoard != null) {
             Box(
-                modifier = Modifier.at(60, 1680, 960, 230)
+                modifier = Modifier.at(60, GamePlayLayout.DETAILS_TOP, 960, GamePlayLayout.DETAILS_HEIGHT)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = d.dp(8)),
             ) { belowBoard() }
@@ -205,108 +210,74 @@ fun MatchScaffold(
     }
 }
 
-/**
- * Khung một người chơi: ảnh khung cắt nine-slice, chân dung (112x112) ở trái, tên + phụ đề, thanh máu
- * (450x28) và ở bên phải là đồng hồ (`battle_timer_frame`) hoặc bảng "đến lượt" (`battle_turn_indicator`).
- */
+/** Paint the circular portrait behind the intact frame and map every slot from source pixels. */
 @Composable
-private fun PlayerFrame(player: MatchPlayer, @DrawableRes frame: Int, top: Int, height: Int) {
+private fun PlayerFrame(player: MatchPlayer, upper: Boolean, top: Int) {
     val d = LocalDesign.current
-    // Nền tối dưới khung (khung rỗng giữa) để chữ đọc được trên mọi nền.
-    Box(
-        modifier = Modifier.at(64, top + 14, 952, height - 28)
-            .clip(RoundedCornerShape(d.dp(18)))
-            .background(GothicColors.Ink.copy(alpha = 0.65f)),
-    )
-    SlicedArt(res = frame, slice = 0.3f, modifier = Modifier.at(48, top, 984, height))
+    val slots = GamePlayLayout.player(upper)
+    val frame = if (upper) R.drawable.game_play_frame_player_top else R.drawable.game_play_frame_player_bottom
+    @Composable
+    fun GamePlayLayout.Rect.placed(): Modifier = Modifier.at(48f + x, top + y, w, h)
 
-    val portraitTop = top + (height - 112) / 2
-    Box(modifier = Modifier.at(66, portraitTop, 112, 112)) {
-        if (player.portrait != null) {
-            PortraitInFrame(portrait = player.portrait, contentDescription = player.name)
-        } else {
-            PortraitInFrame(portrait = null)
-            val king = if (player.piece == Piece.NONE) Piece.of(Piece.KING, true) else player.piece
-            ArtImage(pieceImageRes(king), maxEdge = ArtSizes.PIECE, trim = true,
-                modifier = Modifier.fillMaxSize().padding(d.dp(22)))
-        }
-    }
-
-    val hasHp = player.hp != null
-    val nameTop = if (hasHp) top + 14 else top + (height - 90) / 2
-    Row(
-        modifier = Modifier.at(195, nameTop, 580, if (hasHp) 56 else 90),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(d.dp(14)),
-    ) {
-        DesignText(
-            text = player.name,
-            size = 38,
-            weight = FontWeight.Bold,
-            color = if (player.active) GothicColors.Gold else GothicColors.Parchment,
-            align = TextAlign.Start,
-            maxLines = 1,
-            modifier = Modifier.weight(1f, fill = false),
+    val avatar = slots.avatar
+    Box(modifier = avatar.placed().clip(CircleShape)) {
+        val portrait = player.portrait ?: pieceImageRes(
+            if (player.piece == Piece.NONE) Piece.of(Piece.KING, true) else player.piece,
         )
-        if (player.subtitle.isNotEmpty()) {
-            DesignText(
-                text = player.subtitle,
-                size = 26,
-                color = GothicColors.Parchment.copy(alpha = 0.75f),
-                align = TextAlign.Start,
-                maxLines = 1,
-            )
-        }
+        ArtImage(portrait, maxEdge = ArtSizes.PORTRAIT, trim = true,
+            contentDescription = player.name, contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize())
     }
-    player.hp?.let { hp -> HpBar(hp = hp, modifier = Modifier.at(195, top + height - 66, 450, 28)) }
+    // Preserve the original canvas transform rather than recalculating crop after bitmap sampling.
+    Box(modifier = Modifier.at(48, top, GamePlayLayout.FRAME_WIDTH, slots.height).clipToBounds()) {
+        ArtImage(frame, maxEdge = ArtSizes.BUTTON, trim = false, contentScale = ContentScale.FillBounds,
+            modifier = Modifier.offset(d.dp(-slots.crop.x * slots.scale), d.dp(-slots.crop.y * slots.scale))
+                .size(d.dp(1536f * slots.scale), d.dp(1024f * slots.scale)))
+    }
+    DesignText(text = player.name, size = 30, weight = FontWeight.Bold,
+        color = if (player.active) GothicColors.Gold else GothicColors.Parchment,
+        align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
+        modifier = slots.name.placed())
+    if (player.subtitle.isNotEmpty()) {
+        DesignText(text = player.subtitle, size = 20,
+            color = GothicColors.Parchment.copy(alpha = 0.85f),
+            align = TextAlign.Start, alignment = Alignment.CenterStart, maxLines = 1,
+            modifier = slots.subtitle.placed())
+    }
+    DesignText(text = player.clock ?: "∞", size = if (upper) 28 else 24,
+        weight = if (player.active) FontWeight.Bold else FontWeight.Normal,
+        color = when {
+            player.clockLow -> GothicColors.Blood
+            player.active -> GothicColors.Gold
+            else -> GothicColors.Parchment
+        }, maxLines = 1, modifier = slots.clock.placed())
 
-    val slotTop = top + (height - 90) / 2
-    when {
-        player.clock != null -> {
-            SlicedArt(res = R.drawable.battle_timer_frame, slice = 0.5f, modifier = Modifier.at(790, slotTop, 220, 90))
-            DesignText(
-                text = player.clock,
-                size = 38,
-                weight = if (player.active) FontWeight.Bold else FontWeight.Normal,
-                color = when {
-                    player.clockLow -> GothicColors.Blood
-                    player.active -> GothicColors.Gold
-                    else -> GothicColors.Parchment
-                },
-                maxLines = 1,
-                modifier = Modifier.at(790, slotTop, 220, 90),
-            )
-        }
-
-        player.active -> {
-            SlicedArt(res = R.drawable.battle_turn_indicator, slice = 0.5f, modifier = Modifier.at(790, slotTop, 220, 90))
-        }
+    if (player.captured.isNotEmpty()) {
+        PlayerCaptureRow(player, modifier = slots.captures.placed())
     }
 }
 
-/** Thanh máu: ruột `battle_hp_bar_fill` cắt theo [hp] nằm trong khung `battle_hp_bar_frame`. */
+/** Each header shows pieces captured BY that player, with scroll access for a full set. */
 @Composable
-private fun HpBar(hp: Float, modifier: Modifier = Modifier) {
+private fun PlayerCaptureRow(player: MatchPlayer, modifier: Modifier) {
     val d = LocalDesign.current
-    Box(modifier = modifier) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(12), vertical = d.dp(7)),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            if (hp > 0.01f) {
-                SlicedArt(
-                    res = R.drawable.battle_hp_bar_fill,
-                    slice = 0.5f,
-                    modifier = Modifier.fillMaxHeight().fillMaxWidth(hp.coerceIn(0f, 1f)),
-                )
-            }
+    val pieces = player.captured.sortedByDescending { CaptureTally.valueOf(it) }
+    Row(modifier = modifier.horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(d.dp(4))) {
+        pieces.forEach { piece ->
+            ArtImage(pieceImageRes(piece), maxEdge = ArtSizes.PIECE, trim = true,
+                contentScale = ContentScale.Fit, modifier = Modifier.size(d.dp(42)))
         }
-        SlicedArt(res = R.drawable.battle_hp_bar_frame, slice = 0.5f, modifier = Modifier.fillMaxSize())
+        if (player.advantage > 0) {
+            DesignText(text = "+${player.advantage}", size = 24,
+                color = GothicColors.Gold, modifier = Modifier.size(d.dp(64), d.dp(42)))
+        }
     }
 }
 
 /**
- * Nút tròn 110x110 ở y=1510 kèm nhãn nhỏ bên dưới: chỉ icon thì người chơi phải đoán, mà đoán sai
+ * Nút tròn 110x110 kèm nhãn nhỏ bên dưới: chỉ icon thì người chơi phải đoán, mà đoán sai
  * ở nút Đầu hàng là mất luôn ván.
  */
 @Composable
@@ -317,6 +288,10 @@ private fun ActionButton(action: MatchAction, x: Int) {
     // Nút có ảnh disabled riêng thì không làm mờ thêm; chỉ làm mờ nút một ảnh và nhãn chữ.
     val dim = if (action.enabled) 1f else 0.4f
     val artDim = if (action.art != null && !action.art.singleState) 1f else dim
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed && action.enabled && action.art?.singleState == true) 0.94f else 1f,
+        label = "gameplayActionPress",
+    )
     Box(
         modifier = Modifier.at(x, ACTION_TOP, ACTION_SIZE, ACTION_SIZE)
             .clip(CircleShape)
@@ -327,7 +302,8 @@ private fun ActionButton(action: MatchAction, x: Int) {
                 role = Role.Button,
                 onClick = action.onClick,
             )
-            .alpha(artDim),
+            .alpha(artDim)
+            .scale(pressScale),
         contentAlignment = Alignment.Center,
     ) {
         if (action.art != null) {
@@ -351,5 +327,5 @@ private fun ActionButton(action: MatchAction, x: Int) {
     )
 }
 
-private const val ACTION_TOP = 1510
+private const val ACTION_TOP = GamePlayLayout.ACTIONS_TOP
 private const val ACTION_SIZE = 110

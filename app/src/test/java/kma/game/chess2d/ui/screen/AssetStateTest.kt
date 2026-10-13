@@ -19,9 +19,13 @@ class AssetStateTest {
     }
 
     @Test
-    fun onlyLegacyButtonsAreSingleState() {
+    fun singleArtworkButtonsUseSharedPressAndDisabledFeedback() {
         val single = BattleButton.entries.filter { it.singleState }.toSet()
-        assertEquals(setOf(BattleButton.UNDO, BattleButton.HINT, BattleButton.MOVE, BattleButton.MENU), single)
+        assertEquals(setOf(
+            BattleButton.UNDO, BattleButton.HINT, BattleButton.MOVE, BattleButton.MENU,
+            BattleButton.RESTART, BattleButton.SETTINGS, BattleButton.RESIGN,
+            BattleButton.DRAW, BattleButton.REMATCH, BattleButton.LEAVE,
+        ), single)
         for (b in BattleButton.entries - single) {
             assertEquals(3, setOf(b.normal, b.pressed, b.disabled).size)
         }

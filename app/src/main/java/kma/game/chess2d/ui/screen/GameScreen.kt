@@ -159,6 +159,14 @@ fun GameScreen(
         )
         add(
             MatchAction(
+                icon = Icons.Filled.Settings,
+                label = stringResource(R.string.pause_settings),
+                art = BattleButton.SETTINGS,
+                onClick = { showSettings = true },
+            ),
+        )
+        add(
+            MatchAction(
                 icon = Icons.Filled.Menu,
                 label = stringResource(R.string.action_menu),
                 art = BattleButton.MENU,
@@ -182,6 +190,8 @@ fun GameScreen(
             clockLow = blackClock != null && blackClock <= LOW_CLOCK_MILLIS,
             portrait = opponentPortrait(state),
             hp = MatchHp.fromLost(state.takenFromBlack),
+            captured = state.takenFromWhite,
+            advantage = -state.materialBalance,
         ),
         you = MatchPlayer(
             name = if (twoPlayers && state.whiteName.isNotBlank()) {
@@ -199,6 +209,8 @@ fun GameScreen(
             clockLow = whiteClock != null && whiteClock <= LOW_CLOCK_MILLIS,
             portrait = R.drawable.portrait_protagonist,
             hp = MatchHp.fromLost(state.takenFromWhite),
+            captured = state.takenFromBlack,
+            advantage = state.materialBalance,
         ),
         actions = actions,
         inCheck = state.status == GameStatus.CHECK,
@@ -212,16 +224,6 @@ fun GameScreen(
         modifier = modifier,
         belowBoard = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Trắng ăn quân Đen nên hàng đầu là những quân Đen đã mất, và điểm hơn
-                // của Trắng chính là chênh lệch dương.
-                CapturedRow(
-                    captured = state.takenFromBlack,
-                    advantage = state.materialBalance,
-                )
-                CapturedRow(
-                    captured = state.takenFromWhite,
-                    advantage = -state.materialBalance,
-                )
                 MoveList(
                     sanMoves = state.sanMoves,
                     reviewPly = state.reviewPly,

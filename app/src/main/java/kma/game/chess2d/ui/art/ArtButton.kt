@@ -56,11 +56,7 @@ enum class ButtonArt(
     }
 }
 
-/**
- * Ảnh nút tròn ở hàng thao tác của ván đấu (`battle_button_*`). Nút mới có đủ ba trạng thái;
- * bốn nút cũ (Đi lại, Gợi ý, Nước đi, Menu) chỉ có một ảnh nên [singleState] = true và bên vẽ
- * tự làm mờ khi tắt.
- */
+/** Gameplay buttons with one artwork use press scaling and disabled alpha; other buttons retain their state images. */
 enum class BattleButton(
     @DrawableRes val normal: Int,
     @DrawableRes val pressed: Int = normal,
@@ -70,11 +66,8 @@ enum class BattleButton(
     HINT(R.drawable.battle_button_hint),
     MOVE(R.drawable.battle_button_move),
     MENU(R.drawable.battle_button_menu),
-    RESTART(
-        R.drawable.battle_button_restart_normal,
-        R.drawable.battle_button_restart_pressed,
-        R.drawable.battle_button_restart_disabled,
-    ),
+    RESTART(R.drawable.game_play_button_replay),
+    SETTINGS(R.drawable.game_play_button_settings),
     FLIP(R.drawable.battle_button_flip_normal, R.drawable.battle_button_flip_pressed, R.drawable.battle_button_flip_disabled),
     LEVEL(
         R.drawable.battle_button_level_normal,
@@ -82,28 +75,16 @@ enum class BattleButton(
         R.drawable.battle_button_level_disabled,
     ),
     MAP(R.drawable.battle_button_map_normal, R.drawable.battle_button_map_pressed, R.drawable.battle_button_map_disabled),
-    RESIGN(
-        R.drawable.battle_button_resign_normal,
-        R.drawable.battle_button_resign_pressed,
-        R.drawable.battle_button_resign_disabled,
-    ),
-    DRAW(R.drawable.battle_button_draw_normal, R.drawable.battle_button_draw_pressed, R.drawable.battle_button_draw_disabled),
-    REMATCH(
-        R.drawable.battle_button_rematch_normal,
-        R.drawable.battle_button_rematch_pressed,
-        R.drawable.battle_button_rematch_disabled,
-    ),
+    RESIGN(R.drawable.game_play_button_resign),
+    DRAW(R.drawable.game_play_button_draw),
+    REMATCH(R.drawable.game_play_button_replay),
     SYNC(R.drawable.battle_button_sync_normal, R.drawable.battle_button_sync_pressed, R.drawable.battle_button_sync_disabled),
     SHARE(
         R.drawable.battle_button_share_normal,
         R.drawable.battle_button_share_pressed,
         R.drawable.battle_button_share_disabled,
     ),
-    LEAVE(
-        R.drawable.battle_button_leave_normal,
-        R.drawable.battle_button_leave_pressed,
-        R.drawable.battle_button_leave_disabled,
-    ),
+    LEAVE(R.drawable.game_play_button_exit),
     ;
 
     /** Chỉ có một ảnh cho mọi trạng thái. */

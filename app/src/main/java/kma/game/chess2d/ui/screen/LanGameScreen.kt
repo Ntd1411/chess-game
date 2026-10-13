@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
+import kma.game.chess2d.engine.CaptureTally
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.engine.Piece
@@ -97,6 +98,12 @@ fun LanGameScreen(
     // Đồng hồ hiển thị được nội suy ở đây, vì host chỉ gửi con số mới mỗi nhịp ping
     // (2 giây) — không nội suy thì người chơi thấy đồng hồ đứng im rồi nhảy từng cục.
     val clock = rememberTickingClock(state)
+    val opponentMillis = playerClockMillis(state, clock, forYou = false)
+    val yourMillis = playerClockMillis(state, clock, forYou = true)
+    val captures = remember(state.startFen, state.moves) {
+        CaptureTally.of(state.startFen, state.moves.map { Move(it) })
+    }
+
 
     // Bàn cờ LAN dùng chung đường phát tiếng với bàn cờ offline; cue được suy ra từ số
     // nước đã đi vì ván LAN không đi qua `GameViewModel`.
@@ -165,17 +172,25 @@ fun LanGameScreen(
     MatchScaffold(
         opponent = MatchPlayer(
             name = state.opponentName.ifEmpty { stringResource(R.string.match_waiting_opponent) },
-            subtitle = opponentSubtitle(state, clock),
+            subtitle = opponentSubtitle(state),
             piece = Piece.of(Piece.KING, !state.youPlayWhite),
             active = state.connected && !state.finished && !state.yourTurn,
             portrait = R.drawable.portrait_lan_opponent,
+            clock = opponentMillis?.let(::formatClock),
+            clockLow = opponentMillis != null && opponentMillis <= 30_000L,
+            captured = if (state.youPlayWhite) captures.takenFromWhite else captures.takenFromBlack,
+            advantage = if (state.youPlayWhite) -captures.materialBalance else captures.materialBalance,
         ),
         you = MatchPlayer(
             name = state.lobby.localName,
-            subtitle = youSubtitle(state, clock),
+            subtitle = youSubtitle(state),
             piece = Piece.of(Piece.KING, state.youPlayWhite),
             active = state.connected && !state.finished && state.yourTurn,
             portrait = R.drawable.portrait_protagonist,
+            clock = yourMillis?.let(::formatClock),
+            clockLow = yourMillis != null && yourMillis <= 30_000L,
+            captured = if (state.youPlayWhite) captures.takenFromBlack else captures.takenFromWhite,
+            advantage = if (state.youPlayWhite) captures.materialBalance else -captures.materialBalance,
         ),
         actions = actions,
         backdrop = R.drawable.bg_lan_lobby,
@@ -438,20 +453,17 @@ private fun headline(state: LanUiState): String {
  * đối thủ còn bao nhiêu phút, không phải mạng nhanh hay chậm.
  */
 @Composable
-private fun opponentSubtitle(state: LanUiState, clock: ClockTimes?): String = when {
+private fun opponentSubtitle(state: LanUiState): String = when {
     !state.connected -> ""
-    state.timeControl.limited -> clockLabel(state, clock, forYou = false)
     state.latencyMillis >= 0 -> stringResource(R.string.lan_latency, state.latencyMillis)
     else -> ""
 }
 
 /** Phụ đề của mình: đang cầm quân bên nào, kèm thời gian còn lại khi có bấm giờ. */
 @Composable
-private fun youSubtitle(state: LanUiState, clock: ClockTimes?): String {
+private fun youSubtitle(state: LanUiState): String {
     val side = stringResource(if (state.youPlayWhite) R.string.side_white else R.string.side_black)
-    val mine = stringResource(R.string.match_side, side)
-    if (!state.timeControl.limited) return mine
-    return "$mine · " + clockLabel(state, clock, forYou = true)
+    return stringResource(R.string.match_side, side)
 }
 
 /**
@@ -492,15 +504,12 @@ private const val TICK_MILLIS: Long = 200
 /**
  * Con số thời gian của một bên, lấy từ đồng hồ đã nội suy ở [rememberTickingClock].
  */
-@Composable
-private fun clockLabel(state: LanUiState, clock: ClockTimes?, forYou: Boolean): String {
+internal fun playerClockMillis(state: LanUiState, clock: ClockTimes?, forYou: Boolean): Long? {
+    if (!state.timeControl.limited) return null
     val times = clock ?: state.clock
     val white = if (forYou) state.youPlayWhite else !state.youPlayWhite
-    val millis = when {
-        times != null -> if (white) times.whiteMillis else times.blackMillis
-        else -> state.timeControl.initialMillis
-    }
-    return stringResource(R.string.lan_clock, formatClock(millis))
+    return if (times == null) state.timeControl.initialMillis
+    else if (white) times.whiteMillis else times.blackMillis
 }
 
 /** Định dạng `m:ss`. Làm tròn lên để không hiện 0:00 khi vẫn còn nửa giây. */

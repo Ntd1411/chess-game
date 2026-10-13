@@ -1,8 +1,6 @@
 package kma.game.chess2d.ui.screen
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -19,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kma.game.chess2d.R
@@ -134,6 +131,8 @@ fun CampaignBattleRoute(
             active = !state.game.whiteToMove,
             portrait = if (isBoss) R.drawable.portrait_golden_queen else R.drawable.portrait_tower_keeper,
             hp = if (isPuzzle) null else MatchHp.fromLost(state.game.takenFromBlack),
+            captured = state.game.takenFromWhite,
+            advantage = -state.game.materialBalance,
         ),
         you = MatchPlayer(
             name = playerName.ifBlank { stringResource(R.string.match_player_one) },
@@ -142,8 +141,10 @@ fun CampaignBattleRoute(
             active = state.game.whiteToMove,
             portrait = R.drawable.portrait_protagonist,
             hp = if (isPuzzle) null else MatchHp.fromLost(state.game.takenFromWhite),
+            captured = state.game.takenFromBlack,
+            advantage = state.game.materialBalance,
         ),
-        backdrop = if (isBoss) R.drawable.bg_battle_boss else R.drawable.bg_battle_default,
+        backdrop = if (isBoss) R.drawable.bg_battle_boss else R.drawable.game_play_background,
         inCheck = state.game.status == GameStatus.CHECK,
         checkmate = state.game.status == GameStatus.CHECKMATE,
         // Banner hiện trong nhịp dừng trước khi sang màn kết quả của tầng.
@@ -174,22 +175,7 @@ fun CampaignBattleRoute(
         ),
         headline = headline,
         modifier = modifier,
-        belowBoard = if (isPuzzle) {
-            null
-        } else {
-            {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CapturedRow(
-                        captured = state.game.takenFromBlack,
-                        advantage = state.game.materialBalance,
-                    )
-                    CapturedRow(
-                        captured = state.game.takenFromWhite,
-                        advantage = -state.game.materialBalance,
-                    )
-                }
-            }
-        },
+        belowBoard = null,
     ) {
         ChessBoard(
             pieces = state.game.pieces,

@@ -14,6 +14,19 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 23:56 GMT+7 — Căn gameplay theo hai frame player mới và khung bàn cờ mới
+- Chuyển hai frame PNG 1536x1024 sang WebP lossless, xác minh từng pixel RGBA; sao lưu trong app/build/player_frames_v2_backup
+- Căn avatar tròn, tên sát trái, đồng hồ và hàng quân đã ăn theo tọa độ artwork; bàn cờ đặt đúng vùng rỗng của khung mới, không nine-slice
+- Chuyển đồng hồ LAN vào ô thời gian, ánh xạ đúng bên trắng/đen; ván không giới hạn hiện ∞, quân đã ăn và lợi thế vật chất nằm trong từng header
+- Build debug và 5 nhóm test gameplay/asset/bố cục thành công; toàn bộ 218 test còn 1 lỗi có sẵn ở SubScreenLayoutTest.profileBlocksDoNotOverlap, không sửa trang Hồ sơ ngoài phạm vi
+
+## 2026-10-13 23:04 GMT+7 — Áp dụng bộ asset gameplay mới và chuyển 20 PNG sang WebP lossless
+- Xác minh toàn bộ pixel RGBA và kích thước canvas bằng Pillow; tổng dung lượng 25,127,806 → 16,196,422 byte
+- Chuẩn hóa tên quân Tượng Trắng và Tốt Đen, đưa asset ra gốc drawable; sao lưu PNG và bộ quân cũ trong app/build/gameplay_asset_backup
+- Tích hợp nền, khung người chơi, nút chơi lại/đầu hàng/hòa/cài đặt/rời trận và bộ 12 quân mới vào giao diện dùng chung, giữ nguyên logic ván đấu; nền Boss giữ riêng
+- Căn lại tên, chân dung, HP và đồng hồ theo hai khung mới; thêm nút mở Cài đặt trực tiếp ở ván offline, giữ hành vi Pause và dừng đồng hồ
+- Bổ sung 4 test kiểm tra asset, ánh xạ nút, preload và bố cục không chồng nhau; toàn bộ :app:testDebugUnitTest và :app:assembleDebug thành công
+
 ## 2026-10-13 22:46 GMT+7 — Chuyển hai ảnh thanh loading Splash sang WebP lossless
 - Giữ nguyên canvas 1536x1024 và toàn bộ pixel RGBA, bao gồm vùng trong suốt; xác minh bằng Pillow sau khi giải mã WebP
 - Giữ bản PNG gốc trong app/build/splash_png_backup, loại PNG khỏi drawable để tránh trùng resource
