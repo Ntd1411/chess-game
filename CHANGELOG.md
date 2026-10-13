@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:51 GMT+7 — Vẽ lại Khám phá Tháp Cờ
+- Node tròn và đường nối tự vẽ, danh sách tầng cuộn từ 49 xuống 1; ô chi tiết chữ nhật vẫn nằm bên cạnh, cuộn riêng với teaser/boss/Elo/phần thưởng
+- Header/footer neo vùng an toàn, tự cuộn tới tầng hiện tại; tầng khóa chỉ xem trước, kiểm tra lại khóa cả lúc bấm vào; giữ 49 tầng và luật chiến dịch
+- Thay test tọa độ cũ bằng thứ tự/chỉ số cuộn/khoá tầng; assembleDebug, LobbyLayoutTest và campaign regressions qua; chưa QA thiết bị
+
 ## 2026-10-14 04:36 GMT+7 — Vẽ lại Cài đặt
 - Dialog toàn màn giữ ván bên dưới; tab ngang cuộn, card tối–vàng và hàng switch/radio tự vẽ bấm cả hàng, tối thiểu 56dp; footer và bàn phím dùng vùng an toàn
 - Giữ đủ năm tab và mọi setter thật; tên có IME Done, khôi phục chỉ cài đặt, xoá dữ liệu vẫn cần xác nhận với cảnh báo đầy đủ

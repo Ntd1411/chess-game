@@ -8,10 +8,12 @@ import org.junit.Test
 class LobbyLayoutTest {
     @Test
     fun `preview o ben canh ban do khong che node hay nut vao tang`() {
-        assertTrue(TowerMapLayout.MAP_WIDTH < TowerMapLayout.PREVIEW_X)
-        assertTrue(TowerMapLayout.PREVIEW_X + TowerMapLayout.PREVIEW_WIDTH <= 1032)
-        assertTrue(TowerMapLayout.PREVIEW_TOP >= 210)
-        assertTrue(TowerMapLayout.PREVIEW_TOP + TowerMapLayout.PREVIEW_HEIGHT < 1650)
+        val floors = kma.game.chess2d.campaign.TowerCatalog.build(200)
+        val progress = kma.game.chess2d.campaign.TowerProgress()
+        assertTrue(TowerMapLayout.canEnter(floors.first(), progress))
+        assertFalse(TowerMapLayout.canEnter(floors[1], progress))
+        assertFalse(TowerMapLayout.canEnter(null, progress))
+        assertTrue(TowerMapLayout.NODE_DP >= 48)
     }
 
     @Test
@@ -36,16 +38,9 @@ class LobbyLayoutTest {
 
     @Test
     fun `ban do thap tang 1 o duoi cung va cac node khong chong nhau`() {
-        assertTrue(TowerMapLayout.centerY(1) > TowerMapLayout.centerY(49))
-        assertTrue(TowerMapLayout.centerY(1) + TowerMapLayout.NODE / 2 <= TowerMapLayout.contentHeight)
-        for (n in 1 until 49) {
-            val dy = TowerMapLayout.centerY(n) - TowerMapLayout.centerY(n + 1)
-            assertTrue(dy >= TowerMapLayout.NODE)
-        }
-        for (n in 1..49) {
-            val x = TowerMapLayout.centerX(n)
-            assertTrue(x - TowerMapLayout.NODE / 2 >= 48 && x + TowerMapLayout.NODE / 2 <= TowerMapLayout.MAP_WIDTH)
-            assertTrue(x + 105 <= TowerMapLayout.MAP_WIDTH)
-        }
+        val floors = kma.game.chess2d.campaign.TowerCatalog.build(200)
+        assertEquals((49 downTo 1).toList(), TowerMapLayout.displayOrder(floors).map { it.number })
+        for (number in 1..49) assertEquals(49 - number, TowerMapLayout.initialIndex(floors, number))
+        assertTrue(TowerMapLayout.ROW_DP > TowerMapLayout.NODE_DP)
     }
 }

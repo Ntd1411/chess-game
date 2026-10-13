@@ -67,7 +67,9 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
    node-to-node trong dải cuộn bên trái; 6 Puzzle rồi 1 Boss mỗi chương. Panel chữ
    nhật bên phải hiện sơ lược cốt truyện, câu thoại/hồ sơ boss, độ khó và phần thưởng
    của node đang chọn. Tầng chưa mở vẫn chọn xem trước nhưng không vào được; tầng
-   hiện tại phát sáng vàng. Thưởng đã nhận được đánh dấu khi chọn tầng cũ.
+   hiện tại viền vàng. Node/đường nối tự vẽ, tầng 49 ở trên và tầng 1 ở dưới,
+   tự cuộn tới tầng hiện tại; chi tiết cuộn riêng. Header và Vào tầng/Quay lại
+   neo vùng an toàn. Thưởng đã nhận được đánh dấu khi chọn tầng cũ.
 7. **Dialogue** — background cảnh (đại sảnh/phòng ngai vàng/hành lang/đỉnh tháp);
    nhân vật đứng trái/phải; dialogue box lớn phía dưới + nút `▶` tiếp tục; có thể có
    lựa chọn nhánh thoại (vd. `[Tôi sẽ thử.]` / `[Tôi không còn lựa chọn.]`)
