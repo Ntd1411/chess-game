@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import kma.game.chess2d.R
 import kma.game.chess2d.campaign.TowerCatalog
 import kma.game.chess2d.profile.PlayTime
@@ -35,9 +36,9 @@ import kma.game.chess2d.ui.theme.GothicColors
 /** Bố cục Hồ sơ theo đơn vị thiết kế 1080x1920. Hàm thuần để test không chồng lấn. */
 internal object ProfileLayout {
     val Character = LobbyLayout.Box(300, 170, 480, 500)
-    val NamePlate = LobbyLayout.Box(240, 680, 600, 84)
-    val LevelPanel = LobbyLayout.Box(90, 790, 900, 190)
-    val StatsPanel = LobbyLayout.Box(90, 1010, 900, 760)
+    val NamePlate = LobbyLayout.Box(90, 680, 900, 252)
+    val LevelPanel = LobbyLayout.Box(90, 950, 900, 190)
+    val StatsPanel = LobbyLayout.Box(90, 1200, 900, 760)
 
     const val STAT_ROWS = 4
     const val STAT_PAD = 30
@@ -218,4 +219,68 @@ private fun StatsPanel(stats: PlayerStats) {
             )
         }
     }
+}
+
+// ================================================================================================
+// Preview Functions
+// ================================================================================================
+
+/** Mock data for previews */
+private object ProfilePreviewData {
+    val beginnerPlayer = PlayerStats(
+        wins = 2,
+        losses = 5,
+        draws = 1,
+        checkmates = 1,
+        highestFloor = 6,
+        playSeconds = 1800L
+    )
+
+    val experiencedPlayer = PlayerStats(
+        wins = 30,
+        losses = 43,
+        draws = 15,
+        checkmates = 18,
+        highestFloor = 28,
+        playSeconds = 86400L
+    )
+
+    val veteranPlayer = PlayerStats(
+        wins = 72,
+        losses = 156,
+        draws = 42,
+        checkmates = 45,
+        highestFloor = 50,
+        playSeconds = 360000L
+    )
+}
+
+@Preview(name = "Beginner Player", showBackground = true)
+@Composable
+private fun ProfileScreenPreview_Beginner() {
+    ProfileScreen(
+        name = "ChessNovice",
+        stats = ProfilePreviewData.beginnerPlayer,
+        onBack = {}
+    )
+}
+
+@Preview(name = "Experienced Player", showBackground = true)
+@Composable
+private fun ProfileScreenPreview_Experienced() {
+    ProfileScreen(
+        name = "TacticalMaster",
+        stats = ProfilePreviewData.experiencedPlayer,
+        onBack = {}
+    )
+}
+
+@Preview(name = "Veteran Player", showBackground = true)
+@Composable
+private fun ProfileScreenPreview_Veteran() {
+    ProfileScreen(
+        name = "GrandmasterLegend",
+        stats = ProfilePreviewData.veteranPlayer,
+        onBack = {}
+    )
 }
