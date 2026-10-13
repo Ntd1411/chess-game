@@ -123,6 +123,11 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     hiển thị thời gian nghĩ tối đa từ Difficulty thật. Chọn dòng áp dụng ngay;
     Hủy/nút đóng/Back/chạm ngoài không đổi cấp. Nội dung cuộn khi màn thấp.
 
+18. **Match History** — thẻ tự vẽ tối–vàng, ngày/chế độ/kết quả/số nước và tên
+    đối thủ; danh sách cuộn, nút Xem lại/Xuất PGN/Xoá rõ ràng. Xoá một ván hoặc
+    toàn bộ cần xác nhận. Xem lại có bàn vuông co theo vùng trống, nước trước/sau
+    khoá tại biên và giữ bộ màu/quân đã chọn. Chia sẻ PGN qua chooser như trước.
+
 ## Sơ đồ điều hướng
 
 ```

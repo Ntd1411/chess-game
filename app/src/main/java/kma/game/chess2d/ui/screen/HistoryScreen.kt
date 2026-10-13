@@ -4,50 +4,24 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.semantics.Role
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.text.style.TextAlign
-import kma.game.chess2d.ui.art.ArtImage
-import kma.game.chess2d.ui.art.ArtSizes
-import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.DesignCanvas
-import kma.game.chess2d.ui.art.PanelTone
-import kma.game.chess2d.ui.art.quietPanel
-import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.GothicButton
-import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
-import kma.game.chess2d.ui.art.BackIcon
-import kma.game.chess2d.ui.art.ScreenTitle
-import kma.game.chess2d.ui.art.SubScreenHeader
-import kma.game.chess2d.ui.art.at
-import kma.game.chess2d.ui.theme.GothicColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
@@ -58,13 +32,12 @@ import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.engine.Squares
 import kma.game.chess2d.game.GameMode
 import kma.game.chess2d.game.PieceOnBoard
-import kma.game.chess2d.history.MatchHistoryDatabase
-import kma.game.chess2d.history.MatchRecord
-import kma.game.chess2d.history.MatchResult
-import kma.game.chess2d.history.MatchStats
+import kma.game.chess2d.history.*
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
+import kma.game.chess2d.ui.art.ArtBackdrop
 import kma.game.chess2d.ui.board.ChessBoard
+import kma.game.chess2d.ui.theme.GothicColors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -72,16 +45,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Lịch sử ván đấu (mục 7.3): danh sách ván đã xong, thống kê, xem lại và xoá.
- *
- * Đọc thẳng từ DAO thay vì qua một ViewModel riêng: màn này chỉ hiện dữ liệu đọc
- * được từ hai [kotlinx.coroutines.flow.Flow] của Room, không giữ trạng thái nào
- * phức tạp để đáng phải sống qua xoay máy.
- *
- * Ván được xem lại bằng cách đi lại dãy nước UCI trên một bàn cờ mới, đúng như
- * cách lưu đã chọn: không lưu thế cờ nên không bao giờ có thế cờ sai luật trong DB.
- */
 @Composable
 fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -89,214 +52,112 @@ fun HistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val records by dao.observeAll().collectAsStateWithLifecycle(initialValue = emptyList())
     val stats by dao.observeStats().collectAsStateWithLifecycle(initialValue = MatchStats())
     val scope = rememberCoroutineScope()
-
-    // Ván đang xem lại. Giữ nguyên bản ghi chứ không chỉ giữ id: để xoá ván khác trong
-    // lúc đang xem cũng không làm màn xem lại trống ruỗng.
+    val listState = rememberLazyListState()
+    // Keep the snapshot while reviewing, even if another screen deletes the record.
     var reviewing by remember { mutableStateOf<MatchRecord?>(null) }
-
+    var deleteId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deleteAll by rememberSaveable { mutableStateOf(false) }
     val shown = reviewing
     if (shown != null) {
-        MatchReview(record = shown, onBack = { reviewing = null }, modifier = modifier)
+        MatchReview(shown, { reviewing = null }, modifier)
         return
     }
-
-    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, scrim = true, modifier = modifier) {
-        val d = LocalDesign.current
-        BackIcon(onClick = onBack, modifier = Modifier.at(48, 20, 88, 88))
-        ScreenTitle(text = stringResource(R.string.history_title), modifier = Modifier.at(180, 20, 720, 100))
-        DesignText(
-            text = stringResource(
-                R.string.history_stats,
-                stats.total,
-                stats.wins,
-                stats.draws,
-                stats.losses,
-            ),
-            size = 30,
-            color = GothicColors.Muted,
-            maxLines = 2,
-            modifier = Modifier.at(90, 175, 900, 80),
-        )
-
-        if (records.isNotEmpty()) {
-            GothicButton(
-                label = stringResource(R.string.history_delete_all),
-                // Ghi đĩa là việc treo nên đẩy sang [Dispatchers.IO], không chặn main thread.
-                onClick = { scope.launch { withContext(Dispatchers.IO) { dao.deleteAll() } } },
-                art = ButtonArt.SECONDARY,
-                textColor = GothicColors.Blood,
-                fontSize = 10.sp,
-                modifier = Modifier.at(150, 1690, 780, 200),
-            )
-        }
-
+    HistorySurface(modifier) {
+        SimpleSetupHeader(stringResource(R.string.history_title), stringResource(R.string.action_back), onBack, titleSize = 18.sp)
+        Text(stringResource(R.string.history_stats, stats.total, stats.wins, stats.draws, stats.losses),
+            color = GothicColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
         if (records.isEmpty()) {
-            DesignText(
-                text = stringResource(R.string.history_empty),
-                size = 34,
-                modifier = Modifier.at(100, 700, 880, 200),
-            )
-            return@DesignCanvas
-        }
-
-        LazyColumn(
-            // Không còn panel lớn bao quanh: mỗi ván là một thẻ, một ván thì chỉ có một thẻ.
-            modifier = Modifier.at(90, 280, 900, 1380),
-            verticalArrangement = Arrangement.spacedBy(d.dp(16)),
-        ) {
-            // Khoá theo id để xoá một ván không làm vẽ lại cả danh sách.
-            items(items = records, key = { it.id }) { record ->
-                MatchRow(
-                    record = record,
-                    onReview = { reviewing = record },
-                    onExport = { exportPgn(context, record) },
-                    onDelete = {
-                        scope.launch {
-                            withContext(Dispatchers.IO) { dao.deleteById(record.id) }
-                        }
-                    },
-                )
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.history_empty), color = GothicColors.Parchment)
             }
-        }
-    }
-}
-
-/**
- * Một thẻ ván đã lưu (panel tối giản, đang nhấn thì ánh đỏ): huy hiệu kết quả, ngày + chế độ,
- * kết quả + số nước, và hàng ba nút cao 96 để dễ bấm. Chạm vào thẻ cũng là xem lại.
- */
-@Composable
-private fun MatchRow(
-    record: MatchRecord,
-    onReview: () -> Unit,
-    onExport: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    val d = LocalDesign.current
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    Box(
-        modifier = Modifier.fillMaxWidth().height(d.dp(290))
-            .quietPanel(if (pressed) PanelTone.SELECTED else PanelTone.BASE)
-            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onReview),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(36), vertical = d.dp(28)),
-            verticalArrangement = Arrangement.spacedBy(d.dp(18)),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
-                ArtImage(
-                    res = resultBadge(record.result),
-                    maxEdge = ArtSizes.ICON,
-                    trim = true,
-                    modifier = Modifier.size(d.dp(96)),
-                )
-                Column(modifier = Modifier.weight(1f)) {
-                    DesignText(
-                        text = "${formatPlayedAt(record.playedAtMillis)} · " + stringResource(modeLabel(record.mode)),
-                        size = 30,
-                        color = GothicColors.Gold,
-                        weight = FontWeight.Bold,
-                        align = TextAlign.Start,
-                        alignment = Alignment.CenterStart,
-                        maxLines = 1,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    DesignText(
-                        text = stringResource(resultLabel(record.result)) + " · " +
-                            stringResource(R.string.history_moves_count, record.uciMoves.size),
-                        size = 28,
-                        color = GothicColors.Muted,
-                        align = TextAlign.Start,
-                        alignment = Alignment.CenterStart,
-                        maxLines = 1,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+        } else {
+            LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(records, key = { it.id }) { record ->
+                    MatchRow(record, { reviewing = record }, { exportPgn(context, record) }, { deleteId = record.id })
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth().height(d.dp(96)),
-                horizontalArrangement = Arrangement.spacedBy(d.dp(14)),
-            ) {
-                val cell = Modifier.weight(1f).fillMaxHeight()
-                GothicButton(stringResource(R.string.history_review), onReview, cell, art = ButtonArt.SMALL)
-                GothicButton(stringResource(R.string.history_export_pgn), onExport, cell, art = ButtonArt.SMALL)
-                GothicButton(stringResource(R.string.history_delete), onDelete, cell, art = ButtonArt.SMALL)
-            }
+            SimpleSetupButton(stringResource(R.string.history_delete_all), { deleteAll = true }, Modifier.fillMaxWidth())
+        }
+        Spacer(Modifier.height(10.dp))
+        SimpleSetupButton(stringResource(R.string.history_back), onBack, Modifier.fillMaxWidth())
+    }
+    if (deleteId != null || deleteAll) {
+        DrawnConfirmDialog(
+            title = stringResource(R.string.history_delete_title),
+            text = stringResource(if (deleteAll) R.string.history_delete_all_confirm else R.string.history_delete_match_confirm),
+            confirmLabel = stringResource(R.string.history_delete),
+            onConfirm = {
+                val id = deleteId
+                val all = deleteAll
+                deleteId = null
+                deleteAll = false
+                scope.launch { withContext(Dispatchers.IO) { if (all) dao.deleteAll() else if (id != null) dao.deleteById(id) } }
+            },
+            onDismiss = { deleteId = null; deleteAll = false },
+        )
+    }
+}
+
+@Composable
+private fun HistorySurface(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Box(modifier.fillMaxSize().background(GothicColors.Ink)) {
+        ArtBackdrop(R.drawable.bg_history, dim = 0.6f)
+        Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 16.dp).padding(top = 4.dp, bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.widthIn(max = 560.dp).fillMaxWidth().weight(1f), content = content)
         }
     }
 }
 
-/**
- * Xem lại một ván đã lưu, đi từng nước một.
- *
- * Mọi nước đọc từ DB đều phải qua engine duyệt: gặp nước không hợp lệ thì dừng ở đó
- * thay vì cứ đặt quân theo dữ liệu, vì DB có thể là của một bản app cũ.
- */
+@Composable
+private fun MatchRow(record: MatchRecord, onReview: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
+    SimpleSetupCard(Modifier.clickable(role = Role.Button, onClick = onReview)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(resultLabel(record.result)), color = if (record.result == MatchResult.LOSS) GothicColors.Alert else GothicColors.Gold,
+                fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(formatPlayedAt(record.playedAtMillis), color = GothicColors.Muted, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        }
+        Text(stringResource(modeLabel(record.mode)) + " · " + stringResource(R.string.history_moves_count, record.uciMoves.size),
+            color = GothicColors.Parchment, fontSize = 14.sp)
+        if (record.opponent.isNotBlank()) Text(record.opponent, color = GothicColors.Muted, fontSize = 14.sp)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SimpleSetupButton(stringResource(R.string.history_review), onReview, Modifier.weight(1f), maxLines = 2)
+            SimpleSetupButton(stringResource(R.string.history_export_pgn), onExport, Modifier.weight(1f), maxLines = 2)
+            SimpleSetupButton(stringResource(R.string.history_delete), onDelete, Modifier.weight(1f), maxLines = 2)
+        }
+    }
+}
+
 @Composable
 private fun MatchReview(record: MatchRecord, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val store = remember(context) { SettingsStore(context.applicationContext) }
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
-
-    // Đi lại toàn bộ ván một lần rồi giữ lại ảnh chụp từng thế cờ: rẻ hơn đi lại mỗi lần
-    // bấm, và một ván cờ thì cùng lắm vài trăm thế.
     val frames = remember(record.id) { framesOf(record) }
-    var ply by remember(record.id) { mutableStateOf(frames.lastIndex) }
-
+    var ply by rememberSaveable(record.id) { mutableStateOf(frames.lastIndex) }
+    val position = ply.coerceIn(0, frames.lastIndex)
     BackHandler(onBack = onBack)
-    DesignCanvas(background = R.drawable.bg_history, dim = 0.35f, modifier = modifier) {
-        SubScreenHeader(
-            title = stringResource(R.string.history_review_position, ply, frames.lastIndex),
-            onBack = onBack,
-        )
-        SlicedArt(res = R.drawable.chess_board_frame, slice = 0.12f, modifier = Modifier.at(60, 260, 960, 960))
-        Box(modifier = Modifier.at(84, 284, 912, 912)) {
-            ChessBoard(
-            pieces = frames[ply],
-            selectedSquare = Squares.NONE,
-            legalTargets = emptySet(),
-            lastMoveFrom = Squares.NONE,
-            lastMoveTo = Squares.NONE,
-            checkedKingSquare = Squares.NONE,
-            // Xem lại thì không đi được: bỏ qua mọi cú chạm.
-            onSquareTap = {},
-            palette = settings.boardPalette,
-            pieceTheme = settings.pieceTheme,
-            modifier = Modifier.fillMaxSize(),
-            )
+    HistorySurface(modifier) {
+        SimpleSetupHeader(stringResource(R.string.history_review_position, position, frames.lastIndex),
+            stringResource(R.string.history_back), onBack, titleSize = 16.sp)
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(minOf(maxWidth, maxHeight)).border(1.dp, GothicColors.Gold.copy(alpha = 0.5f)).padding(4.dp)) {
+                ChessBoard(pieces = frames[position], selectedSquare = Squares.NONE, legalTargets = emptySet(),
+                    lastMoveFrom = Squares.NONE, lastMoveTo = Squares.NONE, checkedKingSquare = Squares.NONE,
+                    onSquareTap = {}, palette = settings.boardPalette, pieceTheme = settings.pieceTheme, modifier = Modifier.fillMaxSize())
+            }
         }
-
-        GothicButton(
-            label = stringResource(R.string.history_prev),
-            onClick = { ply = (ply - 1).coerceAtLeast(0) },
-            enabled = ply > 0,
-            art = ButtonArt.SECONDARY,
-            fontSize = 10.sp,
-            modifier = Modifier.at(90, 1300, 440, 220),
-        )
-        GothicButton(
-            label = stringResource(R.string.history_next),
-            onClick = { ply = (ply + 1).coerceAtMost(frames.lastIndex) },
-            enabled = ply < frames.lastIndex,
-            art = ButtonArt.SECONDARY,
-            fontSize = 10.sp,
-            modifier = Modifier.at(550, 1300, 440, 220),
-        )
-        GothicButton(
-            label = stringResource(R.string.history_back),
-            onClick = onBack,
-            fontSize = 10.sp,
-            modifier = Modifier.at(150, 1460, 780, 220),
-        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            SimpleSetupButton(stringResource(R.string.history_prev), { ply = position - 1 }, Modifier.weight(1f), enabled = position > 0, maxLines = 2)
+            SimpleSetupButton(stringResource(R.string.history_next), { ply = position + 1 }, Modifier.weight(1f), enabled = position < frames.lastIndex, maxLines = 2)
+        }
+        Spacer(Modifier.height(10.dp))
+        SimpleSetupButton(stringResource(R.string.history_back), onBack, Modifier.fillMaxWidth())
     }
 }
 
-/**
- * Dựng dãy thế cờ của một ván đã lưu: phần tử 0 là thế đầu, phần tử n là thế sau
- * nước thứ n.
- */
-private fun framesOf(record: MatchRecord): List<List<PieceOnBoard>> {
+internal fun framesOf(record: MatchRecord): List<List<PieceOnBoard>> {
     val board = Engine.fromFen(record.startFen)
     val frames = mutableListOf(piecesOf(board))
     for (uci in record.uciMoves) {
@@ -352,7 +213,7 @@ private fun exportPgn(context: Context, record: MatchRecord) {
 }
 
 /** Kết quả theo ký hiệu PGN, luôn nhìn từ phía Bên Trắng như chuẩn yêu cầu. */
-private fun pgnResultOf(result: String): String = when (result) {
+internal fun pgnResultOf(result: String): String = when (result) {
     MatchResult.WIN -> "1-0"
     MatchResult.LOSS -> "0-1"
     else -> "1/2-1/2"
@@ -370,14 +231,14 @@ private fun resultBadge(result: String): Int = when (result) {
 }
 
 /** Nhãn cho kết quả lưu dưới dạng chuỗi. */
-private fun resultLabel(result: String): Int = when (result) {
+internal fun resultLabel(result: String): Int = when (result) {
     MatchResult.WIN -> R.string.history_result_win
     MatchResult.LOSS -> R.string.history_result_loss
     else -> R.string.history_result_draw
 }
 
 /** Nhãn cho chế độ lưu dưới dạng chuỗi; chuỗi lạ thì coi như ván LAN. */
-private fun modeLabel(mode: String): Int = when (mode) {
+internal fun modeLabel(mode: String): Int = when (mode) {
     GameMode.TWO_PLAYERS.name -> R.string.history_mode_two_players
     GameMode.VS_COMPUTER.name -> R.string.history_mode_vs_computer
     else -> R.string.history_mode_lan

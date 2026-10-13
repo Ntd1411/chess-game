@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:32 GMT+7 — Vẽ lại màn Lịch sử và Xem lại
+- Thẻ tối viền vàng co theo nội dung, danh sách cuộn có key và thống kê; header/footer ở vùng an toàn, giữ nút xem lại/xuất PGN/xoá và hiện tên đối thủ nếu có
+- Xem lại dùng bàn cờ vuông co theo chiều rộng/cao, nút trước/sau tự khoá tại biên; giữ palette/bộ quân từ cài đặt và kiểm tra nước bằng engine
+- Thêm xác nhận trước xoá một ván/toàn bộ; giữ DAO/IO và Intent chia sẻ PGN, thêm test dựng thế cờ/chuỗi hỏng/nhãn; assembleDebug và HistoryPresentationTest cùng history regressions qua; chưa QA thiết bị
+
 ## 2026-10-14 04:29 GMT+7 — Vẽ lại màn Hồ sơ
 - Card chân dung/tên, cấp và thanh tiến độ tự vẽ tối–vàng; tám thống kê hai cột, nội dung cuộn và nút quay lại neo dưới
 - Bỏ bố cục tọa độ cũ khiến bảng thống kê vượt đáy màn; giữ tính cấp, tỉ lệ thắng, tầng và thời gian từ PlayerStats

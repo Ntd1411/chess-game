@@ -188,6 +188,9 @@
     <string name="history_export_pgn">Xuất PGN</string>
     <string name="history_export_chooser">Chia sẻ ván dưới dạng PGN</string>
     <string name="history_export_failed">Không xuất được PGN cho ván này</string>
+    <string name="history_delete_title">Xoá lịch sử ván đấu?</string>
+    <string name="history_delete_match_confirm">Ván đã chọn sẽ bị xoá khỏi lịch sử. Không thể hoàn tác.</string>
+    <string name="history_delete_all_confirm">Toàn bộ ván đã lưu sẽ bị xoá. Không thể hoàn tác.</string>
 
     <!-- Chiến dịch Tháp Cờ: bản đồ 49 tầng -->
     <string name="tower_open">Khám Phá Tháp Cờ</string>
