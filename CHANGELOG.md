@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 00:35 GMT+7 — Chờ thanh loading chạy đầy trước khi vào menu chính
+- `SplashScreen` chờ tiến độ đang hiển thị đạt 100%, thay vì chuyển màn ngay sau khi nạp ảnh và hết thời gian tối thiểu
+- Giữ thanh đầy thêm 150 ms để người chơi thấy loading hoàn tất; dùng callback điều hướng mới nhất
+
 ## 2026-10-13 00:30 GMT+7 — Làm lại màn Splash bằng bộ 3 ảnh mới, không còn chữ
 - Thay `bg_splash.png` bằng nền mới (đã vẽ sẵn logo Tower of Chess); ảnh cũ chuyển ra `app/build/old_res`
 - Thêm `splash_loading_frame.png` và `splash_loading_fill.png` (từ thư mục `drawable/splash`, đã chuyển ra `drawable/` vì Android không nhận thư mục con)
