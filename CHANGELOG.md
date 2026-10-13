@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:18 GMT+7 — Vẽ nốt thông báo trong ván LAN
+- Thông báo lỗi/thử lại/đóng đổi sang card và nút tự vẽ. Xác nhận xin hoà/đấu lại/đầu hàng giữ hai callback đồng ý/từ chối, không sửa socket, protocol hoặc đồng hồ.
+- Kiểm tra: assembleDebug và 275 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:17 GMT+7 — Vẽ nốt điều khiển Máy vs Máy
 - Thay bốn nút ảnh runtime bằng nút tự vẽ trên một hàng vuốt ngang, chữ/touch target dùng dp thật. Giữ bàn cờ, lifecycle AI và quy tắc dừng/tiếp/đi một nước/auto/tốc độ.
 - Kiểm tra: assembleDebug và 275 app unit test qua; chưa QA thiết bị.

@@ -20,12 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.text.style.TextAlign
 import kma.game.chess2d.ui.art.BattleButton
-import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.GothicButton
-import kma.game.chess2d.ui.art.GothicConfirmDialog
-import kma.game.chess2d.ui.art.LocalDesign
-import kma.game.chess2d.ui.art.SlicedArt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kma.game.chess2d.R
@@ -337,43 +332,19 @@ private fun NoticeCard(
     onRetry: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    // Nằm trong khung thiết kế của MatchScaffold nên kích thước tính theo đơn vị 1080x1920.
-    val d = LocalDesign.current
-    Box(modifier = Modifier.fillMaxWidth()) {
-        SlicedArt(res = R.drawable.ui_dialog_small, slice = 0.22f, modifier = Modifier.matchParentSize())
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = d.dp(40), vertical = d.dp(32)),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(d.dp(12)),
-        ) {
-            DesignText(
-                text = text,
-                size = 28,
-                align = TextAlign.Start,
-                alignment = Alignment.CenterStart,
-                modifier = Modifier.weight(1f),
-            )
-            if (offerRetry) {
-                GothicButton(
-                    label = stringResource(R.string.lan_action_retry),
-                    onClick = onRetry,
-                    art = ButtonArt.SMALL,
-                    modifier = Modifier.width(d.dp(190)).height(d.dp(80)),
-                )
-            }
-            GothicButton(
-                label = stringResource(R.string.action_dismiss),
-                onClick = onDismiss,
-                art = ButtonArt.SMALL,
-                modifier = Modifier.width(d.dp(190)).height(d.dp(80)),
-            )
+    SimpleSetupCard {
+        androidx.compose.material3.Text(text, color = kma.game.chess2d.ui.theme.GothicColors.Parchment, fontSize = 16.sp)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (offerRetry) SimpleSetupButton(stringResource(R.string.lan_action_retry), onRetry, Modifier.weight(1f), primary = true, maxLines = 2)
+            SimpleSetupButton(stringResource(R.string.action_dismiss), onDismiss, Modifier.weight(1f), maxLines = 2)
         }
     }
 }
 
 @Composable
 private fun ConfirmDialog(text: String, onAccept: () -> Unit, onDecline: () -> Unit) {
-    GothicConfirmDialog(
+    DrawnConfirmDialog(
+        title = stringResource(R.string.lan_confirm_title),
         text = text,
         confirmLabel = stringResource(R.string.action_yes),
         dismissLabel = stringResource(R.string.action_no),

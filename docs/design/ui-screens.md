@@ -156,6 +156,9 @@ Splash không dùng khung/ruột ảnh cho thanh tải, giữ logo không crop v
 ### Vẽ nốt điều khiển Máy vs Máy
 Màn xem AI dùng hàng điều khiển tự vẽ vuốt ngang trong vùng dưới bàn. Đi một nước chỉ khi không tự chạy, hết ván khóa các thao tác nước đi, tốc độ giữ như trước.
 
+### Vẽ nốt thông báo trong ván LAN
+Ván LAN giữ MatchScaffold và board, thông báo dùng card tối chữ sáng và nút Thử lại/Đóng. Hộp xác nhận tự vẽ nhưng giữ đúng chấp nhận/từ chối và xử lý đóng.
+
 ## Sơ đồ điều hướng
 
 ```
