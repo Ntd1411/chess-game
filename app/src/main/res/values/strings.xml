@@ -270,8 +270,6 @@
     <string name="ai_knight_style">Phòng thủ chắc chắn, ít khi bỏ quân</string>
     <string name="ai_knight_personality">Trầm lặng, kỷ luật</string>
     <string name="ai_knight_quote">“Ta canh giữ bóng tối. Ngươi sẽ không qua được.”</string>
-    <string name="tower_knight_rematch_quote">“Ta nhớ những nước đi của ngươi. Lần này, ta sẽ không để ngươi vượt qua.”</string>
-    <string name="tower_queen_rematch_quote">“Ngươi lại đến trước mặt ta, vẫn mang theo những ký ức ấy. Để xem ngươi giữ được chúng bao lâu.”</string>
     <string name="ai_queen_name">Nữ Hoàng Máu</string>
     <string name="ai_queen_style">Tấn công dữ dội, ép thế địch ngay từ đầu</string>
     <string name="ai_queen_personality">Hung hãn, kiêu ngạo</string>
@@ -280,6 +278,14 @@
     <string name="ai_king_style">Kiên nhẫn, tính trước nhiều nước</string>
     <string name="ai_king_personality">Lạnh lùng, bí ẩn</string>
     <string name="ai_king_quote">“Ngai vàng này không dành cho kẻ run sợ.”</string>
+    <string name="ai_bishop_name">Giám Mục Tĩnh Lặng</string>
+    <string name="ai_bishop_style">Khống chế đường chéo, chờ sơ hở để phản công</string>
+    <string name="ai_bishop_personality">Ít lời, điềm tĩnh, quan sát sắc bén</string>
+    <string name="ai_bishop_quote">“Im lặng không có nghĩa là nhường đường. Hãy để nước đi của ngươi lên tiếng.”</string>
+    <string name="ai_golden_queen_name">Nữ Hoàng Vàng</string>
+    <string name="ai_golden_queen_style">Kiểm soát trung tâm, gây sức ép bằng phối hợp quân</string>
+    <string name="ai_golden_queen_personality">Aria: nghiêm nghị, trân trọng ký ức, thử thách để dẫn đường</string>
+    <string name="ai_golden_queen_quote">“Ta đã giữ ký ức cho ngươi. Giờ hãy chứng minh rằng ngươi đủ sức mang chúng đi tiếp.”</string>
     <string name="ai_hidden_name">\?\?\?</string>
     <string name="ai_hidden_style">Chưa ai thấy hắn ra tay</string>
     <string name="ai_hidden_personality">Không ai biết</string>

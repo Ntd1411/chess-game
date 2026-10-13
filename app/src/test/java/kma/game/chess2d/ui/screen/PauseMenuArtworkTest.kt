@@ -1,9 +1,8 @@
 package kma.game.chess2d.ui.screen
 
 import java.io.File
-import javax.imageio.ImageIO
 import kma.game.chess2d.R
-import kma.game.chess2d.ui.art.ArtAssets
+import kma.game.chess2d.game.PauseItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,26 +10,34 @@ import org.junit.Test
 
 class PauseMenuArtworkTest {
     @Test
-    fun gameplayPauseRowsUseThePreloadedSettingLineArtwork() {
-        assertEquals(R.drawable.setting_line, PauseMenuLayout.rowArt)
-        assertTrue(ArtAssets.preload.any { it.res == PauseMenuLayout.rowArt })
-        assertFalse(File("src/main/res/drawable/setting_line.png").exists())
-        val image = requireNotNull(ImageIO.read(File("src/main/res/drawable/setting_line.webp")))
-        assertTrue(image.colorModel.hasAlpha())
-        assertTrue((image.getRGB(768, 480) ushr 24) > 24)
+    fun pauseActionsKeepTheirLabelsAfterRedesign() {
+        assertEquals(R.string.pause_resume, labelFor(PauseItem.RESUME))
+        assertEquals(R.string.pause_restart, labelFor(PauseItem.RESTART))
+        assertEquals(R.string.pause_settings, labelFor(PauseItem.SETTINGS))
+        assertEquals(R.string.pause_leave, labelFor(PauseItem.LEAVE))
+        assertEquals(4, PauseItem.entries.map(::labelFor).toSet().size)
     }
 
     @Test
-    fun pauseRowsAreCompactButKeepComfortableTapTargetsAndBalancedInsets() {
+    fun pauseRowsKeepComfortableTapTargetsAndIconSpacing() {
         assertTrue(PauseMenuLayout.ROW_HEIGHT_DP >= 48)
         assertTrue(PauseMenuLayout.ROW_HEIGHT_DP < 58)
         assertTrue(PauseMenuLayout.ROW_GAP_DP in 4..10)
         assertTrue(PauseMenuLayout.ICON_SIZE_DP < PauseMenuLayout.ROW_HEIGHT_DP)
-        assertTrue(PauseMenuLayout.LABEL_INSET_DP > PauseMenuLayout.ICON_INSET_DP + PauseMenuLayout.ICON_SIZE_DP)
+        assertTrue(PauseMenuLayout.ICON_SIZE_DP + 2 * PauseMenuLayout.ROW_PADDING_DP <= PauseMenuLayout.ROW_HEIGHT_DP)
+        assertTrue(PauseMenuLayout.MAX_WIDTH_DP in 320..440)
     }
 
     @Test
-    fun settingsPanelNoLongerUsesTheGameplayStripOrCompactRowLayout() {
+    fun pauseWindowUsesDrawnControlsInsteadOfDecorativeArtwork() {
+        val source = File("src/main/java/kma/game/chess2d/ui/screen/PauseMenuOverlay.kt").readText()
+        assertFalse(source.contains("SlicedArt"))
+        assertFalse(source.contains("ArtImage"))
+        assertFalse(source.contains("GothicDialog"))
+    }
+
+    @Test
+    fun settingsPanelRemainsIndependentOfTheGameplayMenu() {
         assertEquals(200, SettingsLayout.ROW_H)
         val source = File("src/main/java/kma/game/chess2d/ui/screen/SettingsPanel.kt").readText()
         assertFalse(source.contains("R.drawable.setting_line"))

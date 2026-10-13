@@ -41,8 +41,8 @@ object FloorDialogues {
         )
 
         21 -> listOf(
-            line(Speaker.ARIA, "Ta là Aria, Nữ Hoàng Ký Ức. Ta giữ lại mọi nước đi mà các ngươi từng bỏ quên."),
-            line(Speaker.TRAVELER, "Các ngươi? Ở đây chỉ có mình tôi."),
+            line(Speaker.ARIA, "Ta là Aria, Nữ Hoàng Vàng. Người trong tháp gọi ta là Nữ Hoàng Ký Ức, vì ta giữ những nước đi đã bị lãng quên."),
+            line(Speaker.TRAVELER, "Những nước đi bị lãng quên? Tôi chưa từng đến nơi này."),
             line(Speaker.ARIA, "Bốn mươi tám người đã thất bại trước ngươi, mỗi người một mình. Ngươi nghĩ sẽ khác sao?"),
             line(Speaker.TRAVELER, "Tôi sẽ thử."),
             line(Speaker.ARIA, "Nữ Hoàng Máu giữ cửa ký ức này. Hãy vượt qua nàng nếu ngươi muốn đi tiếp."),
@@ -53,12 +53,13 @@ object FloorDialogues {
             line(Speaker.PLAYER_48, "Bạn không phải người thứ bốn mươi chín bước vào tháp. Bạn là Attempt #49."),
             line(Speaker.TRAVELER, "Vậy bốn mươi tám người trước..."),
             line(Speaker.PLAYER_48, "Tất cả đều là bạn. Mỗi lần thất bại, vòng lặp lại bắt đầu từ cổng tháp."),
-            line(Speaker.PLAYER_48, "Nữ Hoàng Máu đang trở lại. Lần này, đừng để nàng chôn vùi ký ức của bạn."),
+            line(Speaker.PLAYER_48, "Aria, Nữ Hoàng Vàng, đang chờ bạn. Nàng muốn biết bạn có giữ được sự thật này đến đỉnh tháp hay không."),
+            line(Speaker.ARIA, "Hãy ngồi xuống. Không ai giữ được ký ức chỉ bằng lời hứa."),
         )
 
         45 -> listOf(
-            line(Speaker.ARIA, "Ta không phải kẻ thù của ngươi. Ta được tạo từ ký ức của mọi lần thử."),
-            line(Speaker.ARIA, "Ta cản ngươi vì mỗi lần ngươi thất bại ở đỉnh tháp, vòng lặp lại bắt đầu và ngươi quên tất cả."),
+            line(Speaker.ARIA, "Trận đấu vừa rồi không phải để giữ ngươi lại. Ta được tạo từ ký ức của mọi lần thử, và cần biết ngươi đã sẵn sàng."),
+            line(Speaker.ARIA, "Ta thử sức ngươi vì mỗi lần ngươi thất bại ở đỉnh tháp, vòng lặp lại bắt đầu và ngươi quên tất cả."),
             line(Speaker.TRAVELER, "Vậy vì sao lần này tôi được biết sự thật?"),
             line(Speaker.ARIA, "Vì ta muốn ngươi nhớ. Hãy lên tầng cuối cùng với những ký ức này."),
         )

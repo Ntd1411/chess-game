@@ -52,6 +52,21 @@ class TowerFlowTest {
     }
 
     @Test
+    fun newGuardiansHaveConsistentStoryAndNoRematchNarrative() {
+        assertEquals("silent_bishop", floors[34].bossId)
+        assertTrue(floors[34].teaser.contains("Giám Mục Tĩnh Lặng"))
+        assertEquals("golden_queen", floors[41].bossId)
+        assertTrue(floors[41].teaser.contains("Nữ Hoàng Vàng"))
+        assertTrue(FloorDialogues.intro(21).any { it.speaker == Speaker.ARIA && it.text.contains("Nữ Hoàng Vàng") })
+        val reveal = FloorDialogues.intro(42)
+        assertTrue(reveal.any { it.text.contains("Attempt #49") })
+        assertTrue(reveal.any { it.text.contains("Aria, Nữ Hoàng Vàng") })
+        assertTrue(reveal.none { it.text.contains("Nữ Hoàng Máu") })
+        assertTrue(!floors[34].teaser.contains("Hiệp Sĩ Bóng Đêm"))
+        assertTrue(!floors[41].teaser.contains("Nữ Hoàng Máu"))
+    }
+
+    @Test
     fun `thoai ket chi co o tang cuoi`() {
         val withEpilogue = (1..TowerCatalog.FLOOR_COUNT).filter { FloorDialogues.epilogue(it).isNotEmpty() }
         assertEquals(listOf(TowerCatalog.FLOOR_COUNT), withEpilogue)

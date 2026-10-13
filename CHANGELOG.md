@@ -14,6 +14,19 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 03:43 GMT+7 — Thêm hai AI và bảy boss riêng, đồng bộ portrait/cốt truyện/mở khóa
+- Màn AI chỉ dùng portrait trong res; thêm Silent Bishop và Golden Queen với ảnh, hồ sơ/tính cách/lời thoại riêng, thay hai boss tái đấu ở tầng 35/42
+- Chỉ Pháp Sư Cờ, Hiệp Sĩ Bóng Đêm và Nữ Hoàng Máu mở sẵn; Vua Hắc Ám/Silent Bishop/Golden Queen/nhân vật ẩn mở sau khi thắng tầng 28/35/42/49, giữ tiến độ đã lưu
+- Nối Golden Queen với Aria/Nữ Hoàng Ký Ức; sửa lời dẫn chương 5/6 và thoại tầng 21/42/45, bỏ câu tái đấu, giữ twist và kết thúc. Quy luật 6 puzzle + 1 boss và giới hạn tìm kiếm tăng dần không đổi
+- Truyền/lưu ID AI qua điều hướng, GameUiState, SavedStateHandle và bản lưu ván; hiển thị đúng tên/portrait kể cả các bot cùng mức Khó, tạo ván mới theo token khi chọn AI và giữ fallback cho bản lưu cũ
+- Thêm/cập nhật test bảy boss, biên mở khóa, Nhật ký, cốt truyện và portrait theo ID; assembleDebug và 144/144 test liên quan đạt. Toàn app 247/248 đạt, còn lỗi ProfileLayout cũ ở profileBlocksDoNotOverlap; portrait WebP đọc được, git diff --check sạch. Chưa kiểm tra trực quan/lưu-khôi phục trên thiết bị
+
+## 2026-10-14 03:29 GMT+7 — Vẽ lại cửa sổ menu trong màn chơi
+- Thay khung gothic/setting_line và icon ảnh bằng cửa sổ Compose tự vẽ nền tối bo góc, viền vàng mảnh và icon vector; Tiếp tục nổi bật, Rời trận tách riêng bằng đường kẻ/nền đỏ nhẹ
+- Chữ căn trái, vùng bấm tối thiểu 56dp tự giãn theo chữ; nội dung cuộn khi màn thấp. Nút đóng, Back và chạm ngoài đều tiếp tục ván như trước
+- Giữ nguyên danh sách hành động/callback, logic đồng hồ và xử lý menu của ván thường/chiến dịch; không sửa SettingsPanel hay asset trên bàn chơi
+- Cập nhật test nhãn/icon/kích thước và tài liệu UI; assembleDebug, PauseMenuTest, PauseMenuArtworkTest, AssetStateTest, GamePlayAssetTest và LocalClockTest đều đạt, git diff --check sạch. Chưa kiểm tra trực quan trên thiết bị
+
 ## 2026-10-14 03:11 GMT+7 — Vẽ lại sảnh LAN và màn chọn đối thủ Người vs Máy
 - Thay khung/nút ảnh bằng card tối viền vàng và nút Compose đơn giản; dùng chung header/footer neo mép an toàn, nội dung cuộn và tránh bàn phím ở sảnh LAN
 - Giữ địa chỉ/sao chép, discovery, nhập IP, ba thể thức giờ, chờ/huỷ phòng và tự bắt đầu ván LAN; giữ khóa phòng bận/lệch phiên bản, thêm IME Go cho IP

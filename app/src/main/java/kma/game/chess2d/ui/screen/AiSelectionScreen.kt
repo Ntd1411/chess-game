@@ -65,7 +65,7 @@ internal object AiSelectionNavigation {
     }
 }
 
-/** Drawn setup cards keep character artwork, difficulty and unlock rules intact. */
+/** Portrait-only setup cards share character identity and unlock rules with the tower. */
 @Composable
 fun AiSelectionScreen(
     clearedUpTo: Int,
@@ -103,15 +103,10 @@ fun AiSelectionScreen(
                         tint = GothicColors.Gold)
                 }
                 Box(modifier = Modifier.weight(1f).height(200.dp), contentAlignment = Alignment.Center) {
-                    val fullBody = current.fullBody
-                    ArtImage(res = fullBody ?: current.portrait,
-                        maxEdge = if (fullBody != null) ArtSizes.BOARD else ArtSizes.PORTRAIT,
-                        trim = fullBody != null,
+                    ArtImage(res = current.portrait, maxEdge = ArtSizes.PORTRAIT,
                         contentDescription = stringResource(current.name),
-                        contentScale = if (fullBody != null) ContentScale.Fit else ContentScale.Crop,
-                        alpha = if (unlocked) 1f else 0.4f,
-                        modifier = if (fullBody != null) Modifier.fillMaxSize()
-                            else Modifier.size(168.dp).clip(RoundedCornerShape(16.dp)))
+                        contentScale = ContentScale.Crop, alpha = if (unlocked) 1f else 0.4f,
+                        modifier = Modifier.size(168.dp).clip(RoundedCornerShape(16.dp)))
                     if (!unlocked) Icon(Icons.Default.Lock,
                         stringResource(R.string.ai_select_locked, current.unlockFloor ?: 0),
                         tint = GothicColors.Gold, modifier = Modifier.size(36.dp))

@@ -98,6 +98,8 @@ fun AppRoot(modifier: Modifier = Modifier) {
     var localBlackName by rememberSaveable { mutableStateOf("") }
     var localTime by rememberSaveable { mutableStateOf(LocalTimeControl.UNLIMITED) }
     var localToken by rememberSaveable { mutableIntStateOf(0) }
+    var aiCharacterId by rememberSaveable { mutableStateOf<String?>(null) }
+    var computerToken by rememberSaveable { mutableIntStateOf(0) }
 
     // Sảnh LAN và Tháp Cờ tự chọn nhạc theo pha/chặng bên trong nhánh của chúng; các màn còn lại
     // chỉ phụ thuộc vào màn đang hiện.
@@ -143,6 +145,7 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onResume = { saved ->
                     mode = saved.mode
                     difficulty = saved.difficulty
+                    aiCharacterId = saved.aiCharacterId
                     resumeSaved = true
                     screen = Screen.MATCH
                 },
@@ -207,6 +210,8 @@ fun AppRoot(modifier: Modifier = Modifier) {
             AiSelectRoute(
                 onStart = { character ->
                     difficulty = character.difficulty
+                    aiCharacterId = character.id
+                    computerToken++
                     mode = GameMode.VS_COMPUTER
                     resumeSaved = false
                     screen = Screen.MATCH
@@ -250,6 +255,8 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onExitToMenu = { screen = Screen.MENU },
                 modifier = modifier,
                 resume = resumeSaved,
+                computerCharacterId = aiCharacterId,
+                computerStartToken = computerToken,
                 // Chỉ ván hai người mở từ màn setup mới mang theo setup; đấu máy và tiếp tục ván cũ thì không.
                 localStart = if (mode == GameMode.TWO_PLAYERS && !resumeSaved && localToken > 0) {
                     LocalStart(LocalSetup(localWhiteName, localBlackName, localTime), localToken)
@@ -382,6 +389,7 @@ private fun AiSelectRoute(
     AiSelectionScreen(
         clearedUpTo = progress.clearedUpTo,
         onStart = { character ->
+            if (!character.isUnlocked(progress.clearedUpTo)) return@AiSelectionScreen
             // Bắt đầu đối đầu = đã gặp nhân vật: ghi vào Nhật ký rồi mới vào ván.
             scope.launch { withContext(NonCancellable) { profile.recordMet(character.id) } }
             onStart(character)

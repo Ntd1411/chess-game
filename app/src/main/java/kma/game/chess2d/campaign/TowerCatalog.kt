@@ -106,20 +106,20 @@ object TowerCatalog {
         26 -> "Bóng của một vương miện trải dài trên tường. Chiếc vương miện thật đã biến mất."
         27 -> "Hai hàng tượng cúi đầu trước cánh cửa đen. Phía sau cửa, có người đang chờ trong im lặng."
         28 -> "Vua Hắc Ám ngồi bất động trên ngai. Với hắn, sự kiên nhẫn cũng là một thứ vũ khí."
-        29 -> "Mùi sắt lạnh thoảng qua căn phòng trống. Dấu kiếm trên tường vẫn còn rất mới."
+        29 -> "Tiếng chuông từ ngôi điện phía trên bỗng tắt. Trong bụi hiện ra dấu một quân tượng."
         30 -> "Một chiếc ghế đã được kéo sẵn cho ngươi. Trên lưng ghế có vết khắc giống tên mình."
         31 -> "Tấm bản đồ dừng lại ở tầng này. Những bậc thang phía trước chưa từng được ghi lên giấy."
-        32 -> "Pha lê đỏ sáng lên giữa tro tàn. Ánh sáng của nó khiến các bóng đổ quay về phía ngươi."
+        32 -> "Một quân tượng bằng đá đứng giữa tro tàn. Đường chéo dưới chân nó dẫn vào bóng tối."
         33 -> "Một lời cảnh báo bị cào khỏi cánh cửa. Chỉ còn hai chữ: đừng quên."
-        34 -> "Tiếng bước chân bọc thép trở lại. Người giữ cửa cũ đã tìm thấy ngươi."
-        35 -> "Hiệp Sĩ Bóng Đêm tháo chiếc găng tay sứt mẻ. Lần này, hắn không còn định nương tay."
-        36 -> "Một thẻ phép mắc trong khe đá. Ký hiệu trên đó trùng với trang sách của Pháp Sư."
+        34 -> "Hai cánh cửa nhà nguyện mở ra không một tiếng động. Người giữ điện đã ngồi sẵn bên bàn cờ."
+        35 -> "Giám Mục Tĩnh Lặng đặt một quân tượng xuống bàn. Trong sự im lặng của hắn, không có nước đi nào là vô nghĩa."
+        36 -> "Sau nhà nguyện là một hành lang phủ ánh vàng. Những mảnh ký ức đang tìm đường về với chủ nhân."
         37 -> "Ngọn nến cuối phòng cháy bằng lửa trắng. Dưới chân nến là một trang giấy trắng tinh."
         38 -> "Ngươi nghe thấy tiếng mình gọi từ bên kia cửa. Nhưng căn phòng phía sau hoàn toàn trống rỗng."
         39 -> "Hồ sơ trên bàn đã bị nhòe gần hết. Số 48 là dòng duy nhất còn đọc được."
-        40 -> "Một đóa hồng đen nằm trên chiếc gối bạc. Gai của nó vẫn vương những sợi chỉ đỏ."
-        41 -> "Tấm màn cũ lại xuất hiện ở cuối hành lang. Lần này, bên trong không còn tiếng nhạc."
-        42 -> "Nữ Hoàng Máu trở lại. Sau bàn cờ của nàng, một sự thật vẫn đang chờ được gọi tên."
+        40 -> "Một vương miện vàng nằm trên chiếc gối bạc. Dưới nó là nét chữ của Aria."
+        41 -> "Ánh vàng lọt qua cánh cửa ký ức. Một hồ sơ mang số 48 nằm ngay trước ngưỡng cửa."
+        42 -> "Nữ Hoàng Vàng chờ bên bàn cờ sáng rực. Aria sẽ thử xem ngươi có đủ sức giữ lấy ký ức của mình hay không."
         43 -> "Những bậc thang phía sau chìm dần trong sương. Tiếng gọi của Player #48 vẫn còn vang trong đầu."
         44 -> "Quả cầu phép soi lên những căn phòng ngươi đã đi qua. Có một cánh cửa trong đó chưa từng được mở."
         45 -> "Aria để lại một thế cờ cùng lời nhắn: hãy tìm lối ra, không phải thêm một chiếc ngai."
@@ -187,11 +187,21 @@ object TowerCatalog {
                 "tầng ${floor.number}: only multiples of seven may be bosses"
             }
             validate(floor, puzzles)
+            if (floor.kind == NodeKind.BOSS) {
+                val boss = requireNotNull(TowerBosses.character(floor))
+                check(floor.bossId == TowerBosses.characterId(floor.number))
+                check(boss.unlockFloor == null || boss.unlockFloor == floor.number) {
+                    "floor ${floor.number}: boss unlock does not match their guardian floor"
+                }
+            }
             (floor.goal as? FloorGoal.SolvePuzzle)?.let { goal ->
                 check(floor.estimatedElo == puzzles[goal.puzzleIndex].estimatedElo) {
                     "tầng ${floor.number}: puzzle rating differs from the preview"
                 }
             }
+        }
+        check(floors.filter { it.kind == NodeKind.BOSS }.map { it.bossId }.distinct().size == 7) {
+            "each chapter must have a distinct guardian"
         }
         val puzzleFloors = floors.filter { it.goal is FloorGoal.SolvePuzzle }
         check(puzzleFloors.size == PUZZLE_COUNT)

@@ -52,10 +52,12 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
    để to hơn các mode phụ (2 người cùng máy, LAN, Máy vs Máy)
 3. **Mode Select** — có thể gộp vào Lobby hoặc tách riêng
 4. **AI Character Selection** — card/nút tự vẽ tối viền vàng mảnh, giữ nền và
-   artwork AI (ảnh toàn thân nếu có). Header/back sát trên; Bắt đầu/Quay lại neo
+   portrait AI có sẵn trong res. Header/back sát trên; Bắt đầu/Quay lại neo
    dưới vùng an toàn. Nhân vật, sao độ khó, phong cách, tốc độ nghĩ, tính cách và
    câu thoại nằm trong nội dung cuộn; carousel chân dung vuốt ngang và mũi tên
-   chuyển vòng. AI chưa mở vẫn xem được, hiện điều kiện mở và tắt nút Bắt đầu.
+   chuyển vòng qua bảy AI. Chỉ ba bot đầu mở sẵn; Vua Hắc Ám/Silent Bishop/Golden
+   Queen/nhân vật ẩn mở sau khi thắng tầng 28/35/42/49. Bot khóa vẫn xem được,
+   hiện điều kiện mở và tắt Bắt đầu. Ván chơi giữ đúng tên/portrait theo ID đã chọn.
 5. **Chess Battle** — bàn cờ chiếm 80–90% màn hình; top: avatar/tên/HP-rank/đồng hồ
    đối thủ; bottom: avatar/tên/đồng hồ/quân còn lại của người chơi; hiệu ứng: ô đang
    chọn, ô có thể đi, ô bị tấn công, check, checkmate, hiệu ứng khi ăn quân; thanh
@@ -105,8 +107,11 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     hiệu ứng, âm quân cờ) / Hình ảnh (chất lượng hiệu ứng, hiệu ứng phép thuật, FPS)
     / Điều khiển (hiển thị nước đi hợp lệ, xác nhận nước đi, gợi ý) / Khác (lưu dữ
     liệu, reset dữ liệu, credits)
-17. **Pause Menu** — overlay làm mờ bàn cờ phía sau; `Tiếp tục` / `Khởi động lại` /
-    `Cài đặt` / `Rời trận`
+17. **Pause Menu** — cửa sổ Compose tự vẽ nền đen, góc bo và viền vàng mảnh, không
+    dùng khung/nút ảnh. Tiếp tục là nút vàng nổi bật; Khởi động lại/Cài đặt là dòng
+    tối; Rời trận ngăn bằng đường kẻ và nền đỏ nhẹ. Icon vector, chữ căn trái, vùng
+    bấm tối thiểu 56dp và tự cao thêm khi chữ lớn. Có nút đóng; đóng/Back/chạm ngoài
+    đều Tiếp tục. Nội dung cuộn trên màn thấp, giữ nguyên xử lý ván thường/chiến dịch.
 
 ## Sơ đồ điều hướng
 

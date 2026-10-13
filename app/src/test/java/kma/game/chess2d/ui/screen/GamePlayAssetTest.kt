@@ -75,7 +75,6 @@ class GamePlayAssetTest {
     @Test
     fun gameplayButtonsMatchTheirExistingActions() {
         assertEquals(R.drawable.game_play_button_continue, BattleButton.CONTINUE.normal)
-        assertEquals(R.drawable.game_play_button_continue, iconFor(kma.game.chess2d.game.PauseItem.RESUME))
         assertEquals(R.drawable.game_play_button_undo, BattleButton.UNDO.normal)
         assertEquals(R.drawable.game_play_button_level, BattleButton.LEVEL.normal)
         assertEquals(R.drawable.game_play_button_menu, BattleButton.MENU.normal)

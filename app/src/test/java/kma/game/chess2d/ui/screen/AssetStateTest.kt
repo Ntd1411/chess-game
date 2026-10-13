@@ -44,7 +44,7 @@ class AssetStateTest {
     fun everyPauseItemHasItsOwnIcon() {
         val icons = PauseItem.entries.map { iconFor(it) }
         assertEquals(icons.size, icons.toSet().size)
-        assertTrue(icons.all { it != 0 })
+        assertTrue(icons.all { it.viewportWidth > 0f && it.viewportHeight > 0f })
         assertFalse(icons.isEmpty())
     }
 }

@@ -22,12 +22,15 @@ class JournalPagesTest {
     }
 
     @Test
-    fun `chua gap ai thi nhan vat mo san la chua ro va nhan vat an la khoa`() {
+    fun `chua gap ai thi chi ba bot dau mo san cac bot sau deu khoa`() {
         val pages = Journal.pages(all, emptyMap(), clearedUpTo = 0)
-        val hidden = pages.single { it.character.id == "hidden" }
-        assertEquals(JournalState.LOCKED, hidden.state)
-        pages.filter { it.character.id != "hidden" }.forEach {
-            assertEquals(JournalState.UNKNOWN, it.state)
+        assertEquals(7, pages.size)
+        pages.take(3).forEach { assertEquals(JournalState.UNKNOWN, it.state) }
+        pages.drop(3).forEach { assertEquals(JournalState.LOCKED, it.state) }
+        pages.drop(3).forEach { page ->
+            val floor = requireNotNull(page.character.unlockFloor)
+            assertEquals(JournalState.LOCKED, Journal.stateOf(page.character, emptySet(), floor - 1))
+            assertEquals(JournalState.UNKNOWN, Journal.stateOf(page.character, emptySet(), floor))
         }
     }
 

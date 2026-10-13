@@ -66,6 +66,8 @@ fun GameScreen(
     resume: Boolean = false,
     localStart: LocalStart? = null,
     viewModel: GameViewModel = viewModel(),
+    computerCharacterId: String? = null,
+    computerStartToken: Int = 0,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val clockTimes by viewModel.clockTimes.collectAsStateWithLifecycle()
@@ -85,17 +87,18 @@ fun GameScreen(
 
     // Dựng lại ván cũ trước khi đồng bộ lựa chọn: ViewModel tự chọn đúng chế độ và cấp
     // độ của ván đó, và chính nó cũng chặn việc dựng lại lần thứ hai khi xoay máy.
-    LaunchedEffect(resume) { if (resume) viewModel.resumeSavedGame() }
-
-    // Ván hai người mới từ màn setup. ViewModel nhớ token đã xử lý nên xoay máy không mở thêm ván mới.
-    LaunchedEffect(localStart) {
-        localStart?.let { viewModel.startLocalGame(it.setup, it.token) }
+    LaunchedEffect(resume, localStart, mode, difficulty, computerCharacterId, computerStartToken) {
+        when {
+            resume -> viewModel.resumeSavedGame()
+            localStart != null -> viewModel.startLocalGame(localStart.setup, localStart.token)
+            mode == GameMode.VS_COMPUTER && computerCharacterId != null && computerStartToken > 0 ->
+                viewModel.startComputerGame(computerCharacterId, computerStartToken)
+            else -> {
+                viewModel.setMode(mode)
+                viewModel.setDifficulty(difficulty)
+            }
+        }
     }
-
-    // Đồng bộ lựa chọn từ menu vào ViewModel. Đặt trong LaunchedEffect để việc này chỉ
-    // chạy khi lựa chọn đổi, chứ không chạy lại mỗi lần vẽ lại màn hình.
-    LaunchedEffect(mode) { viewModel.setMode(mode) }
-    LaunchedEffect(difficulty) { viewModel.setDifficulty(difficulty) }
 
     MatchSounds(state.soundCue)
 
@@ -329,10 +332,9 @@ internal fun labelOf(difficulty: Difficulty): Int = when (difficulty) {
     Difficulty.HARD -> R.string.difficulty_hard
 }
 
-/** Chân dung đối thủ: nhân vật máy đúng cấp độ, hoặc bóng người lạ khi hai người một máy. */
-private fun opponentPortrait(state: GameUiState): Int = when (state.mode) {
-    GameMode.VS_COMPUTER -> AiCharacters.all.firstOrNull { it.difficulty == state.difficulty }
-        ?.portrait ?: R.drawable.portrait_unknown_01
+/** Selected identity wins over difficulty; old saves retain the legacy fallback. */
+internal fun opponentPortrait(state: GameUiState): Int = when (state.mode) {
+    GameMode.VS_COMPUTER -> AiCharacters.resolve(state.aiCharacterId, state.difficulty).portrait
     GameMode.TWO_PLAYERS -> R.drawable.portrait_player_two
 }
 
@@ -342,7 +344,7 @@ private const val LOW_CLOCK_MILLIS = 30_000L
 /** Tên đối thủ theo chế độ: máy, hay người thứ hai ngồi cùng máy (tên nhập ở màn setup nếu có). */
 @Composable
 private fun opponentName(state: GameUiState): String = when (state.mode) {
-    GameMode.VS_COMPUTER -> stringResource(R.string.match_computer)
+    GameMode.VS_COMPUTER -> stringResource(AiCharacters.resolve(state.aiCharacterId, state.difficulty).name)
     GameMode.TWO_PLAYERS ->
         state.blackName.ifBlank { stringResource(R.string.match_player_two) }
 }

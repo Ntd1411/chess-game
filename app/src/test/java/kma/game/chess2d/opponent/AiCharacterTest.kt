@@ -1,76 +1,83 @@
 package kma.game.chess2d.opponent
 
+import java.io.File
+import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
-import kma.game.chess2d.campaign.TowerCatalog
+import kma.game.chess2d.campaign.TowerBosses
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Dữ liệu đối thủ AI: số sao và tốc độ phải suy ra từ độ khó thật, và luật mở nhân vật ẩn. */
 class AiCharacterTest {
-
     private val characters = AiCharacters.all
 
     @Test
-    fun `co du nam nhan vat voi id khac nhau`() {
-        assertEquals(5, characters.size)
-        assertEquals(characters.size, characters.map { it.id }.toSet().size)
-    }
-
-    @Test
-    fun `moi nhan vat tro toi tai nguyen khac le`() {
-        // Id tài nguyên bằng 0 nghĩa là chưa gắn chuỗi hoặc ảnh.
+    fun sevenCharactersHaveDistinctIdsAndPortraits() {
+        assertEquals(7, characters.size)
+        assertEquals(7, characters.map { it.id }.toSet().size)
+        assertEquals(7, characters.map { it.portrait }.toSet().size)
         for (character in characters) {
-            assertNotEquals(character.id, 0, character.name)
-            assertNotEquals(character.id, 0, character.portrait)
-            assertNotEquals(character.id, 0, character.style)
-            assertNotEquals(character.id, 0, character.personality)
-            assertNotEquals(character.id, 0, character.quote)
+            assertNotEquals(0, character.name)
+            assertNotEquals(0, character.portrait)
+            assertNotEquals(0, character.style)
+            assertNotEquals(0, character.personality)
+            assertNotEquals(0, character.quote)
         }
-        assertEquals(characters.size, characters.map { it.portrait }.toSet().size)
+        assertEquals(R.drawable.portrait_silent_bishop, characters.single { it.id == "silent_bishop" }.portrait)
+        assertEquals(R.drawable.portrait_golden_queen, characters.single { it.id == "golden_queen" }.portrait)
     }
 
     @Test
-    fun `so sao suy ra tu do kho that`() {
-        for (character in characters) {
-            assertEquals(character.difficulty.ordinal + 1, character.stars)
-            assertTrue(character.stars in 1..3)
-        }
-        assertEquals(1, characters.first { it.difficulty == Difficulty.EASY }.stars)
-        assertEquals(3, characters.first { it.difficulty == Difficulty.HARD }.stars)
+    fun onlyFirstThreeCharactersAreInitiallyUnlocked() {
+        assertEquals(listOf("chess_mage", "dark_knight", "blood_queen"),
+            characters.filter { it.isUnlocked(0) }.map { it.id })
+        assertEquals(listOf(28, 35, 42, 49), characters.drop(3).map { it.unlockFloor })
+        assertTrue(AiCharacters.default.isUnlocked(0))
     }
 
     @Test
-    fun `toc do nghi lay thang tu ngan sach cua AI`() {
-        for (character in characters) {
-            assertEquals(character.difficulty.timeBudgetMillis / 1000f, character.thinkSeconds, 0f)
+    fun laterCharactersUnlockOnlyAfterDefeatingTheirOwnFloor() {
+        characters.drop(3).forEach { character ->
+            val floor = requireNotNull(character.unlockFloor)
+            assertEquals(character.id, TowerBosses.characterId(floor))
+            assertFalse(character.id, character.isUnlocked(floor - 1))
+            assertTrue(character.id, character.isUnlocked(floor))
+        }
+        for (cleared in 0..49) {
+            assertEquals(3 + listOf(28, 35, 42, 49).count { it <= cleared },
+                characters.count { it.isUnlocked(cleared) })
         }
     }
 
     @Test
-    fun `thu tu carousel di tu de toi kho`() {
+    fun displayedStrengthUsesRealDifficulty() {
+        characters.forEach {
+            assertEquals(it.difficulty.ordinal + 1, it.stars)
+            assertTrue(it.stars in 1..3)
+            assertEquals(it.difficulty.timeBudgetMillis / 1000f, it.thinkSeconds, 0f)
+        }
         val levels = characters.map { it.difficulty.ordinal }
         assertEquals(levels.sorted(), levels)
     }
 
     @Test
-    fun `nhan vat mac dinh mo san`() {
-        assertTrue(AiCharacters.default.isUnlocked(clearedUpTo = 0))
+    fun sharedHardDifficultyDoesNotCollapseCharacterIdentity() {
+        characters.forEach {
+            assertEquals(it, AiCharacters.resolve(it.id, it.difficulty))
+        }
+        assertEquals("silent_bishop", AiCharacters.resolve("silent_bishop", Difficulty.MEDIUM).id)
+        assertEquals("golden_queen", AiCharacters.resolve("golden_queen", Difficulty.HARD).id)
+        assertEquals("blood_queen", AiCharacters.resolve(null, Difficulty.HARD).id)
+        assertEquals("dark_knight", AiCharacters.resolve("missing-old-id", Difficulty.MEDIUM).id)
     }
 
     @Test
-    fun `chi nhan vat an bi khoa luc moi choi`() {
-        val locked = characters.filterNot { it.isUnlocked(clearedUpTo = 0) }
-        assertEquals(1, locked.size)
-        assertEquals("hidden", locked.single().id)
-    }
-
-    @Test
-    fun `nhan vat an mo dung khi vuot het thap`() {
-        val hidden = characters.single { it.id == "hidden" }
-        assertFalse(hidden.isUnlocked(TowerCatalog.FLOOR_COUNT - 1))
-        assertTrue(hidden.isUnlocked(TowerCatalog.FLOOR_COUNT))
+    fun selectionUsesPortraitsInsteadOfFullBodyArtwork() {
+        val source = File("src/main/java/kma/game/chess2d/ui/screen/AiSelectionScreen.kt").readText()
+        assertTrue(source.contains("res = current.portrait"))
+        assertFalse(source.contains("fullBody"))
+        assertFalse(source.contains("character_ai_blood_queen"))
     }
 }

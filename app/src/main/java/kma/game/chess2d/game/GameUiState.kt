@@ -108,4 +108,5 @@ data class GameUiState(
     val blackName: String = "",
     val timeLimited: Boolean = false,
     val timeout: TimeoutResult? = null,
+    val aiCharacterId: String? = null,
 )

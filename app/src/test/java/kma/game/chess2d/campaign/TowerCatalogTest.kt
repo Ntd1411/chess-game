@@ -48,15 +48,16 @@ class TowerCatalogTest {
     }
 
     @Test
-    fun `boss tai dau co loi chao rieng va lan dau giu thoai AI`() {
+    fun `bay boss rieng deu dung loi chao cua chinh AI do`() {
         val allFloors = floors()
         val bosses = allFloors.filter { it.kind == NodeKind.BOSS }
         assertEquals(7, bosses.map { TowerBosses.greeting(it) }.filterNotNull().distinct().size)
         assertEquals(R.string.ai_knight_quote, TowerBosses.greeting(allFloors[13]))
-        assertEquals(R.string.tower_knight_rematch_quote, TowerBosses.greeting(allFloors[34]))
+        assertEquals(R.string.ai_bishop_quote, TowerBosses.greeting(allFloors[34]))
         assertEquals(R.string.ai_queen_quote, TowerBosses.greeting(allFloors[20]))
-        assertEquals(R.string.tower_queen_rematch_quote, TowerBosses.greeting(allFloors[41]))
-        bosses.filter { it.number != 35 && it.number != 42 }.forEach {
+        assertEquals(R.string.ai_golden_queen_quote, TowerBosses.greeting(allFloors[41]))
+        assertEquals(7, bosses.map { it.bossId }.distinct().size)
+        bosses.forEach {
             assertEquals(TowerBosses.character(it)!!.quote, TowerBosses.greeting(it))
         }
     }
@@ -76,7 +77,7 @@ class TowerCatalogTest {
     @Test
     fun `tang moc dung loai theo story bible`() {
         val byNumber = floors().associateBy { it.number }
-        assertEquals(NodeKind.BOSS, byNumber.getValue(21).kind) // boss Aria
+        assertEquals(NodeKind.BOSS, byNumber.getValue(21).kind) // Blood Queen guards Aria's memory chamber
         assertEquals(NodeKind.BOSS, byNumber.getValue(42).kind) // true reveal
         assertEquals(NodeKind.PUZZLE, byNumber.getValue(45).kind) // Aria tiết lộ lý do
         assertEquals(NodeKind.BOSS, byNumber.getValue(49).kind) // final reveal
@@ -106,7 +107,7 @@ class TowerCatalogTest {
         val bosses = floors().filter { it.kind == NodeKind.BOSS }
         assertEquals(listOf(7, 14, 21, 28, 35, 42, 49), bosses.map { it.number })
         assertEquals(listOf("chess_mage", "dark_knight", "blood_queen", "dark_king",
-            "dark_knight", "blood_queen", "hidden"), bosses.map { it.bossId })
+            "silent_bishop", "golden_queen", "hidden"), bosses.map { it.bossId })
         val strengths = bosses.map { (it.goal as FloorGoal.DefeatAi).strength!! }
         strengths.zipWithNext().forEach { (a, b) ->
             assertTrue(b.depth > a.depth)

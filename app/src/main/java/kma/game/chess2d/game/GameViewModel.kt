@@ -125,6 +125,7 @@ class GameViewModel(
     private val ai = Ai()
     private var mode = GameMode.TWO_PLAYERS
     private var difficulty = Difficulty.MEDIUM
+    private var aiCharacterId: String? = null
 
     /** Tên hai người và thể thức thời gian của ván hai người hiện tại. Đấu máy không dùng. */
     private var setup = LocalSetup(whiteName = "", blackName = "")
@@ -182,6 +183,7 @@ class GameViewModel(
             ?: GameMode.TWO_PLAYERS
         difficulty = savedState.get<String>(KEY_DIFFICULTY)?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
             ?: Difficulty.MEDIUM
+        aiCharacterId = savedState.get<String>(KEY_AI_CHARACTER)
         setup = LocalSetup(
             whiteName = savedState.get<String>(KEY_WHITE_NAME).orEmpty(),
             blackName = savedState.get<String>(KEY_BLACK_NAME).orEmpty(),
@@ -348,6 +350,26 @@ class GameViewModel(
         }
     }
 
+    /** Start a selected opponent once per request, including switches between equally strong AIs. */
+    fun startComputerGame(characterId: String, token: Int) {
+        if (savedState.get<Int>(KEY_COMPUTER_START_TOKEN) == token) return
+        val character = kma.game.chess2d.opponent.AiCharacters.all.first { it.id == characterId }
+        savedState[KEY_COMPUTER_START_TOKEN] = token
+        savedState[KEY_RESUMED] = false
+        cancelAiTurn()
+        reviewPly = null
+        mode = GameMode.VS_COMPUTER
+        difficulty = character.difficulty
+        aiCharacterId = character.id
+        savedState[KEY_MODE] = mode.name
+        savedState[KEY_DIFFICULTY] = difficulty.name
+        savedState[KEY_AI_CHARACTER] = character.id
+        ai.newGame()
+        resetBoard()
+        saveMoves()
+        publish()
+    }
+
     fun setDifficulty(newDifficulty: Difficulty) {
         if (difficulty == newDifficulty) return
         // Đổi cấp giữa lúc máy đang nghĩ thì bỏ lượt nghĩ đó và tính lại theo cấp mới.
@@ -385,6 +407,8 @@ class GameViewModel(
             savedState[KEY_MODE] = game.mode.name
             difficulty = game.difficulty
             savedState[KEY_DIFFICULTY] = game.difficulty.name
+            aiCharacterId = game.aiCharacterId
+            savedState[KEY_AI_CHARACTER] = game.aiCharacterId
             applySetup(LocalSetup(game.whiteName, game.blackName, game.timeControl))
             resetBoard()
             // Đi lại nước cũ không được chạy đồng hồ: giờ còn lại lấy từ bản lưu bên dưới.
@@ -706,6 +730,7 @@ class GameViewModel(
                 timeControl = if (twoPlayers) setup.time else LocalTimeControl.UNLIMITED,
                 whiteMillis = times?.whiteMillis ?: 0L,
                 blackMillis = times?.blackMillis ?: 0L,
+                aiCharacterId = if (twoPlayers) null else aiCharacterId,
             )
         }
         saveRequests.tryEmit(snapshot)
@@ -918,6 +943,7 @@ class GameViewModel(
             blackName = if (mode == GameMode.TWO_PLAYERS) setup.blackName else "",
             timeLimited = clock != null,
             timeout = timeout,
+            aiCharacterId = if (mode == GameMode.VS_COMPUTER) aiCharacterId else null,
         )
     }
 
@@ -936,6 +962,8 @@ class GameViewModel(
         const val KEY_PLAYED_MOVES = "playedMoves"
         const val KEY_MODE = "gameMode"
         const val KEY_DIFFICULTY = "difficulty"
+        const val KEY_AI_CHARACTER = "aiCharacterId"
+        const val KEY_COMPUTER_START_TOKEN = "computerStartToken"
         const val KEY_RESUMED = "resumedFromDisk"
         const val KEY_START_TOKEN = "localStartToken"
         const val KEY_WHITE_NAME = "localWhiteName"

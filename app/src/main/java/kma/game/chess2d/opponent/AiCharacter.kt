@@ -9,15 +9,13 @@ import kma.game.chess2d.campaign.TowerCatalog
 /**
  * Một đối thủ AI trong màn "Chọn đối thủ AI" (xem `docs/design/story-bible.md`).
  *
- * In regular AI selection, strength comes from [difficulty]. Campaign rematches
- * reuse this identity with chapter-specific AiStrength search limits.
+ * In regular AI selection, strength comes from [difficulty]. Campaign bosses
+ * share this identity with chapter-specific AiStrength search limits.
  * Phong cách, tính cách và câu thoại là phần mô tả/nhân vật, không đổi
  * cách AI nghĩ — nên số sao và tốc độ nghĩ hiển thị đều suy ra từ [difficulty] chứ không
  * khai báo riêng, để màn hình không bao giờ hứa một độ khó mà AI không có.
  *
  * @param portrait ảnh chân dung **vuông** (`portrait_*`), không phải ảnh toàn thân.
- * @param fullBody ảnh toàn thân nếu có (`character_*_fullbody`); `null` thì màn chọn đối thủ dùng
- *        chân dung vuông chứ không phóng chân dung thành hình toàn thân.
  * @param unlockFloor tầng của Tháp Cờ phải vượt qua để mở nhân vật; `null` là mở sẵn.
  */
 data class AiCharacter(
@@ -29,7 +27,6 @@ data class AiCharacter(
     @StringRes val personality: Int,
     @StringRes val quote: Int,
     val unlockFloor: Int? = null,
-    @DrawableRes val fullBody: Int? = null,
 ) {
 
     /** Số sao độ khó, 1 đến 3, suy ra từ [difficulty]. */
@@ -68,7 +65,6 @@ object AiCharacters {
             id = "blood_queen",
             name = R.string.ai_queen_name,
             portrait = R.drawable.portrait_ai_blood_queen,
-            fullBody = R.drawable.character_ai_blood_queen,
             difficulty = Difficulty.HARD,
             style = R.string.ai_queen_style,
             personality = R.string.ai_queen_personality,
@@ -82,6 +78,27 @@ object AiCharacters {
             style = R.string.ai_king_style,
             personality = R.string.ai_king_personality,
             quote = R.string.ai_king_quote,
+            unlockFloor = 28,
+        ),
+        AiCharacter(
+            id = "silent_bishop",
+            name = R.string.ai_bishop_name,
+            portrait = R.drawable.portrait_silent_bishop,
+            difficulty = Difficulty.HARD,
+            style = R.string.ai_bishop_style,
+            personality = R.string.ai_bishop_personality,
+            quote = R.string.ai_bishop_quote,
+            unlockFloor = 35,
+        ),
+        AiCharacter(
+            id = "golden_queen",
+            name = R.string.ai_golden_queen_name,
+            portrait = R.drawable.portrait_golden_queen,
+            difficulty = Difficulty.HARD,
+            style = R.string.ai_golden_queen_style,
+            personality = R.string.ai_golden_queen_personality,
+            quote = R.string.ai_golden_queen_quote,
+            unlockFloor = 42,
         ),
         AiCharacter(
             id = "hidden",
@@ -91,11 +108,14 @@ object AiCharacters {
             style = R.string.ai_hidden_style,
             personality = R.string.ai_hidden_personality,
             quote = R.string.ai_hidden_quote,
-            // Điều kiện mở của nhân vật ẩn chưa được chốt trong story bible: tạm đặt là
-            // đã chinh phục hết Tháp Cờ, để nó thật sự là phần thưởng cuối game.
+            // Defeating the final guardian unlocks the last regular AI opponent.
             unlockFloor = TowerCatalog.FLOOR_COUNT,
         ),
     )
+
+    /** Resolve saved identity, with a difficulty-based fallback only for legacy saves. */
+    fun resolve(id: String?, difficulty: Difficulty): AiCharacter =
+        all.firstOrNull { it.id == id } ?: all.first { it.difficulty == difficulty }
 
     /** Nhân vật mặc định khi mở màn: đối thủ đầu tiên, luôn mở sẵn. */
     val default: AiCharacter get() = all.first()

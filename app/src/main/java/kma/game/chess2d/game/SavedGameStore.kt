@@ -42,6 +42,7 @@ data class SavedGame(
     val timeControl: LocalTimeControl = LocalTimeControl.UNLIMITED,
     val whiteMillis: Long = 0L,
     val blackMillis: Long = 0L,
+    val aiCharacterId: String? = null,
 )
 
 /**
@@ -73,6 +74,7 @@ class SavedGameStore(private val context: Context) {
             prefs[KEY_MOVES] = game.uciMoves.joinToString(MOVE_SEPARATOR)
             prefs[KEY_MODE] = game.mode.name
             prefs[KEY_DIFFICULTY] = game.difficulty.name
+            game.aiCharacterId?.let { prefs[KEY_AI_CHARACTER] = it } ?: prefs.remove(KEY_AI_CHARACTER)
             prefs[KEY_WHITE_NAME] = game.whiteName
             prefs[KEY_BLACK_NAME] = game.blackName
             prefs[KEY_TIME_CONTROL] = game.timeControl.name
@@ -115,6 +117,7 @@ class SavedGameStore(private val context: Context) {
             } ?: LocalTimeControl.UNLIMITED,
             whiteMillis = this[KEY_WHITE_MILLIS] ?: 0L,
             blackMillis = this[KEY_BLACK_MILLIS] ?: 0L,
+            aiCharacterId = this[KEY_AI_CHARACTER],
         )
     }
 
@@ -123,6 +126,7 @@ class SavedGameStore(private val context: Context) {
         val KEY_MOVES = stringPreferencesKey("uci_moves")
         val KEY_MODE = stringPreferencesKey("mode")
         val KEY_DIFFICULTY = stringPreferencesKey("difficulty")
+        val KEY_AI_CHARACTER = stringPreferencesKey("ai_character_id")
         val KEY_WHITE_NAME = stringPreferencesKey("white_name")
         val KEY_BLACK_NAME = stringPreferencesKey("black_name")
         val KEY_TIME_CONTROL = stringPreferencesKey("time_control")
