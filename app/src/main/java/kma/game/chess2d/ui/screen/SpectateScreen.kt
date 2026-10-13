@@ -1,5 +1,7 @@
 package kma.game.chess2d.ui.screen
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
@@ -52,8 +54,6 @@ import kma.game.chess2d.ui.art.ArtBackdrop
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.BattleButton
-import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.GothicButton
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.theme.GothicColors
@@ -327,50 +327,20 @@ private fun SpectateMatchScreen(
  * đang tự chạy thì tắt đi thay vì để bấm mà không thấy gì xảy ra. Hết ván thì mọi nút
  * điều khiển nước đi đều tắt.
  */
+internal data class SpectateControlAvailability(val pause: Boolean, val step: Boolean, val auto: Boolean)
+internal fun spectateControlAvailability(paused: Boolean, autoPlay: Boolean, finished: Boolean) =
+    SpectateControlAvailability(autoPlay && !finished, !(autoPlay && !paused) && !finished, !finished)
+
 @Composable
-private fun SpectateControlRow(
-    paused: Boolean,
-    autoPlay: Boolean,
-    speedFactor: Int,
-    finished: Boolean,
-    onTogglePause: () -> Unit,
-    onStep: () -> Unit,
-    onToggleAuto: () -> Unit,
-    onCycleSpeed: () -> Unit,
-) {
-    val d = LocalDesign.current
-    val running = autoPlay && !paused
-    val rowHeight = Modifier.fillMaxWidth().height(d.dp(90))
-    Column(verticalArrangement = Arrangement.spacedBy(d.dp(12))) {
-        Row(modifier = rowHeight, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
-            GothicButton(
-                label = stringResource(if (paused) R.string.spectate_resume else R.string.spectate_pause),
-                onClick = onTogglePause,
-                enabled = autoPlay && !finished,
-                modifier = Modifier.weight(1f).fillMaxSize(),
-            )
-            GothicButton(
-                label = stringResource(R.string.spectate_step),
-                onClick = onStep,
-                art = ButtonArt.SECONDARY,
-                enabled = !running && !finished,
-                modifier = Modifier.weight(1f).fillMaxSize(),
-            )
-        }
-        Row(modifier = rowHeight, horizontalArrangement = Arrangement.spacedBy(d.dp(20))) {
-            GothicButton(
-                label = stringResource(if (autoPlay) R.string.spectate_auto_on else R.string.spectate_auto_off),
-                onClick = onToggleAuto,
-                art = ButtonArt.SECONDARY,
-                enabled = !finished,
-                modifier = Modifier.weight(1f).fillMaxSize(),
-            )
-            GothicButton(
-                label = stringResource(R.string.spectate_speed, speedFactor),
-                onClick = onCycleSpeed,
-                art = ButtonArt.SECONDARY,
-                modifier = Modifier.weight(1f).fillMaxSize(),
-            )
-        }
+private fun SpectateControlRow(paused: Boolean, autoPlay: Boolean, speedFactor: Int, finished: Boolean,
+    onTogglePause: () -> Unit, onStep: () -> Unit, onToggleAuto: () -> Unit, onCycleSpeed: () -> Unit) {
+    val enabled = spectateControlAvailability(paused, autoPlay, finished)
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SimpleSetupButton(stringResource(if (paused) R.string.spectate_resume else R.string.spectate_pause), onTogglePause,
+            Modifier.width(124.dp), enabled = enabled.pause, maxLines = 2)
+        SimpleSetupButton(stringResource(R.string.spectate_step), onStep, Modifier.width(124.dp), enabled = enabled.step, maxLines = 2)
+        SimpleSetupButton(stringResource(if (autoPlay) R.string.spectate_auto_on else R.string.spectate_auto_off), onToggleAuto,
+            Modifier.width(124.dp), enabled = enabled.auto, maxLines = 2)
+        SimpleSetupButton(stringResource(R.string.spectate_speed, speedFactor), onCycleSpeed, Modifier.width(124.dp), maxLines = 2)
     }
 }

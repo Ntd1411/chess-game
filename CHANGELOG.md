@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:17 GMT+7 — Vẽ nốt điều khiển Máy vs Máy
+- Thay bốn nút ảnh runtime bằng nút tự vẽ trên một hàng vuốt ngang, chữ/touch target dùng dp thật. Giữ bàn cờ, lifecycle AI và quy tắc dừng/tiếp/đi một nước/auto/tốc độ.
+- Kiểm tra: assembleDebug và 275 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:14 GMT+7 — Vẽ lại Splash
 - Giữ nền/logo sẵn có, thanh tải Compose tự vẽ neo dưới vùng an toàn. Tiến độ vẫn lấy preload thật, giữ fade và thời gian chờ tối thiểu/giữ 100 phần trăm trước khi vào menu.
 - Kiểm tra: assembleDebug và 274 app unit test qua; chưa QA thiết bị.

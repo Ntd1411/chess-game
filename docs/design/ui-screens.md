@@ -153,6 +153,9 @@ Thất bại dùng card tối viền vàng và chữ sáng, giữ nền/huy hi�
 ### Vẽ lại Splash
 Splash không dùng khung/ruột ảnh cho thanh tải, giữ logo không crop và thanh tiến độ vàng. Tiến độ phản ánh preload thật, không giả chạy theo thời gian.
 
+### Vẽ nốt điều khiển Máy vs Máy
+Màn xem AI dùng hàng điều khiển tự vẽ vuốt ngang trong vùng dưới bàn. Đi một nước chỉ khi không tự chạy, hết ván khóa các thao tác nước đi, tốc độ giữ như trước.
+
 ## Sơ đồ điều hướng
 
 ```
