@@ -16,13 +16,11 @@ import kma.game.chess2d.engine.Piece
  * định giữa ô sáng và ô tối, nên người chơi đổi bằng bộ màu ở đây chứ không bằng
  * hình nền điện thoại.
  */
-enum class BoardPalette(val lightSquare: Color, val darkSquare: Color, val textured: Boolean = false) {
+enum class BoardPalette(val lightSquare: Color, val darkSquare: Color, val drawLineColor: Color? = null) {
     /**
-     * Bộ gothic: ô đá cẩm thạch ngà và obsidian vân vàng vẽ từ ảnh, có lớp phủ phát sáng cho
-     * ô chọn, nước đi, nước ăn và vua bị chiếu. Hai màu phẳng chỉ là màu dự phòng lúc ảnh
-     * chưa nạp xong. Là bộ mặc định.
+     * Bộ gothic: màu đỏ nhạt và xám đậm, dễ nhìn hơn bộ cũ. Là bộ mặc định.
      */
-    GOTHIC(Color(0xFFD9CDB4), Color(0xFF26262C), textured = true),
+    GOTHIC(Color(0xFFC84C55), Color(0xFF2E2E2E), drawLineColor = Color.Yellow),
 
     /** Bộ xanh lá quen thuộc từ Phase 2. */
     GREEN(Color(0xFFEEEED2), Color(0xFF769656)),
@@ -34,7 +32,7 @@ enum class BoardPalette(val lightSquare: Color, val darkSquare: Color, val textu
     OCEAN(Color(0xFFDEE3E6), Color(0xFF5C87A6)),
 
     /** Bộ xám trung tính, đỡ chói khi dùng ban đêm. */
-    SLATE(Color(0xFFD8D8D8), Color(0xFF6E6E6E)),
+    SLATE(Color(0xFFD8D8D8), Color(0xFF6E6E6E), drawLineColor = Color.Black),
 }
 
 /**
