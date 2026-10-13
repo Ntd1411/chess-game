@@ -86,19 +86,7 @@ fun ChessBoard(
         val squarePx = with(LocalDensity.current) { squareSize.toPx() }
         val occupied = remember(pieces) { pieces.mapTo(HashSet()) { it.square } }
 
-        // Ảnh ô và lớp phủ của bộ gothic, đã được nạp trước ở splash nên thường có ngay. Chưa có (null)
-        // thì Canvas vẽ màu phẳng dự phòng của bộ màu thay vì chờ.
-        // Bàn ghép từ board_tile_light/dark (8x8), không dùng chess_board.png: ảnh đó là bàn vẽ sẵn
-        // trong khung dọc 3:4 nên lưới ô không khớp được với toạ độ ô của engine. Hai cách không dùng chung.
-        val tileLight = rememberTrimmedArt(R.drawable.board_tile_light, ArtSizes.OVERLAY)
-        val tileDark = rememberTrimmedArt(R.drawable.board_tile_dark, ArtSizes.OVERLAY)
-        val selectedOverlay = rememberTrimmedArt(R.drawable.board_tile_selected, ArtSizes.OVERLAY)
-        val moveOverlay = rememberTrimmedArt(R.drawable.board_tile_move, ArtSizes.OVERLAY)
-        val attackOverlay = rememberTrimmedArt(R.drawable.board_tile_attack, ArtSizes.OVERLAY)
-        val checkOverlay = rememberTrimmedArt(R.drawable.board_tile_check, ArtSizes.OVERLAY)
-        // Ô của nước vừa đi dùng đúng ảnh board_tile_last_move (lớp phủ bán trong suốt cùng bộ với các ô khác).
-        val lastMoveOverlay = rememberTrimmedArt(R.drawable.board_tile_last_move, ArtSizes.OVERLAY)
-        val textured = palette.textured
+        val drawLineColor = palette.drawLineColor
 
         // Ô đang được kéo và khoảng đã kéo (đơn vị px). Kéo thả chỉ là một lối vào khác
         // của đúng luồng tap: nhấc quân = chạm ô nguồn, nhả quân = chạm ô đích. Nhờ vậy
@@ -167,33 +155,16 @@ fun ChessBoard(
                 val isLight = (Squares.fileOf(square) + Squares.rankOf(square)) % 2 != 0
                 val col = screenCol(square)
                 val row = screenRow(square)
-                val tile = if (isLight) tileLight else tileDark
 
-                if (textured && tile != null) {
-                    drawTile(tile, col, row, squarePx)
-                } else {
-                    drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
-                }
+                drawRect(if (isLight) palette.lightSquare else palette.darkSquare, topLeft, size)
                 if (square == lastMoveFrom || square == lastMoveTo) {
-                    if (textured && lastMoveOverlay != null) {
-                        drawTile(lastMoveOverlay, col, row, squarePx)
-                    } else {
-                        drawRect(BoardColors.lastMove, topLeft, size)
-                    }
+                    drawRect(BoardColors.lastMove, topLeft, size)
                 }
                 if (square == checkedKingSquare) {
-                    if (textured && checkOverlay != null) {
-                        drawTile(checkOverlay, col, row, squarePx)
-                    } else {
-                        drawRect(BoardColors.check, topLeft, size)
-                    }
+                    drawRect(BoardColors.check, topLeft, size)
                 }
                 if (square == selectedSquare) {
-                    if (textured && selectedOverlay != null) {
-                        drawTile(selectedOverlay, col, row, squarePx)
-                    } else {
-                        drawRect(BoardColors.selected, topLeft, size)
-                    }
+                    drawRect(BoardColors.selected, topLeft, size)
                 }
             }
 
@@ -201,11 +172,6 @@ fun ChessBoard(
             // Gợi ý nước đi vẽ sau cùng để không bị màu ô nào phủ lên.
             for (target in legalTargets) {
                 val capture = occupied.contains(target)
-                val overlay = if (capture) attackOverlay else moveOverlay
-                if (textured && overlay != null) {
-                    drawTile(overlay, screenCol(target), screenRow(target), squarePx)
-                    continue
-                }
                 val center = Offset(
                     squarePx * screenCol(target) + squarePx / 2f,
                     squarePx * screenRow(target) + squarePx / 2f,
@@ -220,6 +186,29 @@ fun ChessBoard(
                     )
                 } else {
                     drawCircle(BoardColors.legalTarget, squarePx * 0.15f, center)
+                }
+            }
+
+            // Vẽ đường kẻ lưới bàn cờ nếu palette có màu đường kẻ.
+            drawLineColor?.let { color ->
+                val strokeWidth = squarePx * 0.01f
+                // 9 đường dọc (x = 0 đến 8)
+                for (i in 0..8) {
+                    drawLine(
+                        color = color,
+                        start = Offset(i * squarePx, 0f),
+                        end = Offset(i * squarePx, squarePx * 8),
+                        strokeWidth = strokeWidth,
+                    )
+                }
+                // 9 đường ngang (y = 0 đến 8)
+                for (i in 0..8) {
+                    drawLine(
+                        color = color,
+                        start = Offset(0f, i * squarePx),
+                        end = Offset(squarePx * 8, i * squarePx),
+                        strokeWidth = strokeWidth,
+                    )
                 }
             }
         }
@@ -248,15 +237,6 @@ fun ChessBoard(
                         .zIndex(if (dragging) 1f else 0f),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // Quầng sáng dưới quân đang chọn (trên ô, dưới quân).
-                    if (textured && piece.square == selectedSquare) {
-                        ArtImage(
-                            res = R.drawable.fx_selected_piece_glow,
-                            maxEdge = ArtSizes.OVERLAY,
-                            trim = true,
-                            modifier = Modifier.size(squareSize),
-                        )
-                    }
                     PieceGlyph(piece.piece, squareSize, pieceTheme)
                 }
             }
