@@ -465,4 +465,6 @@
     <string name="shop_settings_hint">Chỉ áp dụng màu bàn và bộ quân đã sở hữu. Mở Shop từ menu để mua thêm.</string>
     <string name="menu_heading">THÁP CỜ</string>
     <string name="menu_crystals">Pha lê: %1$d</string>
+    <string name="dialogue_auto">Tự động</string>
+    <string name="dialogue_progress">%1$d / %2$d</string>
 </resources>

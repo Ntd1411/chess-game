@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:08 GMT+7 — Vẽ lại Hội thoại
+- Giữ portrait/cốt truyện, card thoại tự vẽ chữ sáng cuộn được, chỉ số trang và nút Auto/Bỏ qua/Tiếp neo dưới. Giữ kết thúc khi hết thoại, bỏ qua và nhịp Auto 3 giây, không tự bỏ dòng cuối.
+- Kiểm tra: assembleDebug và 271 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:05 GMT+7 — Vẽ lại Chọn chế độ
 - Năm card tự vẽ với tên/mô tả đủ, nội dung cuộn và header/footer vùng an toàn; giữ điều hướng từng chế độ, bỏ khung ảnh và tọa độ cố định
 - Kiểm tra: assembleDebug và 269 app unit test qua; chưa QA thiết bị.

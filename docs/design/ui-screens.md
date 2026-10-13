@@ -141,6 +141,9 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     túi đồ hiện số dư sau chi. Khôi phục mặc định không xoá mua hàng; xoá dữ liệu
     toàn bộ mới xoá. Giá tập trung trong ShopCatalog và có thể chỉnh sau.
 
+### Vẽ lại Hội thoại
+Hội thoại dùng card tối viền vàng, portrait có sẵn và chữ sáng không bị khung cắt. Nội dung cuộn, footer Auto/Bỏ qua/Tiếp, giữ mapping người nói và nhịp tự động cũ.
+
 ## Sơ đồ điều hướng
 
 ```
