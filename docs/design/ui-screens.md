@@ -51,7 +51,8 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
    Máy vs Máy; lưới shortcut Hồ sơ/Nhật ký/Túi đồ/Shop/Lịch sử/Cài đặt. Card/nút
    tối–vàng, nội dung cuộn tránh tràn màn, không ảnh nút hay tọa độ cố định.
    Shop thay Thành tựu; hỏi tiếp tục/bỏ ván dở bằng dialog tự vẽ có lựa chọn rõ.
-3. **Mode Select** — có thể gộp vào Lobby hoặc tách riêng
+3. **Mode Select** — năm card tự vẽ tối–vàng tên/mô tả, cuộn cùng nội dung;
+   header và Quay lại neo vùng an toàn, giữ năm nhánh điều hướng.
 4. **AI Character Selection** — card/nút tự vẽ tối viền vàng mảnh, giữ nền và
    portrait AI có sẵn trong res. Header/back sát trên; Bắt đầu/Quay lại neo
    dưới vùng an toàn. Nhân vật, sao độ khó, phong cách, tốc độ nghĩ, tính cách và

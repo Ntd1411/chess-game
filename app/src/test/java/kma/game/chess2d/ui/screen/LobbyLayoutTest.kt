@@ -18,10 +18,9 @@ class LobbyLayoutTest {
 
     @Test
     fun `man chon che do nam gon trong khung`() {
-        val cards = (0 until 5).map(ModeSelectLayout::card)
-        for (i in 0 until cards.size - 1) assertFalse(cards[i].overlaps(cards[i + 1]))
-        assertTrue(cards.last().bottom <= ModeSelectLayout.Ornament.y)
-        assertTrue(ModeSelectLayout.Ornament.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
+        assertEquals(listOf("TOWER", "AI", "LOCAL", "LAN", "SPECTATE"), ModeChoice.entries.map { it.name })
+        assertEquals(5, ModeChoice.entries.map { it.title }.toSet().size)
+        assertEquals(5, ModeChoice.entries.map { it.description }.toSet().size)
 
     }
 

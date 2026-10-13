@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:05 GMT+7 — Vẽ lại Chọn chế độ
+- Năm card tự vẽ với tên/mô tả đủ, nội dung cuộn và header/footer vùng an toàn; giữ điều hướng từng chế độ, bỏ khung ảnh và tọa độ cố định
+- Kiểm tra: assembleDebug và 269 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:00 GMT+7 — Vẽ lại Main menu
 - Giữ nền/ảnh đại diện mới, tự vẽ header tên/cấp/tiến độ và số dư; hai mode chính nổi bật, ba mode phụ và lưới sáu shortcut có Shop thay Thành tựu
 - Nội dung cuộn, không dùng ảnh làm nút/khung hay tọa độ cố định; vẫn vào đủ năm mode và hồ sơ/nhật ký/túi đồ/lịch sử/cài đặt
