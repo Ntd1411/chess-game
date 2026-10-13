@@ -12,10 +12,12 @@ import kma.game.chess2d.R
 import kma.game.chess2d.ui.theme.GothicColors
 
 @Composable
-internal fun DrawnConfirmDialog(title: String, text: String, confirmLabel: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(onDismissRequest = onDismiss, containerColor = GothicColors.Ink,
+internal fun DrawnConfirmDialog(title: String, text: String, confirmLabel: String, onConfirm: () -> Unit, onDismiss: () -> Unit,
+    dismissLabel: String? = null, dismissible: Boolean = true) {
+    AlertDialog(onDismissRequest = { if (dismissible) onDismiss() },
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = dismissible, dismissOnClickOutside = dismissible), containerColor = GothicColors.Ink,
         titleContentColor = GothicColors.Gold, textContentColor = GothicColors.Parchment,
         title = { Text(title) }, text = { Text(text, Modifier.verticalScroll(rememberScrollState())) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(confirmLabel, color = GothicColors.Alert) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel), color = GothicColors.Gold) } })
+        dismissButton = { TextButton(onClick = onDismiss) { Text(dismissLabel ?: stringResource(R.string.action_cancel), color = GothicColors.Gold) } })
 }

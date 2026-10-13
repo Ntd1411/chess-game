@@ -2,7 +2,6 @@ package kma.game.chess2d.ui.screen
 
 import android.os.Build
 import androidx.activity.compose.BackHandler
-import kma.game.chess2d.ui.art.GothicConfirmDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -582,7 +581,7 @@ private fun ResumePrompt(onResume: (SavedGame) -> Unit) {
     if (game == null || answered) return
 
     // Không đóng được bằng chạm ngoài/Back: bỏ ván cũ phải là lựa chọn có ý.
-    GothicConfirmDialog(
+    DrawnConfirmDialog(
         title = stringResource(R.string.resume_title),
         text = stringResource(R.string.resume_text, game.uciMoves.size),
         confirmLabel = stringResource(R.string.resume_continue),

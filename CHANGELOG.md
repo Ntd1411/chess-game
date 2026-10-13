@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:00 GMT+7 — Vẽ lại Main menu
+- Giữ nền/ảnh đại diện mới, tự vẽ header tên/cấp/tiến độ và số dư; hai mode chính nổi bật, ba mode phụ và lưới sáu shortcut có Shop thay Thành tựu
+- Nội dung cuộn, không dùng ảnh làm nút/khung hay tọa độ cố định; vẫn vào đủ năm mode và hồ sơ/nhật ký/túi đồ/lịch sử/cài đặt
+- Hộp tiếp tục/bỏ ván dở đổi sang dialog tự vẽ, vẫn không đóng bằng Back/chạm ngoài và giữ xử lý lưu ván; assembleDebug và 269 app unit test qua; chưa QA thiết bị
+
 ## 2026-10-14 04:55 GMT+7 — Thêm Shop màu bàn và bộ quân
 - Shop tự vẽ có preview bàn/quân thật, hai danh mục, xác nhận mua bằng vàng Tháp Cờ và áp dụng đồ sở hữu; giá tập trung trong ShopCatalog, không thanh toán tiền thật
 - Sở hữu và tổng vàng đã tiêu ghi nguyên tử trong DataStore, mua lặp không trừ thêm; menu/túi đồ trừ khoản chi khỏi tổng thưởng, cài đặt khóa lựa chọn chưa mua

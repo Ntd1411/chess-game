@@ -46,10 +46,11 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
 
 1. **Splash Screen** — logo, loading bar, animation nhẹ (logo hiện dần, ánh sáng đỏ
    từ mặt trăng, quân cờ bay quanh logo)
-2. **Main Lobby** — trung tâm game: avatar/level/gold/crystal + nút Settings trên
-   cùng; nhân vật chính đứng giữa (idle animation, click mở Profile); 2 bên là Nhật
-   ký/Túi đồ/Thành tựu; dưới cùng là 5 mode, **Khám Phá Tháp Cờ** và **Người vs Máy**
-   để to hơn các mode phụ (2 người cùng máy, LAN, Máy vs Máy)
+2. **Main Lobby** — giữ nền/ảnh đại diện người dùng, header tự vẽ tên/cấp/thanh
+   tiến độ và số dư. Hai thẻ chính Tháp Cờ/Người vs Máy, ba thẻ phụ cùng máy/LAN/
+   Máy vs Máy; lưới shortcut Hồ sơ/Nhật ký/Túi đồ/Shop/Lịch sử/Cài đặt. Card/nút
+   tối–vàng, nội dung cuộn tránh tràn màn, không ảnh nút hay tọa độ cố định.
+   Shop thay Thành tựu; hỏi tiếp tục/bỏ ván dở bằng dialog tự vẽ có lựa chọn rõ.
 3. **Mode Select** — có thể gộp vào Lobby hoặc tách riêng
 4. **AI Character Selection** — card/nút tự vẽ tối viền vàng mảnh, giữ nền và
    portrait AI có sẵn trong res. Header/back sát trên; Bắt đầu/Quay lại neo
