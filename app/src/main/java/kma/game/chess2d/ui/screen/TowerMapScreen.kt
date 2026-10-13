@@ -10,10 +10,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalDensity
@@ -45,7 +49,7 @@ import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.DesignCanvas
 import kma.game.chess2d.ui.art.DesignText
-import kma.game.chess2d.ui.art.GothicButton
+import kma.game.chess2d.ui.screen.SimpleSetupButton
 import kma.game.chess2d.ui.art.LocalDesign
 import kma.game.chess2d.ui.art.SubScreenHeader
 import kma.game.chess2d.ui.art.at
@@ -98,6 +102,27 @@ fun TowerMapScreen(
     modifier: Modifier = Modifier,
 ) {
     var selected by rememberSaveable(progress.currentFloor) { mutableIntStateOf(progress.currentFloor) }
+    TowerMapScreenContent(
+        floors = floors,
+        progress = progress,
+        selected = selected,
+        onSelectFloor = { selected = it },
+        onFloorClick = onFloorClick,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun TowerMapScreenContent(
+    floors: List<Floor>,
+    progress: TowerProgress,
+    selected: Int,
+    onSelectFloor: (Int) -> Unit,
+    onFloorClick: (Floor) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val selectedFloor = floors.getOrNull(selected - 1)
     val density = LocalDensity.current
     val scroll = rememberScrollState()
@@ -128,7 +153,7 @@ fun TowerMapScreen(
                         floor = floor,
                         status = progress.statusOf(floor.number),
                         isSelected = floor.number == selected,
-                        onClick = { selected = floor.number },
+                        onClick = { onSelectFloor(floor.number) },
                     )
                 }
             }
@@ -156,12 +181,11 @@ fun TowerMapScreen(
             maxLines = 1,
             modifier = Modifier.at(170, 150, 740, 50),
         )
-        GothicButton(
+        SimpleSetupButton(
             label = stringResource(R.string.tower_enter),
-            onClick = { selectedFloor?.let(onFloorClick) },
-            enabled = selectedFloor != null && progress.statusOf(selected) != FloorStatus.LOCKED,
-            fontSize = d.sp(40),
+            primary = selectedFloor != null && progress.statusOf(selected) != FloorStatus.LOCKED,
             modifier = Modifier.at(150, 1650, 780, 110),
+            onClick = { selectedFloor?.let(onFloorClick) },
         )
     }
 }
@@ -176,16 +200,16 @@ private fun FloorPreview(floor: Floor, status: FloorStatus, modifier: Modifier =
     val reward = TowerRewards.forFloor(floor)
     Column(
         modifier = modifier.background(GothicColors.Ink.copy(alpha = 0.94f))
-            .border(d.dp(3), GothicColors.Gold.copy(alpha = 0.7f)).padding(d.dp(28)),
-        verticalArrangement = Arrangement.spacedBy(d.dp(24)),
+            .border(d.dp(3), GothicColors.Gold.copy(alpha = 0.7f)).padding(d.dp(20)),
+        verticalArrangement = Arrangement.spacedBy(d.dp(16)),
     ) {
         Column(
             modifier = Modifier.weight(1f).verticalScroll(detailScroll),
-            verticalArrangement = Arrangement.spacedBy(d.dp(24)),
+            verticalArrangement = Arrangement.spacedBy(d.dp(16)),
         ) {
-            DesignText(stringResource(R.string.tower_floor_label, floor.number), 36,
+            DesignText(stringResource(R.string.tower_floor_label, floor.number), 32,
                 color = GothicColors.Gold, weight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
-            DesignText(floor.title, 42, weight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
+            DesignText(floor.title, 38, weight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
             if (boss != null) {
                 PreviewText(stringResource(boss.name), colorGold = true)
                 ArtImage(boss.portrait, maxEdge = ArtSizes.PIECE,
@@ -200,22 +224,40 @@ private fun FloorPreview(floor: Floor, status: FloorStatus, modifier: Modifier =
                 PreviewText(stringResource(R.string.tower_preview_strength, TowerCatalog.chapterOf(floor.number)))
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(d.dp(12))) {
-            DesignText(stringResource(R.string.tower_preview_rewards), 36,
+        Column(verticalArrangement = Arrangement.spacedBy(d.dp(8))) {
+            DesignText(stringResource(R.string.tower_preview_rewards), 30,
                 modifier = Modifier.fillMaxWidth(), weight = FontWeight.Bold, color = GothicColors.Gold)
-            DesignText(stringResource(R.string.tower_preview_reward_values, reward.gold, reward.crystals, reward.books),
-                36, modifier = Modifier.fillMaxWidth())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(d.dp(24), Alignment.CenterHorizontally),
+            ) {
+                RewardItem(R.drawable.item_gold_coin, reward.gold)
+                RewardItem(R.drawable.item_red_crystal, reward.crystals)
+                RewardItem(R.drawable.item_ancient_book, reward.books)
+            }
             Relic.entries.firstOrNull { it.unlockFloor == floor.number }?.let { relic ->
                 DesignText(stringResource(R.string.tower_preview_relic, stringResource(relicArt(relic).name)),
-                    30, modifier = Modifier.fillMaxWidth(), color = GothicColors.Gold)
+                    28, modifier = Modifier.fillMaxWidth(), color = GothicColors.Gold)
             }
             DesignText(stringResource(when (status) {
                 FloorStatus.LOCKED -> R.string.tower_preview_locked
                 FloorStatus.CLEARED -> R.string.tower_preview_cleared
                 FloorStatus.CURRENT -> R.string.tower_preview_ready
-            }), 30, modifier = Modifier.fillMaxWidth(),
+            }), 28, modifier = Modifier.fillMaxWidth(),
                 color = if (status == FloorStatus.LOCKED) GothicColors.Parchment else GothicColors.Gold)
         }
+    }
+}
+
+@Composable
+private fun RewardItem(iconRes: Int, quantity: Int) {
+    val d = LocalDesign.current
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(d.dp(12)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ArtImage(iconRes, maxEdge = ArtSizes.PIECE, modifier = Modifier.size(d.dp(80)))
+        DesignText("$quantity", 64, color = GothicColors.Parchment, weight = FontWeight.Bold)
     }
 }
 
@@ -326,3 +368,37 @@ private fun kindLabelRes(kind: NodeKind): Int = when (kind) {
 private const val MAP_TOP = 210
 private const val MAP_HEIGHT = 1390
 private const val CHAIN_RATIO = 3.85f
+
+// Preview functions for Android Studio
+@Preview(name = "Floor Preview - Boss Floor", showBackground = true, widthDp = 400, heightDp = 800)
+@Composable
+private fun FloorPreviewBossPreview() {
+    val sampleFloor = TowerCatalog.build(puzzleCount = 0)[20] // Floor 21 - boss floor
+    FloorPreview(
+        floor = sampleFloor,
+        status = FloorStatus.CURRENT,
+        modifier = Modifier.size(400.dp, 800.dp),
+    )
+}
+
+@Preview(name = "Floor Preview - Cleared", showBackground = true, widthDp = 400, heightDp = 800)
+@Composable
+private fun FloorPreviewClearedPreview() {
+    val sampleFloor = TowerCatalog.build(puzzleCount = 0)[4] // Floor 5
+    FloorPreview(
+        floor = sampleFloor,
+        status = FloorStatus.CLEARED,
+        modifier = Modifier.size(400.dp, 800.dp),
+    )
+}
+
+@Preview(name = "Floor Preview - Locked", showBackground = true, widthDp = 400, heightDp = 800)
+@Composable
+private fun FloorPreviewLockedPreview() {
+    val sampleFloor = TowerCatalog.build(puzzleCount = 0)[29] // Floor 30
+    FloorPreview(
+        floor = sampleFloor,
+        status = FloorStatus.LOCKED,
+        modifier = Modifier.size(400.dp, 800.dp),
+    )
+}
