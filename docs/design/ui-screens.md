@@ -159,6 +159,9 @@ Màn xem AI dùng hàng điều khiển tự vẽ vuốt ngang trong vùng dư�
 ### Vẽ nốt thông báo trong ván LAN
 Ván LAN giữ MatchScaffold và board, thông báo dùng card tối chữ sáng và nút Thử lại/Đóng. Hộp xác nhận tự vẽ nhưng giữ đúng chấp nhận/từ chối và xử lý đóng.
 
+### Vẽ nốt cửa sổ phong cấp
+Phong cấp dùng dialog/card Compose và ảnh quân có sẵn. Chọn gửi đúng Move từ pending options, Hủy hoặc đóng chỉ huỷ lựa chọn như trước.
+
 ## Sơ đồ điều hướng
 
 ```
