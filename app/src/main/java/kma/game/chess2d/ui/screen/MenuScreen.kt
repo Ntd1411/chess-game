@@ -86,6 +86,7 @@ fun MenuScreen(
     modifier: Modifier = Modifier,
     levelProgress: Float = 0f,
     onOpenSpectate: () -> Unit = onOpenModes,
+    onOpenShop: () -> Unit = onOpenProfile,
 ) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(GothicColors.Ink)) {
@@ -117,7 +118,7 @@ fun MenuScreen(
             val sides = listOf(
                 Triple(R.drawable.main_menu_journal, R.string.main_menu_journal, onOpenJournal),
                 Triple(R.drawable.main_menu_inventory, R.string.main_menu_inventory, onOpenInventory),
-                Triple(R.drawable.main_menu_achievements, R.string.main_menu_achievements, onOpenProfile),
+                Triple(R.drawable.main_menu_achievements, R.string.shop_title, onOpenShop),
                 Triple(R.drawable.main_menu_history, R.string.main_menu_history, onOpenHistory),
                 Triple(R.drawable.main_menu_settings, R.string.main_menu_settings) { showSettings = true },
             )

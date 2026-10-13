@@ -132,6 +132,13 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     toàn bộ cần xác nhận. Xem lại có bàn vuông co theo vùng trống, nước trước/sau
     khoá tại biên và giữ bộ màu/quân đã chọn. Chia sẻ PGN qua chooser như trước.
 
+19. **Shop** — mua màu bàn/bộ quân hiện có bằng vàng Tháp Cờ, không thanh toán
+    tiền thật. Hai danh mục và preview bàn thật; xác nhận mua, chặn thiếu vàng,
+    đã sở hữu thì Áp dụng. Gothic và bộ ảnh mặc định miễn phí, giữ lựa chọn đang
+    dùng từ bản cũ. Sở hữu/chi tiêu ghi nguyên tử cùng DataStore cài đặt; menu và
+    túi đồ hiện số dư sau chi. Khôi phục mặc định không xoá mua hàng; xoá dữ liệu
+    toàn bộ mới xoá. Giá tập trung trong ShopCatalog và có thể chỉnh sau.
+
 ## Sơ đồ điều hướng
 
 ```

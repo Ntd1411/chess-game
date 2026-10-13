@@ -14,6 +14,12 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:55 GMT+7 — Thêm Shop màu bàn và bộ quân
+- Shop tự vẽ có preview bàn/quân thật, hai danh mục, xác nhận mua bằng vàng Tháp Cờ và áp dụng đồ sở hữu; giá tập trung trong ShopCatalog, không thanh toán tiền thật
+- Sở hữu và tổng vàng đã tiêu ghi nguyên tử trong DataStore, mua lặp không trừ thêm; menu/túi đồ trừ khoản chi khỏi tổng thưởng, cài đặt khóa lựa chọn chưa mua
+- Gothic/bộ quân ảnh miễn phí, lựa chọn đang dùng của bản cũ được giữ; khôi phục cài đặt không mất đồ mua, xoá toàn bộ dữ liệu mới xoá giao dịch
+- Thay Thành tựu bằng Shop và nối điều hướng/nhạc/Back; assembleDebug và toàn bộ 271 app unit test qua, gồm số dư/lưu lại/song song/reset/migration; chưa QA thiết bị
+
 ## 2026-10-14 04:51 GMT+7 — Vẽ lại Khám phá Tháp Cờ
 - Node tròn và đường nối tự vẽ, danh sách tầng cuộn từ 49 xuống 1; ô chi tiết chữ nhật vẫn nằm bên cạnh, cuộn riêng với teaser/boss/Elo/phần thưởng
 - Header/footer neo vùng an toàn, tự cuộn tới tầng hiện tại; tầng khóa chỉ xem trước, kiểm tra lại khóa cả lúc bấm vào; giữ 49 tầng và luật chiến dịch

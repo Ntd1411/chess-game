@@ -446,4 +446,21 @@
     <string name="tower_preview_ready">Đã mở · sẵn sàng thử thách</string>
     <string name="tower_preview_relic">Mở di vật: %1$s</string>
     <string name="tower_elo_estimate_note">Elo ước lượng, chưa được kiểm chứng.</string>
+    <string name="shop_title">SHOP</string>
+    <string name="shop_boards">Màu bàn</string>
+    <string name="shop_pieces">Bộ quân</string>
+    <string name="shop_balance">Vàng: %1$d</string>
+    <string name="shop_hint">Dùng vàng kiếm từ Tháp Cờ. Mua một lần, dùng lâu dài; không có thanh toán tiền thật.</string>
+    <string name="shop_price">Giá: %1$d vàng</string>
+    <string name="shop_owned">Đã sở hữu</string>
+    <string name="shop_equipped">Đang dùng</string>
+    <string name="shop_apply">Áp dụng</string>
+    <string name="shop_buy">Mua</string>
+    <string name="shop_confirm">Mua %1$s với %2$d vàng? Vàng sẽ được trừ sau khi xác nhận.</string>
+    <string name="shop_insufficient">Không đủ vàng. Hãy vượt thêm tầng để nhận thưởng.</string>
+    <string name="shop_bought">Đã mua. Chọn Áp dụng để sử dụng.</string>
+    <string name="shop_applied">Đã áp dụng.</string>
+    <string name="shop_save_failed">Không đọc/ghi được dữ liệu Shop. Vui lòng thử lại.</string>
+    <string name="shop_locked">Mua tại Shop</string>
+    <string name="shop_settings_hint">Chỉ áp dụng màu bàn và bộ quân đã sở hữu. Mở Shop từ menu để mua thêm.</string>
 </resources>

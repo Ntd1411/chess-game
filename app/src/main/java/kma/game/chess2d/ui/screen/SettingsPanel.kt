@@ -59,6 +59,7 @@ fun SettingsPanel(onDismiss: () -> Unit, modifier: Modifier = Modifier, name: St
     val context = LocalContext.current
     val store = remember(context) { SettingsStore(context.applicationContext) }
     val settings by store.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+    val cosmetics by store.cosmetics.collectAsStateWithLifecycle(initialValue = kma.game.chess2d.shop.ShopState())
     val scope = rememberCoroutineScope()
     var confirmReset by rememberSaveable { mutableStateOf(false) }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -86,7 +87,7 @@ fun SettingsPanel(onDismiss: () -> Unit, modifier: Modifier = Modifier, name: St
                     }
                 }
                 key(tab) {
-                    SettingsPanelContent(currentTab = tab, settings = settings, name = name, onNameChange = onNameChange,
+                    SettingsPanelContent(currentTab = tab, settings = settings, owned = cosmetics.owned, name = name, onNameChange = onNameChange,
                         onHapticChanged = { scope.launch { store.setHapticEnabled(it) } },
                         onMusicChanged = { scope.launch { store.setMusicEnabled(it) } },
                         onSoundChanged = { scope.launch { store.setSoundEnabled(it) } },
@@ -112,7 +113,7 @@ fun SettingsPanel(onDismiss: () -> Unit, modifier: Modifier = Modifier, name: St
 }
 
 @Composable
-private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings, name: String?, onNameChange: ((String) -> Unit)?,
+private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings, owned: Set<String>, name: String?, onNameChange: ((String) -> Unit)?,
     onHapticChanged: (Boolean) -> Unit, onMusicChanged: (Boolean) -> Unit, onSoundChanged: (Boolean) -> Unit,
     onBoardPaletteChanged: (BoardPalette) -> Unit, onPieceThemeChanged: (PieceTheme) -> Unit,
     onShowLegalMovesChanged: (Boolean) -> Unit, onResetDataClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -140,11 +141,13 @@ private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings,
                 ToggleRow(stringResource(R.string.settings_sound), settings.soundEnabled, onSoundChanged)
             }
             SettingsTab.VISUAL -> {
+                Text(stringResource(R.string.shop_settings_hint), color = GothicColors.Muted, fontSize = 13.sp)
                 SettingsGroup(stringResource(R.string.settings_board_palette)) {
                     Column(Modifier.selectableGroup()) {
                         BoardPalette.entries.forEachIndexed { index, palette ->
                             if (index > 0) SettingDivider()
-                            RadioRow(stringResource(paletteLabel(palette)), palette == settings.boardPalette) { onBoardPaletteChanged(palette) }
+                            RadioRow(stringResource(paletteLabel(palette)), palette == settings.boardPalette,
+                                enabled = kma.game.chess2d.shop.ShopCatalog.boardId(palette) in owned) { onBoardPaletteChanged(palette) }
                         }
                     }
                 }
@@ -152,7 +155,8 @@ private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings,
                     Column(Modifier.selectableGroup()) {
                         PieceTheme.entries.forEachIndexed { index, theme ->
                             if (index > 0) SettingDivider()
-                            RadioRow(stringResource(pieceThemeLabel(theme)), theme == settings.pieceTheme) { onPieceThemeChanged(theme) }
+                            RadioRow(stringResource(pieceThemeLabel(theme)), theme == settings.pieceTheme,
+                                enabled = kma.game.chess2d.shop.ShopCatalog.pieceId(theme) in owned) { onPieceThemeChanged(theme) }
                         }
                     }
                 }
@@ -196,12 +200,12 @@ private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
 }
 
 @Composable
-private fun RadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun RadioRow(label: String, selected: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = SettingsLayout.ROW_MIN_DP.dp)
-        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick).padding(vertical = 4.dp),
+        .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick).padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(label, color = if (selected) GothicColors.Gold else GothicColors.Parchment, fontSize = 16.sp, modifier = Modifier.weight(1f))
-        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = GothicColors.Gold, unselectedColor = GothicColors.Muted))
+        Text(if (enabled) label else label + " · " + stringResource(R.string.shop_locked), color = if (!enabled) GothicColors.Muted else if (selected) GothicColors.Gold else GothicColors.Parchment, fontSize = 16.sp, modifier = Modifier.weight(1f))
+        RadioButton(selected = selected, enabled = enabled, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = GothicColors.Gold, unselectedColor = GothicColors.Muted))
     }
 }
 

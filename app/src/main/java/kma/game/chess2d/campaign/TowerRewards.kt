@@ -3,9 +3,9 @@ package kma.game.chess2d.campaign
 /**
  * Phần thưởng của một tầng: vàng, pha lê xanh và sách cổ.
  *
- * App không lưu ví riêng: số vàng/pha lê người chơi có luôn **suy ra** từ tiến độ Tháp Cờ
- * ([TowerRewards.total]), nên không có cách nào lệch giữa phần thưởng hiện ở màn Chiến thắng
- * và số dư ở sảnh, và chơi lại tầng cũ không cộng dồn.
+ * Earned rewards are derived from tower progress by [TowerRewards.total]; replaying a cleared
+ * floor never earns them twice. Spendable gold subtracts the persistent shop spending ledger
+ * in SettingsStore. Crystals and books are not spent in the cosmetic shop.
  */
 data class Reward(val gold: Int = 0, val crystals: Int = 0, val books: Int = 0) {
     operator fun plus(other: Reward): Reward =

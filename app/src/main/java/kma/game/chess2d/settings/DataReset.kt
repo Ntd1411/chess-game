@@ -20,7 +20,7 @@ object DataReset {
 
     suspend fun resetAll(context: Context) {
         val app = context.applicationContext
-        SettingsStore(app).resetToDefaults()
+        SettingsStore(app).clearAll()
         TowerProgressStore(app).clear()
         SavedGameStore(app).clear()
         withContext(Dispatchers.IO) {

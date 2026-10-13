@@ -64,7 +64,7 @@ import kotlinx.coroutines.withContext
  */
 private enum class Screen {
     SPLASH, LOBBY, MENU, MATCH, HISTORY, TOWER, SPECTATE, AI_SELECT, PROFILE, JOURNAL, LOCAL_SETUP,
-    MODES, INVENTORY,
+    MODES, INVENTORY, SHOP,
 }
 
 /**
@@ -138,6 +138,7 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 onOpenProfile = { screen = Screen.PROFILE },
                 onOpenJournal = { screen = Screen.JOURNAL },
                 onOpenInventory = { screen = Screen.INVENTORY },
+                onOpenShop = { screen = Screen.SHOP },
                 modifier = modifier,
             )
             // Hỏi "tiếp tục hay bỏ" ngay trên menu, màn đầu tiên người chơi thấy sau splash.
@@ -168,6 +169,12 @@ fun AppRoot(modifier: Modifier = Modifier) {
         Screen.INVENTORY -> {
             BackHandler { screen = Screen.MENU }
             InventoryRoute(onBack = { screen = Screen.MENU }, modifier = modifier)
+        }
+
+        Screen.SHOP -> {
+            BackHandler { screen = Screen.MENU }
+            val (earned, _) = rememberEarnedWallet()
+            ShopScreen(earnedGold = earned.gold, onBack = { screen = Screen.MENU }, modifier = modifier)
         }
 
         Screen.LOCAL_SETUP -> {
@@ -279,12 +286,12 @@ private fun musicFor(screen: Screen): MusicTrack? = when (screen) {
     Screen.SPLASH -> null
     Screen.MATCH, Screen.SPECTATE -> MusicTrack.BATTLE
     Screen.MENU, Screen.HISTORY, Screen.AI_SELECT, Screen.PROFILE, Screen.JOURNAL,
-    Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER, Screen.MODES, Screen.INVENTORY -> MusicTrack.MENU
+    Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER, Screen.MODES, Screen.INVENTORY, Screen.SHOP -> MusicTrack.MENU
 }
 
 /** Vàng/pha lê/sách suy ra từ tiến độ Tháp (xem [TowerRewards]); tự cập nhật khi qua tầng mới. */
 @Composable
-private fun rememberWallet(): Pair<Reward, Int> {
+private fun rememberEarnedWallet(): Pair<Reward, Int> {
     val context = LocalContext.current
     val puzzles = remember(context) { PuzzleCatalog.load(context.applicationContext) }
     val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
@@ -292,6 +299,15 @@ private fun rememberWallet(): Pair<Reward, Int> {
     val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
     val wallet = remember(floors, progress.clearedUpTo) { TowerRewards.total(floors, progress.clearedUpTo) }
     return wallet to progress.clearedUpTo
+}
+
+@Composable
+private fun rememberWallet(): Pair<Reward, Int> {
+    val (earned, cleared) = rememberEarnedWallet()
+    val context = LocalContext.current
+    val store = remember(context) { kma.game.chess2d.settings.SettingsStore(context.applicationContext) }
+    val cosmetics by store.cosmetics.collectAsStateWithLifecycle(initialValue = kma.game.chess2d.shop.ShopState())
+    return earned.copy(gold = cosmetics.availableGold(earned.gold)) to cleared
 }
 
 /** Sảnh chính: đọc cấp từ Hồ sơ và ví từ tiến độ Tháp. */
@@ -309,6 +325,7 @@ private fun MenuRoute(
     onOpenProfile: () -> Unit,
     onOpenJournal: () -> Unit,
     onOpenInventory: () -> Unit,
+    onOpenShop: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -330,6 +347,7 @@ private fun MenuRoute(
         onOpenProfile = onOpenProfile,
         onOpenJournal = onOpenJournal,
         onOpenInventory = onOpenInventory,
+        onOpenShop = onOpenShop,
         modifier = modifier,
         levelProgress = stats.pointsIntoLevel.toFloat() / PlayerStats.GAMES_PER_LEVEL,
         onOpenSpectate = onOpenSpectate,

@@ -6,6 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import kma.game.chess2d.shop.*
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kma.game.chess2d.ui.board.BoardPalette
@@ -75,12 +78,45 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
         dataStore.edit { it[KEY_HAPTIC] = enabled }
     }
 
+    val cosmetics: Flow<ShopState> = dataStore.data.map { shopState(it) }
+        .catch { cause -> if (cause is IOException) emit(ShopState(readable = false)) else throw cause }
+
+    // Ownership and spending share one serialized edit, preventing double charges.
+    suspend fun purchaseCosmetic(id: String, earnedGold: Int): PurchaseResult {
+        val item = requireNotNull(ShopCatalog.item(id)) { "Unknown cosmetic: $id" }
+        require(earnedGold >= 0)
+        var result = PurchaseResult.INSUFFICIENT_GOLD
+        dataStore.edit { prefs ->
+            val state = shopState(prefs)
+            result = when {
+                id in state.owned -> PurchaseResult.ALREADY_OWNED
+                state.availableGold(earnedGold) < item.goldPrice -> PurchaseResult.INSUFFICIENT_GOLD
+                else -> {
+                    prefs[KEY_OWNED] = state.owned + id
+                    prefs[KEY_SPENT] = Math.addExact(state.spentGold, item.goldPrice)
+                    PurchaseResult.BOUGHT
+                }
+            }
+        }
+        return result
+    }
+
     suspend fun setBoardPalette(palette: BoardPalette) {
-        dataStore.edit { it[KEY_PALETTE] = palette.name }
+        dataStore.edit {
+            val state = shopState(it)
+            require(ShopCatalog.boardId(palette) in state.owned) { "Board palette is not owned" }
+            it[KEY_OWNED] = state.owned
+            it[KEY_PALETTE] = palette.name
+        }
     }
 
     suspend fun setPieceTheme(theme: PieceTheme) {
-        dataStore.edit { it[KEY_PIECES] = theme.name }
+        dataStore.edit {
+            val state = shopState(it)
+            require(ShopCatalog.pieceId(theme) in state.owned) { "Piece theme is not owned" }
+            it[KEY_OWNED] = state.owned
+            it[KEY_PIECES] = theme.name
+        }
     }
 
     suspend fun setShowLegalMoves(show: Boolean) {
@@ -89,10 +125,28 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
 
     /** Đưa mọi cài đặt về mặc định. */
     suspend fun resetToDefaults() {
-        dataStore.edit { it.clear() }
+        dataStore.edit {
+            val state = shopState(it)
+            it.clear()
+            it[KEY_OWNED] = state.owned
+            it[KEY_SPENT] = state.spentGold
+        }
     }
 
+    /** Explicit data reset removes purchases as well as settings. */
+    suspend fun clearAll() { dataStore.edit { it.clear() } }
+
     private companion object {
+        val KEY_OWNED = stringSetPreferencesKey("cosmetics_owned")
+        val KEY_SPENT = intPreferencesKey("cosmetics_spent_gold")
+
+        fun shopState(prefs: Preferences): ShopState {
+            // Grandfather the selected cosmetics from installations predating the shop.
+            val legacy = setOf(ShopCatalog.boardId(paletteOf(prefs[KEY_PALETTE])), ShopCatalog.pieceId(pieceThemeOf(prefs[KEY_PIECES])))
+            val owned = (prefs[KEY_OWNED] ?: legacy).filter { ShopCatalog.item(it) != null }.toSet() + ShopCatalog.freeIds
+            return ShopState(owned, (prefs[KEY_SPENT] ?: 0).coerceAtLeast(0))
+        }
+
         val KEY_SOUND = booleanPreferencesKey("sound_enabled")
         val KEY_MUSIC = booleanPreferencesKey("music_enabled")
         val KEY_HAPTIC = booleanPreferencesKey("haptic_enabled")

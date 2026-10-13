@@ -61,7 +61,9 @@ class SettingsStoreTest {
         store.setMusicEnabled(false)
         store.setHapticEnabled(false)
         store.setShowLegalMoves(false)
+        store.purchaseCosmetic("board_WOOD", 10000)
         store.setBoardPalette(BoardPalette.WOOD)
+        store.purchaseCosmetic("pieces_LETTER", 10000)
         store.setPieceTheme(PieceTheme.LETTER)
 
         val s = store.settings.first()
@@ -75,6 +77,7 @@ class SettingsStoreTest {
 
     @Test
     fun `doi mot gia tri khong lam hong gia tri khac`() = withStore { store, _ ->
+        store.purchaseCosmetic("board_OCEAN", 10000)
         store.setBoardPalette(BoardPalette.OCEAN)
         store.setShowLegalMoves(false)
         val s = store.settings.first()
@@ -89,6 +92,7 @@ class SettingsStoreTest {
     fun `gia tri van con sau khi mo lai file`() {
         withStore { store, _ ->
             store.setSoundEnabled(false)
+            store.purchaseCosmetic("pieces_OUTLINE", 10000)
             store.setPieceTheme(PieceTheme.OUTLINE)
         }
         // DataStore thứ hai trên cùng file = mở lại app.
@@ -112,6 +116,7 @@ class SettingsStoreTest {
     fun `dat lai mac dinh xoa moi thay doi`() = withStore { store, _ ->
         store.setSoundEnabled(false)
         store.setShowLegalMoves(false)
+        store.purchaseCosmetic("board_SLATE", 10000)
         store.setBoardPalette(BoardPalette.SLATE)
         store.resetToDefaults()
         assertEquals(AppSettings(), store.settings.first())
