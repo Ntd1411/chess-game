@@ -1,9 +1,15 @@
 package kma.game.chess2d.ui.art
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.BasicTextField
@@ -20,6 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import kma.game.chess2d.R
 import kma.game.chess2d.ui.theme.GameFontFamily
 import kma.game.chess2d.ui.theme.GothicColors
@@ -51,7 +60,7 @@ fun GothicTextField(
         )
         Box(
             modifier = Modifier.fillMaxSize().padding(horizontal = d.dp(56)),
-            contentAlignment = Alignment.CenterStart,
+            contentAlignment = Alignment.Center,
         ) {
             if (value.isEmpty()) {
                 Text(
@@ -59,6 +68,7 @@ fun GothicTextField(
                     color = GothicColors.Parchment.copy(alpha = 0.5f),
                     fontSize = d.sp(fontSize),
                     maxLines = 1,
+                    textAlign = TextAlign.Center,
                 )
             }
             BasicTextField(
@@ -72,6 +82,7 @@ fun GothicTextField(
                     fontFamily = GameFontFamily,
                     color = GothicColors.Parchment,
                     fontSize = d.sp(fontSize),
+                    textAlign = TextAlign.Center,
                 ),
                 modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
             )
@@ -99,4 +110,79 @@ fun GothicRadio(selected: Boolean, onClick: () -> Unit, modifier: Modifier = Mod
         trim = true,
         modifier = modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
     )
+}
+
+@Preview(widthDp = 400, heightDp = 200, showBackground = true)
+@Composable
+private fun GothicTextFieldPreview() {
+    val d = LocalDesign.current
+    Column(
+        modifier = Modifier.fillMaxSize().padding(d.dp(20)),
+        verticalArrangement = Arrangement.spacedBy(d.dp(20)),
+    ) {
+        var text1 by remember { mutableStateOf("") }
+        GothicTextField(
+            value = text1,
+            onValueChange = { text1 = it },
+            placeholder = "Enter name...",
+            modifier = Modifier.fillMaxWidth().height(d.dp(100)),
+        )
+        
+        var text2 by remember { mutableStateOf("Player 1") }
+        GothicTextField(
+            value = text2,
+            onValueChange = { text2 = it },
+            placeholder = "Enter name...",
+            modifier = Modifier.fillMaxWidth().height(d.dp(100)),
+        )
+    }
+}
+
+@Preview(widthDp = 300, heightDp = 150, showBackground = true)
+@Composable
+private fun GothicTogglePreview() {
+    val d = LocalDesign.current
+    Row(
+        modifier = Modifier.fillMaxSize().padding(d.dp(20)),
+        horizontalArrangement = Arrangement.spacedBy(d.dp(30)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        var checked1 by remember { mutableStateOf(false) }
+        GothicToggle(
+            checked = checked1,
+            onCheckedChange = { checked1 = it },
+            modifier = Modifier.width(d.dp(120)).height(d.dp(60))  // Cách 1: Resize với modifier
+        )
+        
+        var checked2 by remember { mutableStateOf(true) }
+        GothicToggle(
+            checked = checked2,
+            onCheckedChange = { checked2 = it },
+            modifier = Modifier.width(d.dp(80)).height(d.dp(40))  // Nhỏ hơn
+        )
+    }
+}
+
+@Preview(widthDp = 200, heightDp = 150, showBackground = true)
+@Composable
+private fun GothicRadioPreview() {
+    val d = LocalDesign.current
+    Row(
+        modifier = Modifier.fillMaxSize().padding(d.dp(20)),
+        horizontalArrangement = Arrangement.spacedBy(d.dp(30)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        var selected by remember { mutableStateOf(0) }
+        GothicRadio(
+            selected = selected == 0,
+            onClick = { selected = 0 },
+            modifier = Modifier.size(d.dp(60))  // Cách 1: Resize với modifier (60x60)
+        )
+        
+        GothicRadio(
+            selected = selected == 1,
+            onClick = { selected = 1 },
+            modifier = Modifier.size(d.dp(40))  // Nhỏ hơn (40x40)
+        )
+    }
 }

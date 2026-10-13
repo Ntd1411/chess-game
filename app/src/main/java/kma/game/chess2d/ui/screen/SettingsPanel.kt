@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,7 +93,7 @@ internal object SettingsLayout {
     const val CONTENT_Y = 320
     const val CONTENT_W = 900
     const val CONTENT_H = 1330
-    const val ROW_H = 120
+    const val ROW_H = 200
     const val RESTORE_Y = 1680
 }
 
@@ -149,116 +150,32 @@ fun SettingsPanel(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .at(
-                        SettingsLayout.CONTENT_X,
-                        SettingsLayout.CONTENT_Y,
-                        SettingsLayout.CONTENT_W,
-                        SettingsLayout.CONTENT_H,
-                    )
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(LocalDesign.current.dp(24)),
-            ) {
-                when (tab) {
-                    SettingsTab.GENERAL -> {
-                        if (name != null && onNameChange != null) {
-                            SettingsGroup(title = stringResource(R.string.lan_your_name)) {
-                                GothicTextField(
-                                    value = name,
-                                    onValueChange = onNameChange,
-                                    placeholder = stringResource(R.string.lan_your_name),
-                                    modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(110)),
-                                )
-                            }
-                        }
-                        SettingsGroup {
-                            ToggleRow(
-                                label = stringResource(R.string.settings_haptic),
-                                checked = settings.hapticEnabled,
-                                onCheckedChange = { scope.launch { store.setHapticEnabled(it) } },
-                            )
-                        }
-                    }
-
-                    SettingsTab.SOUND -> SettingsGroup {
-                        ToggleRow(
-                            label = stringResource(R.string.settings_music),
-                            checked = settings.musicEnabled,
-                            onCheckedChange = { scope.launch { store.setMusicEnabled(it) } },
-                        )
-                        Hairline()
-                        ToggleRow(
-                            label = stringResource(R.string.settings_sound),
-                            checked = settings.soundEnabled,
-                            onCheckedChange = { scope.launch { store.setSoundEnabled(it) } },
-                        )
-                    }
-
-                    SettingsTab.VISUAL -> {
-                        SettingsGroup(title = stringResource(R.string.settings_board_palette)) {
-                            BoardPalette.entries.forEachIndexed { i, palette ->
-                                key(palette) {
-                                    if (i > 0) Hairline()
-                                    RadioRow(
-                                        label = stringResource(paletteLabel(palette)),
-                                        selected = palette == settings.boardPalette,
-                                        onClick = { scope.launch { store.setBoardPalette(palette) } },
-                                    )
-                                }
-                            }
-                        }
-                        SettingsGroup(title = stringResource(R.string.settings_piece_theme)) {
-                            PieceTheme.entries.forEachIndexed { i, theme ->
-                                key(theme) {
-                                    if (i > 0) Hairline()
-                                    RadioRow(
-                                        label = stringResource(pieceThemeLabel(theme)),
-                                        selected = theme == settings.pieceTheme,
-                                        onClick = { scope.launch { store.setPieceTheme(theme) } },
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    SettingsTab.CONTROLS -> SettingsGroup {
-                        ToggleRow(
-                            label = stringResource(R.string.settings_legal_moves),
-                            checked = settings.showLegalMoves,
-                            onCheckedChange = { scope.launch { store.setShowLegalMoves(it) } },
-                        )
-                    }
-
-                    SettingsTab.OTHER -> {
-                        SettingsGroup(title = stringResource(R.string.settings_data)) {
-                            GothicButton(
-                                label = stringResource(R.string.settings_reset_data),
-                                onClick = { confirmReset = true },
-                                art = ButtonArt.SECONDARY,
-                                textColor = GothicColors.Alert,
-                                modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(100)),
-                            )
-                        }
-                        SettingsGroup(title = stringResource(R.string.settings_credits_title)) {
-                            DesignText(
-                                text = stringResource(R.string.settings_credits_text),
-                                size = 30,
-                                color = GothicColors.Muted,
-                                align = TextAlign.Start,
-                                alignment = Alignment.TopStart,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
-                }
-            }
+            SettingsPanelContent(
+                modifier = Modifier.at(
+                    SettingsLayout.CONTENT_X,
+                    SettingsLayout.CONTENT_Y,
+                    SettingsLayout.CONTENT_W,
+                    SettingsLayout.CONTENT_H,
+                ),
+                currentTab = tab,
+                settings = settings,
+                name = name,
+                onNameChange = onNameChange,
+                onHapticChanged = { scope.launch { store.setHapticEnabled(it) } },
+                onMusicChanged = { scope.launch { store.setMusicEnabled(it) } },
+                onSoundChanged = { scope.launch { store.setSoundEnabled(it) } },
+                onBoardPaletteChanged = { scope.launch { store.setBoardPalette(it) } },
+                onPieceThemeChanged = { scope.launch { store.setPieceTheme(it) } },
+                onShowLegalMovesChanged = { scope.launch { store.setShowLegalMoves(it) } },
+                onResetDataClick = { confirmReset = true },
+            )
 
             GothicButton(
                 label = stringResource(R.string.settings_restore_defaults),
                 onClick = { scope.launch { store.resetToDefaults() } },
                 art = ButtonArt.SECONDARY,
-                modifier = Modifier.at(170, SettingsLayout.RESTORE_Y, 740, 100),
+                fontSize = LocalDesign.current.sp(30),
+                modifier = Modifier.at(170, SettingsLayout.RESTORE_Y, 740, 200),
             )
         }
     }
@@ -278,6 +195,121 @@ fun SettingsPanel(
     }
 }
 
+@Composable
+private fun SettingsPanelContent(
+    currentTab: SettingsTab,
+    settings: AppSettings,
+    name: String?,
+    onNameChange: ((String) -> Unit)?,
+    onHapticChanged: (Boolean) -> Unit,
+    onMusicChanged: (Boolean) -> Unit,
+    onSoundChanged: (Boolean) -> Unit,
+    onBoardPaletteChanged: (BoardPalette) -> Unit,
+    onPieceThemeChanged: (PieceTheme) -> Unit,
+    onShowLegalMovesChanged: (Boolean) -> Unit,
+    onResetDataClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(LocalDesign.current.dp(24)),
+    ) {
+        when (currentTab) {
+            SettingsTab.GENERAL -> {
+                if (name != null && onNameChange != null) {
+                    SettingsGroup(title = stringResource(R.string.lan_your_name)) {
+                        GothicTextField(
+                            value = name,
+                            onValueChange = onNameChange,
+                            placeholder = stringResource(R.string.lan_your_name),
+                            modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(200)),
+                        )
+                    }
+                }
+                SettingsGroup {
+                    ToggleRow(
+                        label = stringResource(R.string.settings_haptic),
+                        checked = settings.hapticEnabled,
+                        onCheckedChange = onHapticChanged,
+                    )
+                }
+            }
+
+            SettingsTab.SOUND -> SettingsGroup {
+                ToggleRow(
+                    label = stringResource(R.string.settings_music),
+                    checked = settings.musicEnabled,
+                    onCheckedChange = onMusicChanged,
+                )
+                Hairline()
+                ToggleRow(
+                    label = stringResource(R.string.settings_sound),
+                    checked = settings.soundEnabled,
+                    onCheckedChange = onSoundChanged,
+                )
+            }
+
+            SettingsTab.VISUAL -> {
+                SettingsGroup(title = stringResource(R.string.settings_board_palette)) {
+                    BoardPalette.entries.forEachIndexed { i, palette ->
+                        key(palette) {
+                            if (i > 0) Hairline()
+                            RadioRow(
+                                label = stringResource(paletteLabel(palette)),
+                                selected = palette == settings.boardPalette,
+                                onClick = { onBoardPaletteChanged(palette) },
+                            )
+                        }
+                    }
+                }
+                SettingsGroup(title = stringResource(R.string.settings_piece_theme)) {
+                    PieceTheme.entries.forEachIndexed { i, theme ->
+                        key(theme) {
+                            if (i > 0) Hairline()
+                            RadioRow(
+                                label = stringResource(pieceThemeLabel(theme)),
+                                selected = theme == settings.pieceTheme,
+                                onClick = { onPieceThemeChanged(theme) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            SettingsTab.CONTROLS -> SettingsGroup {
+                ToggleRow(
+                    label = stringResource(R.string.settings_legal_moves),
+                    checked = settings.showLegalMoves,
+                    onCheckedChange = onShowLegalMovesChanged,
+                )
+            }
+
+            SettingsTab.OTHER -> {
+                SettingsGroup(title = stringResource(R.string.settings_data)) {
+                    GothicButton(
+                        label = stringResource(R.string.settings_reset_data),
+                        onClick = onResetDataClick,
+                        art = ButtonArt.SECONDARY,
+                        fontSize = LocalDesign.current.sp(30),
+                        textColor = GothicColors.Alert,
+                        modifier = Modifier.fillMaxWidth().height(LocalDesign.current.dp(200)),
+                    )
+                }
+                SettingsGroup(title = stringResource(R.string.settings_credits_title)) {
+                    DesignText(
+                        text = stringResource(R.string.settings_credits_text),
+                        size = 40,
+                        color = GothicColors.Muted,
+                        align = TextAlign.Start,
+                        alignment = Alignment.TopStart,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+    }
+}
+
 /**
  * Một tab ở hàng ngang: tab đang chọn là panel [PanelTone.SELECTED] (ánh đỏ, viền vàng, chữ vàng),
  * tab khác chỉ là nền chìm viền mờ — không dùng khung PNG để tab không chiếm sự chú ý của nội dung.
@@ -291,7 +323,7 @@ private fun CategoryTab(label: String, selected: Boolean, onClick: () -> Unit, m
     ) {
         DesignText(
             text = label,
-            size = 28,
+            size = 36,
             color = if (selected) GothicColors.Gold else GothicColors.Muted,
             weight = if (selected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 2,
@@ -326,7 +358,7 @@ private fun SettingRow(label: String, modifier: Modifier = Modifier, control: @C
     ) {
         DesignText(
             text = label,
-            size = 32,
+            size = 40,
             align = TextAlign.Start,
             alignment = Alignment.CenterStart,
             maxLines = 2,
@@ -346,7 +378,7 @@ private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         GothicToggle(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = Modifier.size(d.dp(100), d.dp(50)),
+            modifier = Modifier.size(d.dp(200), d.dp(100)),
         )
     }
 }
@@ -356,7 +388,7 @@ private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
 private fun RadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
     val d = LocalDesign.current
     SettingRow(label = label, modifier = Modifier.clickable(role = Role.RadioButton, onClick = onClick)) {
-        GothicRadio(selected = selected, onClick = onClick, modifier = Modifier.size(d.dp(48)))
+        GothicRadio(selected = selected, onClick = onClick, modifier = Modifier.size(d.dp(96)))
     }
 }
 
@@ -375,4 +407,109 @@ private fun pieceThemeLabel(theme: PieceTheme): Int = when (theme) {
     PieceTheme.OUTLINE -> R.string.piece_theme_outline
     PieceTheme.LETTER -> R.string.piece_theme_letter
     PieceTheme.IMAGE -> R.string.piece_theme_image
+}
+
+@Preview(widthDp = 400, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsPanelGeneralPreview() {
+    SettingsPanelContent(
+        modifier = Modifier.fillMaxSize(),
+        currentTab = SettingsTab.GENERAL,
+        settings = AppSettings(hapticEnabled = true),
+        name = "Player Name",
+        onNameChange = {},
+        onHapticChanged = {},
+        onMusicChanged = {},
+        onSoundChanged = {},
+        onBoardPaletteChanged = {},
+        onPieceThemeChanged = {},
+        onShowLegalMovesChanged = {},
+        onResetDataClick = {},
+    )
+}
+
+@Preview(widthDp = 400, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsPanelSoundPreview() {
+    SettingsPanelContent(
+        modifier = Modifier.fillMaxSize(),
+        currentTab = SettingsTab.SOUND,
+        settings = AppSettings(musicEnabled = true, soundEnabled = false),
+        name = null,
+        onNameChange = null,
+        onHapticChanged = {},
+        onMusicChanged = {},
+        onSoundChanged = {},
+        onBoardPaletteChanged = {},
+        onPieceThemeChanged = {},
+        onShowLegalMovesChanged = {},
+        onResetDataClick = {},
+    )
+}
+
+@Preview(widthDp = 400, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsPanelVisualPreview() {
+    SettingsPanelContent(
+        modifier = Modifier.fillMaxSize(),
+        currentTab = SettingsTab.VISUAL,
+        settings = AppSettings(boardPalette = BoardPalette.WOOD, pieceTheme = PieceTheme.OUTLINE),
+        name = null,
+        onNameChange = null,
+        onHapticChanged = {},
+        onMusicChanged = {},
+        onSoundChanged = {},
+        onBoardPaletteChanged = {},
+        onPieceThemeChanged = {},
+        onShowLegalMovesChanged = {},
+        onResetDataClick = {},
+    )
+}
+
+@Preview(widthDp = 400, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsPanelControlsPreview() {
+    SettingsPanelContent(
+        modifier = Modifier.fillMaxSize(),
+        currentTab = SettingsTab.CONTROLS,
+        settings = AppSettings(showLegalMoves = true),
+        name = null,
+        onNameChange = null,
+        onHapticChanged = {},
+        onMusicChanged = {},
+        onSoundChanged = {},
+        onBoardPaletteChanged = {},
+        onPieceThemeChanged = {},
+        onShowLegalMovesChanged = {},
+        onResetDataClick = {},
+    )
+}
+
+@Preview(widthDp = 400, heightDp = 700, showBackground = true)
+@Composable
+private fun SettingsPanelOtherPreview() {
+    SettingsPanelContent(
+        modifier = Modifier.fillMaxSize(),
+        currentTab = SettingsTab.OTHER,
+        settings = AppSettings(),
+        name = null,
+        onNameChange = null,
+        onHapticChanged = {},
+        onMusicChanged = {},
+        onSoundChanged = {},
+        onBoardPaletteChanged = {},
+        onPieceThemeChanged = {},
+        onShowLegalMovesChanged = {},
+        onResetDataClick = {},
+    )
+}
+
+@Preview(widthDp = 360, heightDp = 800, showBackground = true)
+@Composable
+private fun SettingsPanelFullPreview() {
+    SettingsPanel(
+        onDismiss = {},
+        name = "Player 1",
+        onNameChange = {},
+    )
 }

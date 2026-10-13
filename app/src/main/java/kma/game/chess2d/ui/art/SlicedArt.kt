@@ -1,17 +1,26 @@
 package kma.game.chess2d.ui.art
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import kma.game.chess2d.R
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -92,5 +101,63 @@ private fun DrawScope.drawNineSlice(
                 filterQuality = FilterQuality.Medium,
             )
         }
+    }
+}
+
+@Preview(widthDp = 400, heightDp = 300, showBackground = true)
+@Composable
+private fun SlicedArtButtonPreview() {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        // Button-style: slice=0.5 (hai đầu là "góc" cao bằng nút)
+        SlicedArt(
+            res = R.drawable.toggle_on,
+            slice = 0.5f,
+            modifier = Modifier.width(200.dp).height(60.dp),
+        )
+        
+        SlicedArt(
+            res = R.drawable.toggle_on,
+            slice = 0.5f,
+            modifier = Modifier.width(300.dp).height(80.dp),  // Lớn hơn
+        )
+        
+        SlicedArt(
+            res = R.drawable.toggle_on,
+            slice = 0.5f,
+            corner = 25.dp,  // Fixed corner size
+            modifier = Modifier.width(250.dp).height(50.dp),
+        )
+    }
+}
+
+@Preview(widthDp = 400, heightDp = 350, showBackground = true)
+@Composable
+private fun SlicedArtPanelPreview() {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        // Panel-style: slice=0.25 (góc nhỏ hơn)
+        SlicedArt(
+            res = R.drawable.ui_panel_main,
+            slice = 0.25f,
+            modifier = Modifier.width(250.dp).height(150.dp),
+        )
+        
+        SlicedArt(
+            res = R.drawable.ui_panel_main,
+            slice = 0.25f,
+            modifier = Modifier.width(300.dp).height(200.dp),  // Lớn hơn
+        )
+        
+        SlicedArt(
+            res = R.drawable.ui_panel_main,
+            slice = 0.25f,
+            corner = 30.dp,  // Fixed corner
+            modifier = Modifier.width(280.dp).height(120.dp),
+        )
     }
 }
