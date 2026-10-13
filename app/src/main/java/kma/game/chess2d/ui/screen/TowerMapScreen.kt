@@ -72,8 +72,8 @@ internal object TowerMapLayout {
     const val MAP_WIDTH = 500
     const val PREVIEW_X = 520
     const val PREVIEW_WIDTH = 512
-    const val PREVIEW_TOP = 270
-    const val PREVIEW_HEIGHT = 1240
+    const val PREVIEW_TOP = 700
+    const val PREVIEW_HEIGHT = 620
     private val CENTER_X = intArrayOf(260, 360, 260, 160)
 
     /** Chiều cao cả dải bản đồ. */
@@ -204,7 +204,7 @@ private fun FloorPreview(floor: Floor, status: FloorStatus, modifier: Modifier =
         verticalArrangement = Arrangement.spacedBy(d.dp(16)),
     ) {
         Column(
-            modifier = Modifier.weight(1f).verticalScroll(detailScroll),
+            modifier = Modifier.verticalScroll(detailScroll),
             verticalArrangement = Arrangement.spacedBy(d.dp(16)),
         ) {
             DesignText(stringResource(R.string.tower_floor_label, floor.number), 32,
