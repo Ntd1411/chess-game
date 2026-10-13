@@ -77,9 +77,10 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
 9. **Defeat** — nền tối/đỏ, hiệu ứng quân cờ vỡ; chữ "THẤT BẠI"; 1 câu thoại động
    viên; nút `[THỬ LẠI]` / `[VỀ SẢNH]`; có thể bổ sung: số nước đi, thời gian, sai
    lầm lớn nhất, gợi ý cải thiện
-10. **Character/Profile** — artwork full-body ở giữa; tên + level; stats: số trận
-    thắng/thua, tầng cao nhất, số checkmate, thời gian chơi; tabs: Thông tin / Trang
-    phục / Kỹ năng / Ký ức
+10. **Character/Profile** — card tự vẽ tối viền vàng, portrait tròn và tên; card
+    cấp có thanh tiến độ Compose lấy điểm thật. Tám thống kê chia hai cột, cuộn
+    cùng nội dung; header và Quay lại neo vùng an toàn. Không dùng tọa độ cố định
+    vượt mép màn, không dựng tab trang phục/kỹ năng khi chưa có dữ liệu.
 11. **Character Journal** — giữ nền gothic, card tự vẽ tối viền vàng và lưới cuộn
     1–3 cột theo chiều rộng (thường 2 trên điện thoại, 3 trên màn rộng). Header/back
     sát trên, Quay lại neo dưới; nhớ vị trí lưới khi mở chi tiết rồi quay về. Nhân

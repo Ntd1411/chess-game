@@ -38,23 +38,17 @@ class SubScreenLayoutTest {
     }
 
     @Test
-    fun profileBlocksDoNotOverlap() {
-        val blocks = with(ProfileLayout) { listOf(Character, NamePlate, LevelPanel, StatsPanel) }
-        for (i in blocks.indices) for (j in i + 1 until blocks.size) {
-            assertTrue("$i vs $j", !blocks[i].overlaps(blocks[j]))
-        }
-        assertTrue(ProfileLayout.StatsPanel.bottom <= 1872)
+    fun profileRetainsEightDistinctMetricsInFourRows() {
+        assertEquals(8, ProfileMetric.entries.size)
+        assertEquals(8, ProfileMetric.entries.map { it.label }.toSet().size)
+        assertTrue(ProfileMetric.entries.chunked(2).all { it.size == 2 })
     }
 
     @Test
-    fun profileStatCellsStayInsidePanelWithoutOverlap() {
-        val panel = ProfileLayout.StatsPanel
-        val cells = (0 until ProfileLayout.STAT_ROWS * 2).map(ProfileLayout::statCell)
-        for (c in cells) {
-            assertTrue(c.x >= panel.x && c.y >= panel.y && c.right <= panel.right && c.bottom <= panel.bottom)
-        }
-        for (i in cells.indices) for (j in i + 1 until cells.size) {
-            assertTrue("$i vs $j", !cells[i].overlaps(cells[j]))
+    fun profileProgressUsesRealLevelPoints() {
+        for (points in 0..30) {
+            val stats = kma.game.chess2d.profile.PlayerStats(wins = points)
+            assertEquals((points % 5) / 5f, profileLevelFraction(stats), 0.0001f)
         }
     }
 
