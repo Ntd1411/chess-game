@@ -165,6 +165,9 @@ Phong cấp dùng dialog/card Compose và ảnh quân có sẵn. Chọn gửi đ
 ### Sửa lỗi Compose khi mở ván đấu tầng
 Màn đấu tầng dùng khung gameplay đã vẽ trước, khởi tạo ván sau composition thành công. Chặn khung cũ trong bước khởi tạo, giữ ID tầng/lượt để xoay máy không reset ván.
 
+### Thêm code mở khoá toàn bộ trong Cài đặt
+Cài đặt - Khác - Nhập code nhận TOWER49, giữ trạng thái qua khởi động lại. Mở tất cả nội dung tách khỏi số tầng đã thắng và phần thưởng. Mã sai hoặc nhập lại có thông báo, có khoá nút khi ghi và xử lý lỗi I/O.
+
 ## Sơ đồ điều hướng
 
 ```

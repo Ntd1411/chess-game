@@ -81,6 +81,22 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
     val cosmetics: Flow<ShopState> = dataStore.data.map { shopState(it) }
         .catch { cause -> if (cause is IOException) emit(ShopState(readable = false)) else throw cause }
 
+    val fullUnlock: Flow<Boolean> = dataStore.data.map { it[KEY_FULL_UNLOCK] ?: false }
+        .catch { cause -> if (cause is IOException) emit(false) else throw cause }
+
+    suspend fun redeemUnlockCode(input: String): UnlockResult {
+        if (!UnlockCode.matches(input)) return UnlockResult.INVALID_CODE
+        var result = UnlockResult.ALREADY_UNLOCKED
+        dataStore.edit { prefs ->
+            if (prefs[KEY_FULL_UNLOCK] != true) {
+                prefs[KEY_FULL_UNLOCK] = true
+                prefs[KEY_OWNED] = shopState(prefs).owned + ShopCatalog.items.map { it.id }
+                result = UnlockResult.UNLOCKED
+            }
+        }
+        return result
+    }
+
     // Ownership and spending share one serialized edit, preventing double charges.
     suspend fun purchaseCosmetic(id: String, earnedGold: Int): PurchaseResult {
         val item = requireNotNull(ShopCatalog.item(id)) { "Unknown cosmetic: $id" }
@@ -127,9 +143,11 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
     suspend fun resetToDefaults() {
         dataStore.edit {
             val state = shopState(it)
+            val unlocked = it[KEY_FULL_UNLOCK] ?: false
             it.clear()
             it[KEY_OWNED] = state.owned
             it[KEY_SPENT] = state.spentGold
+            it[KEY_FULL_UNLOCK] = unlocked
         }
     }
 
@@ -137,13 +155,15 @@ class SettingsStore internal constructor(private val dataStore: DataStore<Prefer
     suspend fun clearAll() { dataStore.edit { it.clear() } }
 
     private companion object {
+        val KEY_FULL_UNLOCK = booleanPreferencesKey("full_content_unlocked")
         val KEY_OWNED = stringSetPreferencesKey("cosmetics_owned")
         val KEY_SPENT = intPreferencesKey("cosmetics_spent_gold")
 
         fun shopState(prefs: Preferences): ShopState {
             // Grandfather the selected cosmetics from installations predating the shop.
             val legacy = setOf(ShopCatalog.boardId(paletteOf(prefs[KEY_PALETTE])), ShopCatalog.pieceId(pieceThemeOf(prefs[KEY_PIECES])))
-            val owned = (prefs[KEY_OWNED] ?: legacy).filter { ShopCatalog.item(it) != null }.toSet() + ShopCatalog.freeIds
+            val fullAccess = if (prefs[KEY_FULL_UNLOCK] == true) ShopCatalog.items.map { it.id }.toSet() else emptySet()
+            val owned = (prefs[KEY_OWNED] ?: legacy).filter { ShopCatalog.item(it) != null }.toSet() + ShopCatalog.freeIds + fullAccess
             return ShopState(owned, (prefs[KEY_SPENT] ?: 0).coerceAtLeast(0))
         }
 

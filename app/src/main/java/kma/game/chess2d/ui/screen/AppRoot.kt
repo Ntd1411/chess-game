@@ -50,6 +50,7 @@ import kma.game.chess2d.profile.ProfileRepository
 import kma.game.chess2d.puzzle.PuzzleCatalog
 import kma.game.chess2d.sound.MusicPlan
 import kma.game.chess2d.sound.MusicTrack
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -288,6 +289,19 @@ private fun musicFor(screen: Screen): MusicTrack? = when (screen) {
     Screen.LOCAL_SETUP, Screen.LOBBY, Screen.TOWER, Screen.MODES, Screen.INVENTORY, Screen.SHOP -> MusicTrack.MENU
 }
 
+/** Full-content access does not fabricate cleared floors or earned rewards. */
+@Composable
+private fun rememberTowerProgress(): TowerProgress {
+    val context = LocalContext.current
+    val tower = remember(context) { TowerProgressStore(context.applicationContext) }
+    val access = remember(context) { kma.game.chess2d.settings.SettingsStore(context.applicationContext) }
+    val flow = remember(tower, access) {
+        combine(tower.progress, access.fullUnlock) { progress, unlocked -> progress.copy(allUnlocked = unlocked) }
+    }
+    val progress by flow.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    return progress
+}
+
 /** Vàng/pha lê/sách suy ra từ tiến độ Tháp (xem [TowerRewards]); tự cập nhật khi qua tầng mới. */
 @Composable
 private fun rememberEarnedWallet(): Pair<Reward, Int> {
@@ -295,9 +309,9 @@ private fun rememberEarnedWallet(): Pair<Reward, Int> {
     val puzzles = remember(context) { PuzzleCatalog.load(context.applicationContext) }
     val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
-    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val progress = rememberTowerProgress()
     val wallet = remember(floors, progress.clearedUpTo) { TowerRewards.total(floors, progress.clearedUpTo) }
-    return wallet to progress.clearedUpTo
+    return wallet to progress.unlockLevel
 }
 
 @Composable
@@ -379,11 +393,11 @@ private fun ProfileRoute(name: String, onBack: () -> Unit, modifier: Modifier = 
 private fun JournalRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
-    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val progress = rememberTowerProgress()
     val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
     val entries by profile.journal.collectAsStateWithLifecycle(initialValue = emptyMap<String, JournalEntry>())
-    val pages = remember(entries, progress.clearedUpTo) {
-        Journal.pages(AiCharacters.all, entries, progress.clearedUpTo)
+    val pages = remember(entries, progress.unlockLevel) {
+        Journal.pages(AiCharacters.all, entries, progress.unlockLevel)
     }
     JournalScreen(pages = pages, onBack = onBack, modifier = modifier)
 }
@@ -399,14 +413,14 @@ private fun AiSelectRoute(
 ) {
     val context = LocalContext.current
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
-    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val progress = rememberTowerProgress()
     val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
     val scope = rememberCoroutineScope()
 
     AiSelectionScreen(
-        clearedUpTo = progress.clearedUpTo,
+        clearedUpTo = progress.unlockLevel,
         onStart = { character ->
-            if (!character.isUnlocked(progress.clearedUpTo)) return@AiSelectionScreen
+            if (!character.isUnlocked(progress.unlockLevel)) return@AiSelectionScreen
             // Bắt đầu đối đầu = đã gặp nhân vật: ghi vào Nhật ký rồi mới vào ván.
             scope.launch { withContext(NonCancellable) { profile.recordMet(character.id) } }
             onStart(character)
@@ -432,7 +446,7 @@ private fun TowerRoute(playerName: String, onBack: () -> Unit, modifier: Modifie
     val floors = remember(puzzles) { TowerCatalog.build(puzzles.size) }
     val store = remember(context) { TowerProgressStore(context.applicationContext) }
     val profile = remember(context) { ProfileRepository(ProfileDatabase.get(context.applicationContext)) }
-    val progress by store.progress.collectAsStateWithLifecycle(initialValue = TowerProgress())
+    val progress = rememberTowerProgress()
 
     var stage by rememberSaveable { mutableStateOf(TowerStage.MAP) }
     var floorNumber by rememberSaveable { mutableIntStateOf(1) }

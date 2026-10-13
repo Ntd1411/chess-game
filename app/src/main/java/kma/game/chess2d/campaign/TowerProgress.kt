@@ -19,7 +19,10 @@ enum class FloorStatus {
  * ở lớp thuần này (không biết Android) để test JVM kiểm được luật mở khóa mà không
  * cần DataStore.
  */
-data class TowerProgress(val clearedUpTo: Int = 0) {
+data class TowerProgress(val clearedUpTo: Int = 0, val allUnlocked: Boolean = false) {
+
+    /** Access is independent of wins, rewards, and actual campaign completion. */
+    val unlockLevel: Int get() = if (allUnlocked) TowerCatalog.FLOOR_COUNT else clearedUpTo
 
     init {
         require(clearedUpTo in 0..TowerCatalog.FLOOR_COUNT) { "tiến độ ngoài khoảng: $clearedUpTo" }
@@ -34,7 +37,7 @@ data class TowerProgress(val clearedUpTo: Int = 0) {
 
     fun statusOf(floor: Int): FloorStatus = when {
         floor <= clearedUpTo -> FloorStatus.CLEARED
-        floor == clearedUpTo + 1 -> FloorStatus.CURRENT
+        floor == clearedUpTo + 1 || (allUnlocked && floor in 1..TowerCatalog.FLOOR_COUNT) -> FloorStatus.CURRENT
         else -> FloorStatus.LOCKED
     }
 
@@ -46,7 +49,7 @@ data class TowerProgress(val clearedUpTo: Int = 0) {
      */
     fun withCleared(floor: Int): TowerProgress =
         if (floor == clearedUpTo + 1 && floor <= TowerCatalog.FLOOR_COUNT) {
-            TowerProgress(floor)
+            copy(clearedUpTo = floor)
         } else {
             this
         }

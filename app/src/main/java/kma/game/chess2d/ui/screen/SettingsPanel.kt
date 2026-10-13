@@ -95,6 +95,7 @@ fun SettingsPanel(onDismiss: () -> Unit, modifier: Modifier = Modifier, name: St
                         onPieceThemeChanged = { scope.launch { store.setPieceTheme(it) } },
                         onShowLegalMovesChanged = { scope.launch { store.setShowLegalMoves(it) } },
                         onResetDataClick = { confirmReset = true },
+                        unlockContent = { UnlockCodeCard(store) },
                         modifier = Modifier.weight(1f).widthIn(max = SettingsLayout.MAX_WIDTH_DP.dp).fillMaxWidth())
                 }
                 Column(Modifier.widthIn(max = SettingsLayout.MAX_WIDTH_DP.dp).fillMaxWidth().padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -116,7 +117,7 @@ fun SettingsPanel(onDismiss: () -> Unit, modifier: Modifier = Modifier, name: St
 private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings, owned: Set<String>, name: String?, onNameChange: ((String) -> Unit)?,
     onHapticChanged: (Boolean) -> Unit, onMusicChanged: (Boolean) -> Unit, onSoundChanged: (Boolean) -> Unit,
     onBoardPaletteChanged: (BoardPalette) -> Unit, onPieceThemeChanged: (PieceTheme) -> Unit,
-    onShowLegalMovesChanged: (Boolean) -> Unit, onResetDataClick: () -> Unit, modifier: Modifier = Modifier) {
+    onShowLegalMovesChanged: (Boolean) -> Unit, onResetDataClick: () -> Unit, unlockContent: @Composable () -> Unit, modifier: Modifier = Modifier) {
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     Column(modifier.verticalScroll(rememberScrollState()).padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -165,6 +166,7 @@ private fun SettingsPanelContent(currentTab: SettingsTab, settings: AppSettings,
                 ToggleRow(stringResource(R.string.settings_legal_moves), settings.showLegalMoves, onShowLegalMovesChanged)
             }
             SettingsTab.OTHER -> {
+                unlockContent()
                 SettingsGroup(stringResource(R.string.settings_data)) {
                     SimpleSetupButton(stringResource(R.string.settings_reset_data), onResetDataClick, Modifier.fillMaxWidth())
                 }

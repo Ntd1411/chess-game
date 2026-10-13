@@ -468,4 +468,13 @@
     <string name="dialogue_auto">Tự động</string>
     <string name="dialogue_progress">%1$d / %2$d</string>
     <string name="lan_confirm_title">Xác nhận</string>
+    <string name="unlock_title">Nhập code</string>
+    <string name="unlock_field">Mã mở khoá</string>
+    <string name="unlock_hint">Nhập mã để mở tất cả tầng, AI, di vật, màu bàn và bộ quân. Không tự ghi nhận chiến thắng hay cộng thưởng.</string>
+    <string name="unlock_redeem">Áp dụng code</string>
+    <string name="unlock_busy">Đang áp dụng…</string>
+    <string name="unlock_success">Đã mở khoá toàn bộ nội dung. Tiến độ và lịch sử thật được giữ nguyên.</string>
+    <string name="unlock_already">Toàn bộ nội dung đã được mở khoá.</string>
+    <string name="unlock_invalid">Mã không hợp lệ. Kiểm tra lại và thử lại.</string>
+    <string name="unlock_save_failed">Không lưu được mã. Vui lòng thử lại.</string>
 </resources>

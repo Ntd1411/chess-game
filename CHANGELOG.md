@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:39 GMT+7 — Thêm code mở khoá toàn bộ trong Cài đặt
+- Tab Khác có ô mã và nút áp dụng, mã TOWER49 không phân biệt hoa thường. Quyền mở toàn bộ lưu nguyên tử cùng sở hữu Shop, không trừ vàng hay tự ghi thắng. 49 tầng, AI, di vật và toàn bộ màu/bộ quân mở theo quyền, tiến độ thật và lịch sử giữ nguyên. Khôi phục mặc định giữ quyền, Xoá dữ liệu xoá quyền.
+- Kiểm tra: assembleDebug, 285 app unit test và lintDebug qua; chưa QA hình ảnh/tương tác/bàn phím trên thiết bị.
+
 ## 2026-10-14 05:28 GMT+7 — Sửa lỗi Compose khi mở ván đấu tầng
 - Lint phát hiện remember trả Unit ở mã cũ. Chuyển khởi tạo sang DisposableEffect trước attach AI, chặn render/báo kết quả trước khi khởi tạo, giữ khóa tầng/lượt và detach. Không sửa engine hay luật chiến dịch.
 - Kiểm tra cuối: assembleDebug, 277 app unit test và lintDebug qua (vẫn có cảnh báo). Engine 78 test qua, AI 24 qua/1 bỏ qua, LAN 35 qua. Chưa QA thiết bị.
