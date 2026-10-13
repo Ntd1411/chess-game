@@ -66,7 +66,7 @@ fun SplashScreen(onDone: () -> Unit, modifier: Modifier = Modifier) {
     }
 
     DesignCanvas(background = R.drawable.bg_splash, dim = 0f, modifier = modifier) {
-        // Khung và ruột cùng canvas 1536x1024; ruột thật nằm từ 4,0% đến 95,8% chiều ngang.
+        // Khung và ruột cùng canvas 1536x1024; ruột đã căn vào lòng khung (10,9–89,1%).
         val bar = SplashLayout.Bar
         ArtBar(
             frame = R.drawable.splash_loading_frame,
@@ -86,8 +86,8 @@ internal object SplashLayout {
      * canvas, nên phần khung thật nằm khoảng y 1553–1707.
      */
     val Bar = LobbyLayout.Box(160, 1390, 760, 507)
-    const val FILL_START = 0.040f
-    const val FILL_END = 0.958f
+    const val FILL_START = 0.109f
+    const val FILL_END = 0.891f
 }
 
 private const val MIN_SPLASH_MILLIS = 1400L

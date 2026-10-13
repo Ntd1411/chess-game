@@ -14,6 +14,11 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-13 19:36 GMT+7 — Căn ruột thanh loading khớp với lòng khung Splash
+- Chỉnh `splash_loading_fill.png` trên canvas gốc 1536x1024: thu ngang còn 85%, thu dọc còn 90%, dịch lên 0,5% chiều cao để ruột không tràn ra hoa văn hai đầu
+- Cập nhật vùng cắt tiến độ thành 10,9–89,1%; giữ nguyên khung, vị trí thanh và logic chờ loading hoàn tất
+- Bổ sung test kiểm tra kích thước canvas, biên ruột và khoảng hở trong khung
+
 ## 2026-10-13 00:35 GMT+7 — Chờ thanh loading chạy đầy trước khi vào menu chính
 - `SplashScreen` chờ tiến độ đang hiển thị đạt 100%, thay vì chuyển màn ngay sau khi nạp ảnh và hết thời gian tối thiểu
 - Giữ thanh đầy thêm 150 ms để người chơi thấy loading hoàn tất; dùng callback điều hướng mới nhất
