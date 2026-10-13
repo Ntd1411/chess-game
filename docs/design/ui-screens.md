@@ -80,9 +80,13 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
 10. **Character/Profile** — artwork full-body ở giữa; tên + level; stats: số trận
     thắng/thua, tầng cao nhất, số checkmate, thời gian chơi; tabs: Thông tin / Trang
     phục / Kỹ năng / Ký ức
-11. **Character Journal** — giao diện như 1 cuốn sách cổ; danh sách nhân vật đã gặp
-    (✓ đã gặp / ? chưa rõ / 🔒 khóa); mở 1 nhân vật ra xem: artwork, tên, tiểu sử,
-    câu thoại, lịch sử gặp mặt, bí mật đã phát hiện
+11. **Character Journal** — giữ nền gothic, card tự vẽ tối viền vàng và lưới cuộn
+    1–3 cột theo chiều rộng (thường 2 trên điện thoại, 3 trên màn rộng). Header/back
+    sát trên, Quay lại neo dưới; nhớ vị trí lưới khi mở chi tiết rồi quay về. Nhân
+    vật đã gặp hiện tên/portrait thật; chưa rõ/khóa dùng ?/icon khóa, không tải ảnh
+    để lộ danh tính. Card khóa ghi tầng mở. Chi tiết cuộn gồm portrait, sao, lời
+    thoại, độ khó/phong cách/tính cách/tốc độ và ngày đầu gặp/số lần đối đầu. Back
+    từ chi tiết về lưới, rồi mới về menu; dữ liệu gặp và điều kiện mở không đổi.
 12. **Inventory** — nêu trong sơ đồ điều hướng, chưa có spec chi tiết riêng (cần hỏi
     thêm khi tới lượt làm)
 13. **LAN Multiplayer** — card/nút tự vẽ tối viền vàng, giữ nền/chân dung. Header
@@ -112,6 +116,9 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     tối; Rời trận ngăn bằng đường kẻ và nền đỏ nhẹ. Icon vector, chữ căn trái, vùng
     bấm tối thiểu 56dp và tự cao thêm khi chữ lớn. Có nút đóng; đóng/Back/chạm ngoài
     đều Tiếp tục. Nội dung cuộn trên màn thấp, giữ nguyên xử lý ván thường/chiến dịch.
+    Panel Đổi cấp cũng tự vẽ tối–vàng: ba dòng Dễ/Vừa/Khó, mức hiện tại có dấu chọn,
+    hiển thị thời gian nghĩ tối đa từ Difficulty thật. Chọn dòng áp dụng ngay;
+    Hủy/nút đóng/Back/chạm ngoài không đổi cấp. Nội dung cuộn khi màn thấp.
 
 ## Sơ đồ điều hướng
 

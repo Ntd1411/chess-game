@@ -14,6 +14,17 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 04:15 GMT+7 — Cân bằng chiều cao tất cả thẻ Nhật ký
+- Mọi thẻ chừa hai dòng tên và một dòng tầng mở, kể cả thẻ đã gặp/chưa rõ; badge trạng thái luôn một dòng, dùng line-height chung để không lệch giữa thẻ khóa và thẻ mở
+- Giữ portrait vuông, lưới co giãn và khả năng tăng kích thước theo cỡ chữ; không đổi trạng thái/mở khóa hay nội dung chi tiết
+- Thêm test dòng tên/footer và điều kiện hiện tầng mở; assembleDebug, JournalPresentationTest và JournalPagesTest đều đạt, git diff --check sạch. Chưa đo/kiểm tra trực quan trên thiết bị
+
+## 2026-10-14 04:00 GMT+7 — Vẽ lại panel Đổi cấp và trang Nhật ký
+- Panel Đổi cấp dùng cửa sổ tối bo góc/viền vàng, ba dòng Dễ/Vừa/Khó có trạng thái chọn và ngân sách thời gian thật; chọn áp dụng ngay, Hủy/đóng/Back/chạm ngoài không đổi mức
+- Nhật ký dùng card tự vẽ và lưới cuộn co giãn 1–3 cột, header/footer neo mép an toàn, chi tiết cuộn với portrait/sao/hồ sơ/thoại/lịch sử gặp; giữ ID đang xem và vị trí lưới khi quay lại
+- Nhân vật chưa gặp vẫn giấu tên và dùng ?/khóa thay vì hiển thị portrait mờ; card khóa ghi tầng mở. Không thay đổi điều kiện mở, dữ liệu Nhật ký hay logic AI/ván chơi
+- Thêm test trình bày Đổi cấp/Nhật ký và thay test lưới tọa độ cũ; assembleDebug và 88/88 test liên quan đạt, toàn app 254/255 đạt (còn lỗi ProfileLayout cũ ở profileBlocksDoNotOverlap), git diff --check sạch. Chưa kiểm tra trực quan/cuộn/Back trên thiết bị
+
 ## 2026-10-14 03:43 GMT+7 — Thêm hai AI và bảy boss riêng, đồng bộ portrait/cốt truyện/mở khóa
 - Màn AI chỉ dùng portrait trong res; thêm Silent Bishop và Golden Queen với ảnh, hồ sơ/tính cách/lời thoại riêng, thay hai boss tái đấu ở tầng 35/42
 - Chỉ Pháp Sư Cờ, Hiệp Sĩ Bóng Đêm và Nữ Hoàng Máu mở sẵn; Vua Hắc Ám/Silent Bishop/Golden Queen/nhân vật ẩn mở sau khi thắng tầng 28/35/42/49, giữ tiến độ đã lưu

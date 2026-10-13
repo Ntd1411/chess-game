@@ -2,13 +2,11 @@ package kma.game.chess2d.ui.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import kma.game.chess2d.R
@@ -37,9 +34,6 @@ import kma.game.chess2d.game.PauseMenu
 import kma.game.chess2d.settings.AppSettings
 import kma.game.chess2d.settings.SettingsStore
 import kma.game.chess2d.ui.art.BattleButton
-import kma.game.chess2d.ui.art.ButtonArt
-import kma.game.chess2d.ui.art.GothicButton
-import kma.game.chess2d.ui.art.GothicDialog
 import kma.game.chess2d.ui.board.ChessBoard
 import kma.game.chess2d.ui.board.PromotionDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -257,37 +251,6 @@ fun GameScreen(
             pending = pending,
             onChosen = viewModel::onPromotionChosen,
             onDismiss = viewModel::onPromotionDismissed,
-        )
-    }
-}
-
-/**
- * Hộp thoại đổi cấp độ máy ngay trong ván.
- *
- * Ba mức đều là một dòng bấm được trong thân hộp thoại, không nhét vào hai ô
- * confirm/dismiss của AlertDialog — nhét như thế thì mức giữa không còn chỗ để chọn.
- */
-@Composable
-private fun LevelDialog(
-    current: Difficulty,
-    onChosen: (Difficulty) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    GothicDialog(onDismiss = onDismiss, title = stringResource(R.string.menu_difficulty)) {
-        for (level in Difficulty.entries) {
-            // Mức đang chọn là nút vàng, các mức khác là nút phụ.
-            GothicButton(
-                label = stringResource(labelOf(level)),
-                onClick = { onChosen(level) },
-                art = if (level == current) ButtonArt.PRIMARY else ButtonArt.SECONDARY,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            )
-        }
-        GothicButton(
-            label = stringResource(R.string.action_cancel),
-            onClick = onDismiss,
-            art = ButtonArt.SMALL,
-            modifier = Modifier.fillMaxWidth(0.6f).height(48.dp),
         )
     }
 }

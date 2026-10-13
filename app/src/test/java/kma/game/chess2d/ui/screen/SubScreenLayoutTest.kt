@@ -26,12 +26,15 @@ class SubScreenLayoutTest {
     }
 
     @Test
-    fun journalGridIsCenteredThreeColumns() {
-        assertEquals(listOf(80, 395, 710), (0..2).map(JournalLayout::cellX))
-        assertEquals(1080, JournalLayout.cellX(0) + JournalLayout.cellX(2) + JournalLayout.CELL)
-        assertEquals(0, JournalLayout.rows(0))
-        assertEquals(1, JournalLayout.rows(3))
-        assertEquals(3, JournalLayout.rows(7))
+    fun journalGridAdaptsToAvailableWidth() {
+        assertEquals(1, JournalLayout.columnsFor(144f))
+        assertEquals(2, JournalLayout.columnsFor(320f))
+        assertEquals(3, JournalLayout.columnsFor(560f))
+        assertEquals(3, JournalLayout.columnsFor(1000f))
+        for (width in 144..560) {
+            val columns = JournalLayout.columnsFor(width.toFloat())
+            assertTrue(columns * JournalLayout.MIN_CELL_DP + (columns - 1) * JournalLayout.GAP_DP <= width)
+        }
     }
 
     @Test
