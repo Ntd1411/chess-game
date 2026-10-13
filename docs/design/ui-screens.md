@@ -144,6 +144,9 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
 ### Vẽ lại Hội thoại
 Hội thoại dùng card tối viền vàng, portrait có sẵn và chữ sáng không bị khung cắt. Nội dung cuộn, footer Auto/Bỏ qua/Tiếp, giữ mapping người nói và nhịp tự động cũ.
 
+### Vẽ lại Chiến thắng
+Chiến thắng dùng card phần thưởng tối viền vàng, số vàng/pha lê/sách thật và nút tự vẽ. Không đổi logic cộng thưởng hoặc mở tầng, vẫn Tiếp tục về bản đồ.
+
 ## Sơ đồ điều hướng
 
 ```

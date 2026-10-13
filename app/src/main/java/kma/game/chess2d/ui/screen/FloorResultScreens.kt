@@ -2,6 +2,11 @@ package kma.game.chess2d.ui.screen
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,97 +31,41 @@ import kma.game.chess2d.ui.art.SlicedArt
 import kma.game.chess2d.ui.art.at
 import kma.game.chess2d.ui.theme.GothicColors
 
-/**
- * Màn Chiến thắng theo bản thiết kế: nền `bg_victory`, ánh sáng phía sau huy hiệu, ornament,
- * tiêu đề lớn, panel phần thưởng (vàng, pha lê, sách cổ) và hai nút Tiếp tục / Về sảnh.
- *
- * Hiệu ứng sáng và hạt chỉ nằm phía trên panel, không đè lên vật phẩm hay chữ.
- *
- * @param reward thưởng của tầng ([kma.game.chess2d.campaign.TowerRewards.forFloor]).
- * @param nextFloor tầng vừa mở; `null` ở tầng cuối.
- * @param onContinue về bản đồ, nơi tầng kế đang sáng sẵn nút Vào tầng.
- */
+internal fun victorySubtitleRes(floor: Floor): Int = when {
+    floor.number == TowerCatalog.FLOOR_COUNT -> R.string.victory_tower_cleared
+    floor.kind == NodeKind.TREASURE -> R.string.victory_sub_treasure
+    floor.kind == NodeKind.STORY -> R.string.victory_sub_story
+    else -> R.string.victory_sub_floor
+}
+
 @Composable
-fun VictoryScreen(
-    floor: Floor,
-    reward: Reward,
-    nextFloor: Floor?,
-    onContinue: () -> Unit,
-    onLobby: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val isFinal = floor.number == TowerCatalog.FLOOR_COUNT
-    val subtitle = when {
-        isFinal -> stringResource(R.string.victory_tower_cleared)
-        floor.kind == NodeKind.TREASURE -> stringResource(R.string.victory_sub_treasure)
-        floor.kind == NodeKind.STORY -> stringResource(R.string.victory_sub_story)
-        else -> stringResource(R.string.victory_sub_floor, floor.number, floor.title)
-    }
-    DesignCanvas(background = R.drawable.bg_victory, dim = 0.15f, modifier = modifier) {
-        val d = LocalDesign.current
-        ArtImage(R.drawable.fx_victory_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.5f,
-            modifier = Modifier.at(40, 120, 1000, 640))
-        ArtImage(R.drawable.decor_victory_light, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.85f,
-            modifier = Modifier.at(140, 200, 800, 700))
-        ArtImage(R.drawable.decor_victory_particles, maxEdge = ArtSizes.BOARD, trim = true, alpha = 0.5f,
-            modifier = Modifier.at(200, 220, 680, 480))
-        ArtImage(R.drawable.badge_victory, maxEdge = ArtSizes.BUTTON, trim = true,
-            modifier = Modifier.at(340, 300, 400, 300))
-        ArtImage(R.drawable.decor_victory_ornament, maxEdge = ArtSizes.BUTTON, trim = true,
-            modifier = Modifier.at(140, 600, 800, 140))
-        DesignText(
-            text = stringResource(R.string.victory_title),
-            size = 104,
-            color = GothicColors.Gold,
-            weight = FontWeight.Bold,
-            maxLines = 1,
-            modifier = Modifier.at(100, 760, 880, 140),
-        )
-        DesignText(subtitle, size = 32, maxLines = 2, modifier = Modifier.at(100, 900, 880, 80))
-
-        SlicedArt(res = R.drawable.ui_panel_main, slice = 0.2f, modifier = Modifier.at(100, 980, 880, 360))
-        RewardItem(R.drawable.item_gold_coin, reward.gold, x = 230)
-        RewardItem(R.drawable.item_blue_crystal, reward.crystals, x = 490)
-        RewardItem(R.drawable.item_ancient_book, reward.books, x = 750)
-        if (nextFloor != null) {
-            DesignText(
-                text = stringResource(R.string.victory_unlocked, nextFloor.number),
-                size = 30,
-                color = GothicColors.Gold,
-                maxLines = 1,
-                modifier = Modifier.at(140, 1250, 800, 60),
-            )
+fun VictoryScreen(floor: Floor, reward: Reward, nextFloor: Floor?, onContinue: () -> Unit, onLobby: () -> Unit, modifier: Modifier = Modifier) {
+    SimpleSetupPage(R.drawable.bg_victory, stringResource(R.string.victory_title), stringResource(R.string.action_back), onContinue, modifier,
+        footer = {
+            SimpleSetupButton(stringResource(R.string.victory_continue), onContinue, Modifier.fillMaxWidth(), primary = true)
+            SimpleSetupButton(stringResource(R.string.result_to_lobby), onLobby, Modifier.fillMaxWidth())
+        }) {
+        ArtImage(R.drawable.badge_victory, trim = true, modifier = Modifier.size(120.dp).align(androidx.compose.ui.Alignment.CenterHorizontally))
+        Text(stringResource(victorySubtitleRes(floor), floor.number, floor.title), color = GothicColors.Gold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        SimpleSetupCard {
+            Text(stringResource(R.string.tower_preview_rewards), color = GothicColors.Gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.tower_preview_reward_values, reward.gold, reward.crystals, reward.books), color = GothicColors.Parchment, fontSize = 16.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                RewardItem(R.drawable.item_gold_coin, reward.gold)
+                RewardItem(R.drawable.item_blue_crystal, reward.crystals)
+                RewardItem(R.drawable.item_ancient_book, reward.books)
+            }
+            if (nextFloor != null) Text(stringResource(R.string.victory_unlocked, nextFloor.number), color = GothicColors.Gold, fontSize = 15.sp)
         }
-
-        GothicButton(
-            label = stringResource(R.string.victory_continue),
-            onClick = onContinue,
-            fontSize = d.sp(40),
-            modifier = Modifier.at(150, 1430, 780, 110),
-        )
-        GothicButton(
-            label = stringResource(R.string.result_to_lobby),
-            onClick = onLobby,
-            art = ButtonArt.SECONDARY,
-            fontSize = d.sp(36),
-            modifier = Modifier.at(150, 1560, 780, 100),
-        )
     }
 }
 
-/** Một vật phẩm thưởng 100x100 ở y=1080 và số lượng ngay bên dưới. */
 @Composable
-private fun RewardItem(@DrawableRes icon: Int, count: Int, x: Int) {
-    ArtImage(icon, maxEdge = ArtSizes.PIECE, trim = true, alpha = if (count > 0) 1f else 0.35f,
-        modifier = Modifier.at(x, 1080, 100, 100))
-    DesignText(
-        text = stringResource(R.string.inventory_count, count),
-        size = 34,
-        weight = FontWeight.Bold,
-        color = if (count > 0) GothicColors.Gold else GothicColors.Parchment.copy(alpha = 0.5f),
-        maxLines = 1,
-        modifier = Modifier.at(x - 40, 1185, 180, 56),
-    )
+private fun RewardItem(@DrawableRes icon: Int, count: Int) {
+    Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        ArtImage(icon, trim = true, modifier = Modifier.size(48.dp))
+        Text(stringResource(R.string.inventory_count, count), color = GothicColors.Parchment, fontSize = 16.sp)
+    }
 }
 
 /**

@@ -14,6 +14,10 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 05:10 GMT+7 — Vẽ lại Chiến thắng
+- Giữ nền/huy hiệu, card phần thưởng tự vẽ với số liệu thật, nội dung cuộn và hai nút Tiếp tục/Về sảnh neo dưới. Giữ thông báo tầng cuối/tầng mở và luồng ghi tiến độ.
+- Kiểm tra: assembleDebug và 272 app unit test qua; chưa QA thiết bị.
+
 ## 2026-10-14 05:08 GMT+7 — Vẽ lại Hội thoại
 - Giữ portrait/cốt truyện, card thoại tự vẽ chữ sáng cuộn được, chỉ số trang và nút Auto/Bỏ qua/Tiếp neo dưới. Giữ kết thúc khi hết thoại, bỏ qua và nhịp Auto 3 giây, không tự bỏ dòng cuối.
 - Kiểm tra: assembleDebug và 271 app unit test qua; chưa QA thiết bị.
