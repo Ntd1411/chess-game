@@ -14,6 +14,13 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 03:11 GMT+7 — Vẽ lại sảnh LAN và màn chọn đối thủ Người vs Máy
+- Thay khung/nút ảnh bằng card tối viền vàng và nút Compose đơn giản; dùng chung header/footer neo mép an toàn, nội dung cuộn và tránh bàn phím ở sảnh LAN
+- Giữ địa chỉ/sao chép, discovery, nhập IP, ba thể thức giờ, chờ/huỷ phòng và tự bắt đầu ván LAN; giữ khóa phòng bận/lệch phiên bản, thêm IME Go cho IP
+- Giữ năm AI, artwork, độ khó, tính cách/lời thoại và điều kiện mở; carousel vuốt ngang, mũi tên chuyển vòng, AI khóa vẫn xem được nhưng không bắt đầu ván
+- Thay test tọa độ AI/LAN cũ bằng test điều hướng, điều kiện mở, nhãn/trạng thái phòng và thể thức; không chỉnh logic engine/AI/network
+- Kiểm tra: assembleDebug và các test chọn AI/Local/spectate đạt; toàn bộ app đạt 243/244 test (còn lỗi ProfileLayout cũ ở profileBlocksDoNotOverlap), net có 35/35 test đạt; git diff --check sạch. Chưa kiểm tra trực quan, bàn phím hay kết nối hai thiết bị
+
 ## 2026-10-14 02:42 GMT+7 — Vẽ lại màn Hai người cùng máy đồng bộ với Máy vs Máy
 - Dùng card tối viền vàng mảnh, avatar tròn, nhãn bên Trắng/Đen và ô tên tự vẽ bằng Compose; nhóm thời gian bốn mức thành lưới 2×2 dễ đọc
 - Header/back sát mép trên vùng an toàn; nút Bắt đầu/Quay lại neo dưới, phần nội dung cuộn độc lập và tránh bàn phím. Next chuyển sang tên người chơi 2, Done đóng bàn phím

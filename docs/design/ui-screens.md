@@ -51,10 +51,11 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
    ký/Túi đồ/Thành tựu; dưới cùng là 5 mode, **Khám Phá Tháp Cờ** và **Người vs Máy**
    để to hơn các mode phụ (2 người cùng máy, LAN, Máy vs Máy)
 3. **Mode Select** — có thể gộp vào Lobby hoặc tách riêng
-4. **AI Character Selection** — tiêu đề "CHỌN ĐỐI THỦ AI"; nhân vật AI hiển thị lớn ở
-   giữa kèm câu thoại giới thiệu; thông tin: độ khó (sao), phong cách, tốc độ, khả
-   năng, tính cách; carousel chọn AI phía dưới (mũi tên trái/phải); nút BẮT ĐẦU cuối
-   màn hình
+4. **AI Character Selection** — card/nút tự vẽ tối viền vàng mảnh, giữ nền và
+   artwork AI (ảnh toàn thân nếu có). Header/back sát trên; Bắt đầu/Quay lại neo
+   dưới vùng an toàn. Nhân vật, sao độ khó, phong cách, tốc độ nghĩ, tính cách và
+   câu thoại nằm trong nội dung cuộn; carousel chân dung vuốt ngang và mũi tên
+   chuyển vòng. AI chưa mở vẫn xem được, hiện điều kiện mở và tắt nút Bắt đầu.
 5. **Chess Battle** — bàn cờ chiếm 80–90% màn hình; top: avatar/tên/HP-rank/đồng hồ
    đối thủ; bottom: avatar/tên/đồng hồ/quân còn lại của người chơi; hiệu ứng: ô đang
    chọn, ô có thể đi, ô bị tấn công, check, checkmate, hiệu ứng khi ăn quân; thanh
@@ -82,10 +83,13 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
     câu thoại, lịch sử gặp mặt, bí mật đã phát hiện
 12. **Inventory** — nêu trong sơ đồ điều hướng, chưa có spec chi tiết riêng (cần hỏi
     thêm khi tới lượt làm)
-13. **LAN Multiplayer** — 2 lựa chọn lớn: `TẠO PHÒNG` (chờ người khác kết nối) /
-    `THAM GIA PHÒNG` (nhập IP hoặc tìm phòng trong LAN); sau khi kết nối hiện
-    Player 1 vs Player 2 → `BẮT ĐẦU TRẬN ĐẤU`; có thể auto-discover phòng trong cùng
-    mạng
+13. **LAN Multiplayer** — card/nút tự vẽ tối viền vàng, giữ nền/chân dung. Header
+    sát trên; Mở phòng và Về sảnh neo dưới. Nội dung cuộn gồm địa chỉ + sao chép,
+    người chơi, ba thể thức giờ, danh sách phòng và nhập IP thủ công có IME Go.
+    Khi host, hiện đối thủ chờ + thể thức đã chọn, tắt nút chính và đổi nút dưới
+    thành Huỷ phòng; ván tự bắt đầu khi người khác vào. Vẫn cho chọn phòng khác
+    khi đang host; phòng bận/lệch phiên bản không vào được. Giữ hướng dẫn cùng
+    Wi-Fi, hotspot và nhập IP khi discovery bị mạng chặn.
 14. **Local Multiplayer (2 người cùng máy)** — màn setup dùng hai card tự vẽ tối
     viền vàng, avatar tròn và ô tên; Người chơi 1 cầm Trắng, Người chơi 2 cầm Đen.
     Chọn Không giới hạn/5/10/30 phút trong lưới nút 2×2. Header/back neo sát trên;

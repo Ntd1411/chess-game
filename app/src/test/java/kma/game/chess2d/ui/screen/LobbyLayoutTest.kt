@@ -15,19 +15,12 @@ class LobbyLayoutTest {
     }
 
     @Test
-    fun `man chon che do va chon AI nam gon trong khung`() {
+    fun `man chon che do nam gon trong khung`() {
         val cards = (0 until 5).map(ModeSelectLayout::card)
         for (i in 0 until cards.size - 1) assertFalse(cards[i].overlaps(cards[i + 1]))
         assertTrue(cards.last().bottom <= ModeSelectLayout.Ornament.y)
         assertTrue(ModeSelectLayout.Ornament.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
 
-        val ai = with(AiSelectLayout) { listOf(Name, Stars, Description, Start) }
-        for (i in ai.indices) for (j in i + 1 until ai.size) assertFalse(ai[i].overlaps(ai[j]))
-        assertTrue(AiSelectLayout.Stars.bottom <= AiSelectLayout.THUMB_Y)
-        assertTrue(AiSelectLayout.THUMB_Y + AiSelectLayout.THUMB <= AiSelectLayout.Description.y)
-        assertTrue(AiSelectLayout.Start.bottom <= 1920 - LobbyLayout.SAFE_MARGIN)
-        assertEquals(1080, AiCarouselX.first() + AiCarouselX.last() + AiSelectLayout.THUMB)
-        for (i in 0 until AiCarouselX.size - 1) assertTrue(AiCarouselX[i] + AiSelectLayout.THUMB < AiCarouselX[i + 1])
     }
 
     @Test
