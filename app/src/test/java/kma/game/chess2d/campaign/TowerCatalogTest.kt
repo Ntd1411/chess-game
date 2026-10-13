@@ -1,6 +1,7 @@
 package kma.game.chess2d.campaign
 
 import java.io.File
+import kma.game.chess2d.R
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.puzzle.Puzzle
 import kma.game.chess2d.puzzle.PuzzleCatalog
@@ -34,6 +35,33 @@ class TowerCatalogTest {
     }
 
     @Test
+    fun `49 loi dan rieng khong lap va chi mot den hai cau`() {
+        val introductions = floors().map { it.teaser }
+        assertEquals(49, introductions.distinct().size)
+        introductions.forEach { text ->
+            val sentences = text.split(Regex("[.!?…]+")).count { it.isNotBlank() }
+            assertTrue(text, sentences in 1..2)
+            assertTrue(text, text.length <= 180)
+            assertTrue(text, !text.contains("Tìm chuỗi", ignoreCase = true))
+            assertTrue(text, !text.contains("dấu tay đã khô", ignoreCase = true))
+        }
+    }
+
+    @Test
+    fun `boss tai dau co loi chao rieng va lan dau giu thoai AI`() {
+        val allFloors = floors()
+        val bosses = allFloors.filter { it.kind == NodeKind.BOSS }
+        assertEquals(7, bosses.map { TowerBosses.greeting(it) }.filterNotNull().distinct().size)
+        assertEquals(R.string.ai_knight_quote, TowerBosses.greeting(allFloors[13]))
+        assertEquals(R.string.tower_knight_rematch_quote, TowerBosses.greeting(allFloors[34]))
+        assertEquals(R.string.ai_queen_quote, TowerBosses.greeting(allFloors[20]))
+        assertEquals(R.string.tower_queen_rematch_quote, TowerBosses.greeting(allFloors[41]))
+        bosses.filter { it.number != 35 && it.number != 42 }.forEach {
+            assertEquals(TowerBosses.character(it)!!.quote, TowerBosses.greeting(it))
+        }
+    }
+
+    @Test
     fun `ca 49 tang deu hop le theo engine`() {
         // validateAll ném lỗi nếu có tầng nào thiếu dữ liệu, FEN hỏng hay lệch loại/mục tiêu.
         TowerCatalog.validateAll(floors(), puzzles())
@@ -50,7 +78,7 @@ class TowerCatalogTest {
         val byNumber = floors().associateBy { it.number }
         assertEquals(NodeKind.BOSS, byNumber.getValue(21).kind) // boss Aria
         assertEquals(NodeKind.BOSS, byNumber.getValue(42).kind) // true reveal
-        assertEquals(NodeKind.STORY, byNumber.getValue(45).kind) // Aria tiết lộ lý do
+        assertEquals(NodeKind.PUZZLE, byNumber.getValue(45).kind) // Aria tiết lộ lý do
         assertEquals(NodeKind.BOSS, byNumber.getValue(49).kind) // final reveal
     }
 
@@ -74,21 +102,34 @@ class TowerCatalogTest {
     }
 
     @Test
-    fun `boss manh hon tang thuong mot bac tran la hard`() {
-        val byNumber = floors().associateBy { it.number }
-        assertEquals(FloorGoal.DefeatAi(Difficulty.MEDIUM), byNumber.getValue(7).goal)
-        assertEquals(FloorGoal.DefeatAi(Difficulty.HARD), byNumber.getValue(21).goal)
-        assertEquals(FloorGoal.DefeatAi(Difficulty.HARD), byNumber.getValue(49).goal)
+    fun `boss dung roster AI va tang suc manh tung chuong`() {
+        val bosses = floors().filter { it.kind == NodeKind.BOSS }
+        assertEquals(listOf(7, 14, 21, 28, 35, 42, 49), bosses.map { it.number })
+        assertEquals(listOf("chess_mage", "dark_knight", "blood_queen", "dark_king",
+            "dark_knight", "blood_queen", "hidden"), bosses.map { it.bossId })
+        val strengths = bosses.map { (it.goal as FloorGoal.DefeatAi).strength!! }
+        strengths.zipWithNext().forEach { (a, b) ->
+            assertTrue(b.depth > a.depth)
+            assertTrue(b.timeBudgetMillis > a.timeBudgetMillis)
+            assertTrue(b.topMoveChoices <= a.topMoveChoices)
+            assertTrue(b.blunderChance <= a.blunderChance)
+        }
+        bosses.forEach { assertNotNull(TowerBosses.character(it)) }
     }
 
     @Test
-    fun `it cau do hon so chuong van dung duoc`() {
-        // Chỉ 1 câu đố mà vẫn dựng đủ 49 tầng: các tầng PUZZLE dùng lại câu đó.
-        val floors = TowerCatalog.build(puzzleCount = 1)
-        assertEquals(TowerCatalog.FLOOR_COUNT, floors.size)
-        for (floor in floors.filter { it.kind == NodeKind.PUZZLE }) {
-            assertEquals(FloorGoal.SolvePuzzle(0), floor.goal)
-        }
+    fun `sau puzzle moi chuong co chi so rieng va elo tang tu 800`() {
+        val puzzles = floors().filter { it.kind == NodeKind.PUZZLE }
+        assertEquals(42, puzzles.size)
+        assertEquals((0 until 42).toList(), puzzles.map { (it.goal as FloorGoal.SolvePuzzle).puzzleIndex })
+        assertEquals((0 until 42).map { 800 + 25 * it }, puzzles.map { it.estimatedElo })
+        assertTrue(puzzles.all { it.number % 7 != 0 && it.teaser.isNotBlank() })
+        assertTrue(floors().take(6).all { it.kind == NodeKind.PUZZLE })
+    }
+
+    @Test
+    fun `khong lap puzzle khi thieu du lieu`() {
+        assertTrue(runCatching { TowerCatalog.build(41) }.isFailure)
     }
 
     @Test

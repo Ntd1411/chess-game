@@ -7,7 +7,7 @@ import org.junit.Test
 
 class TowerRewardsTest {
 
-    private val floors = TowerCatalog.build(puzzleCount = 40)
+    private val floors = TowerCatalog.build(puzzleCount = 42)
 
     @Test
     fun `chua qua tang nao thi vi rong`() {

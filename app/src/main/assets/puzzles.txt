@@ -1,15 +1,44 @@
-# Câu đố cờ đóng gói sẵn trong app (mục 7.3).
-#
-# Mỗi dòng là một câu đố: <tên>|<FEN>|<các nước giải viết kiểu UCI, cách nhau bằng dấu cách>
-# Dòng trống và dòng bắt đầu bằng dấu # bị bỏ qua.
-#
-# Dùng file văn bản thay vì JSON để không phải thêm thư viện giải mã nào vào :app.
-# Toàn bộ nước ở đây đều được engine duyệt lại trong test JVM, nên một câu đố viết
-# sai FEN hay sai nước sẽ làm test đỏ ngay chứ không đợi tới lúc chạy trên máy.
-# Nội dung câu đố tự soạn, không lấy từ bộ dự liệu bên ngoài nên không vướng license.
-
-Chiếu hết hàng cuối|6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1|a1a8
-Hậu vào hàng tám|6k1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1|e1e8
-Ăn xe đối phương|r5k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1|a1a8
-Phong cấp thành hậu|8/P6k/8/8/8/8/8/7K w - - 0 1|a7a8q
-Xe lên hàng tám|6k1/5ppp/8/8/8/8/8/4R1K1 w - - 0 1|e1e8
+# Composed checking combinations. Elo is an estimate, not a measured rating.
+# title|FEN|UCI solution|estimated Elo|mate in (continuous checks)
+Chuỗi chiếu 01 — chiếu hết trong 1 nước|8/2p5/8/8/7Q/4p2K/4B3/6k1 w - - 0 1|h4e1|800|1
+Chuỗi chiếu 02 — chiếu hết trong 1 nước|8/7K/3R4/7k/1R6/8/8/1r6 w - - 0 1|d6d5|825|1
+Chuỗi chiếu 03 — chiếu hết trong 1 nước|3k4/6R1/8/5R2/8/8/7K/8 w - - 0 1|f5f8|850|1
+Chuỗi chiếu 04 — chiếu hết trong 1 nước|4k3/Q7/6R1/r7/3K4/8/8/8 w - - 0 1|g6g8|875|1
+Chuỗi chiếu 05 — chiếu hết trong 1 nước|4Q3/8/8/8/K7/8/1R6/6k1 w - - 0 1|e8e1|900|1
+Chuỗi chiếu 06 — chiếu hết trong 1 nước|8/5K1k/8/8/8/1N6/4R3/8 w - - 0 1|e2h2|925|1
+Chuỗi chiếu 07 — chiếu hết trong 1 nước|7R/K7/8/k7/4R3/4p3/8/8 w - - 0 1|h8h5|950|1
+Chuỗi chiếu 08 — chiếu hết trong 1 nước|6k1/3R4/2R5/4p2p/8/6K1/8/8 w - - 0 1|c6c8|975|1
+Chuỗi chiếu 09 — chiếu hết trong 1 nước|8/8/1p6/k7/4Q3/K7/6R1/8 w - - 0 1|e4a4|1000|1
+Chuỗi chiếu 10 — chiếu hết trong 1 nước|6k1/5p2/7K/8/8/1NR5/8/8 w - - 0 1|c3c8|1025|1
+Chuỗi chiếu 11 — chiếu hết trong 1 nước|8/8/8/1Q6/1K6/8/R7/4k3 w - - 0 1|b5e2|1050|1
+Chuỗi chiếu 12 — chiếu hết trong 1 nước|1r6/8/5Q2/8/4N3/8/8/4k1K1 w - - 0 1|f6f1|1075|1
+Chuỗi chiếu 13 — chiếu hết trong 2 nước|8/8/2QB2Kp/8/8/8/k7/8 w - - 0 1|c6c2 a2a1 d6e5|1100|2
+Chuỗi chiếu 14 — chiếu hết trong 2 nước|5k2/3Q4/1p6/8/3N4/8/8/7K w - - 0 1|d4e6 f8g8 d7g7|1125|2
+Chuỗi chiếu 15 — chiếu hết trong 2 nước|5k2/1QK5/8/8/8/8/6R1/8 w - - 0 1|b7f3 f8e8 g2e2|1150|2
+Chuỗi chiếu 16 — chiếu hết trong 2 nước|8/8/6K1/1Q6/2N5/8/8/2k5 w - - 0 1|b5b2 c1d1 b2d2|1175|2
+Chuỗi chiếu 17 — chiếu hết trong 2 nước|8/1R6/6K1/8/8/2R5/7k/8 w - - 0 1|b7b2 h2h1 c3c1|1200|2
+Chuỗi chiếu 18 — chiếu hết trong 2 nước|1K6/1p6/8/7Q/p7/5R2/8/6k1 w - - 0 1|h5g4 g1h2 f3h3|1225|2
+Chuỗi chiếu 19 — chiếu hết trong 2 nước|8/8/4B3/8/6K1/2Q5/7k/8 w - - 0 1|c3g3 h2h1 e6d5|1250|2
+Chuỗi chiếu 20 — chiếu hết trong 2 nước|8/8/3Q4/8/2N5/4K3/k7/8 w - - 0 1|d6a3 a2b1 a3b2|1275|2
+Chuỗi chiếu 21 — chiếu hết trong 2 nước|2K5/k7/2R4B/8/8/1p4p1/8/8 w - - 0 1|h6e3 a7a8 c6a6|1300|2
+Chuỗi chiếu 22 — chiếu hết trong 2 nước|8/8/k4p2/8/8/1R5Q/1p3K2/8 w - - 0 1|h3c8 a6a7 c8b7|1325|2
+Chuỗi chiếu 23 — chiếu hết trong 2 nước|5K2/8/8/4p3/5R2/Q7/8/7k w - - 0 1|a3h3 h1g1 f4f1|1350|2
+Chuỗi chiếu 24 — chiếu hết trong 2 nước|4K3/k7/8/7r/8/8/4R3/1R6 w - - 0 1|e2a2 h5a5 a2a5|1375|2
+Chuỗi chiếu 25 — chiếu hết trong 2 nước|2Q5/4p3/7K/8/8/3N4/8/1k6 w - - 0 1|c8c1 b1a2 c1b2|1400|2
+Chuỗi chiếu 26 — chiếu hết trong 2 nước|3N2k1/8/1Q6/8/8/8/8/1K6 w - - 0 1|b6g6 g8h8 d8f7|1425|2
+Chuỗi chiếu 27 — chiếu hết trong 2 nước|3B4/8/Q7/6K1/8/7k/8/8 w - - 0 1|a6f1 h3g3 d8c7|1450|2
+Chuỗi chiếu 28 — chiếu hết trong 2 nước|8/1p4Q1/8/4R3/1K6/8/8/2k5 w - - 0 1|e5e1 c1d2 g7c3|1475|2
+Chuỗi chiếu 29 — chiếu hết trong 2 nước|8/8/8/2KR2p1/6p1/5Q2/8/1k6 w - - 0 1|f3b3 b1c1 d5d1|1500|2
+Chuỗi chiếu 30 — chiếu hết trong 2 nước|k7/3Q4/5B1K/8/8/8/8/8 w - - 0 1|d7c8 a8a7 f6d4|1525|2
+Chuỗi chiếu 31 — chiếu hết trong 3 nước|2k5/8/7K/8/8/6R1/8/3R4 w - - 0 1|g3c3 c8b8 d1b1 b8a8 c3a3|1550|3
+Chuỗi chiếu 32 — chiếu hết trong 3 nước|1K2N3/8/7k/8/8/2Q4p/8/8 w - - 0 1|c3g7 h6h5 e8f6 h5h4 g7g4|1575|3
+Chuỗi chiếu 33 — chiếu hết trong 3 nước|2k5/5p2/4R1Q1/6p1/8/6K1/8/8 w - - 0 1|g6g8 c8d7 g8f7 d7d8 e6e8|1600|3
+Chuỗi chiếu 34 — chiếu hết trong 3 nước|5R2/8/8/2r5/R7/8/1K6/4k3 w - - 0 1|a4e4 e1d2 f8d8 c5d5 d8d5|1625|3
+Chuỗi chiếu 35 — chiếu hết trong 3 nước|5k2/8/5K2/8/7N/8/8/4R3 w - - 0 1|h4g6 f8g8 e1e8 g8h7 e8h8|1650|3
+Chuỗi chiếu 36 — chiếu hết trong 3 nước|8/3K3k/2QR4/8/8/8/8/8 w - - 0 1|d6h6 h7g8 c6g6 g8f8 h6h8|1675|3
+Chuỗi chiếu 37 — chiếu hết trong 3 nước|1R6/8/3pK3/1p1R4/8/8/8/2k5 w - - 0 1|b8c8 c1b2 d5b5 b2a3 c8a8|1700|3
+Chuỗi chiếu 38 — chiếu hết trong 3 nước|8/1R1r4/k7/2K5/6R1/8/8/8 w - - 0 1|b7b6 a6a5 b6b5 a5a6 g4a4|1725|3
+Chuỗi chiếu 39 — chiếu hết trong 3 nước|3k4/8/7Q/1K6/8/R6p/8/8 w - - 0 1|a3a8 d8e7 a8a7 e7e8 h6h8|1750|3
+Chuỗi chiếu 40 — chiếu hết trong 3 nước|3k4/8/1N2p2K/8/8/6Q1/5p2/8 w - - 0 1|g3d6 d8e8 d6e6 e8f8 b6d7|1775|3
+Chuỗi chiếu 41 — chiếu hết trong 3 nước|8/6p1/6R1/3Q4/k1p5/8/4K3/8 w - - 0 1|g6a6 a4b4 a6b6 b4a4 d5a8|1800|3
+Chuỗi chiếu 42 — chiếu hết trong 3 nước|1k5K/8/4p3/8/5p2/5B2/8/3Q4 w - - 0 1|d1d8 b8a7 d8c7 a7a6 f3e2|1825|3

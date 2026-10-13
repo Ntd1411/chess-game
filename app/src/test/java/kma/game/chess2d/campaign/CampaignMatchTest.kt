@@ -2,6 +2,7 @@ package kma.game.chess2d.campaign
 
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.Engine
+import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Move
 import kma.game.chess2d.puzzle.PuzzleCatalog
 import org.junit.Assert.assertEquals
@@ -157,12 +158,34 @@ class CampaignMatchTest {
 
     @Test
     fun `moi tang co van co the dung duoc ma khong loi`() {
-        val allFloors = TowerCatalog.build(puzzles.size)
+        val catalog = kma.game.chess2d.puzzle.PuzzleCatalog.parse(
+            java.io.File("src/main/assets/puzzles.txt").readText(),
+        )
+        val allFloors = TowerCatalog.build(catalog.size)
         for (floor in allFloors) {
-            if (floor.goal is FloorGoal.Claim) continue
-            val match = CampaignMatch(floor, puzzles)
+            val match = CampaignMatch(floor, catalog)
             assertEquals("tầng ${floor.number}", FloorResult.ONGOING, match.result)
             assertTrue("tầng ${floor.number}", match.snapshot().game.pieces.isNotEmpty())
+        }
+    }
+
+    @Test
+    fun `giai du 42 puzzle qua dung luong match va khong can AI tim nuoc`() {
+        val catalog = kma.game.chess2d.puzzle.PuzzleCatalog.parse(
+            java.io.File("src/main/assets/puzzles.txt").readText(),
+        )
+        for (floor in TowerCatalog.build(catalog.size).filter { it.kind == NodeKind.PUZZLE }) {
+            val puzzle = catalog[(floor.goal as FloorGoal.SolvePuzzle).puzzleIndex]
+            val moves = kma.game.chess2d.puzzle.PuzzleCatalog.validate(puzzle)
+            val match = CampaignMatch(floor, catalog, seed = 42)
+            for (index in moves.indices step 2) {
+                assertTrue("tầng ${floor.number} bước $index", match.play(moves[index]))
+                assertFalse(match.needsAiReply)
+            }
+            assertEquals(FloorResult.WON, match.result)
+            assertEquals(puzzle.mateIn, match.playerMoves)
+            assertEquals(0, match.mistakes)
+            assertEquals(GameStatus.CHECKMATE, match.snapshot().game.status)
         }
     }
 

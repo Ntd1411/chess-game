@@ -42,6 +42,16 @@ class PuzzleCatalogTest {
     }
 
     @Test
+    fun `42 the rieng co elo tang va chuoi giai ket thuc chieu het`() {
+        val puzzles = PuzzleCatalog.parse(assetText())
+        assertEquals(42, puzzles.size)
+        assertEquals(42, puzzles.map { it.startFen }.toSet().size)
+        assertEquals((0 until 42).map { 800 + 25 * it }, puzzles.map { it.estimatedElo })
+        assertEquals(listOf(1, 2, 3), puzzles.map { it.mateIn }.distinct())
+        puzzles.forEach { PuzzleCatalog.validate(it) }
+    }
+
+    @Test
     fun `dong chu thich va dong trong bi bo qua`() {
         val text = """
             # chú thích

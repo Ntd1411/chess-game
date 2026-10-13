@@ -14,6 +14,27 @@ Không cần xin phép trước khi thêm dòng này — đây là log bắt bu�
 
 ---
 
+## 2026-10-14 02:20 GMT+7 — Chỉnh ba vấn đề lời thoại và lời chào boss tái đấu
+- Thoại Aria tầng 45 nói rõ vòng lặp bắt đầu khi thất bại ở đỉnh tháp, không phải vừa đến đỉnh; đổi câu hỏi của Người Lữ Hành sang cách nói trung tính, không gọi Aria là “bà”
+- Hiệp Sĩ tầng 35 và Nữ Hoàng Máu tầng 42 có lời chào tái đấu riêng; giữ lời chào mặc định ở lần đầu và màn chọn AI
+- Lời dẫn tầng 20 dùng hình ảnh “dấu tay mờ trên đá” thay cho “dấu tay đã khô”
+
+## 2026-10-14 02:13 GMT+7 — Viết lời dẫn riêng cho đủ 49 tầng, bỏ lặp theo chương
+- Thay 7 câu mẫu dùng chung theo chương bằng 49 đoạn giới thiệu riêng, mỗi tầng 1–2 câu ngắn gắn cảnh, nhân vật hoặc di vật; giữ các mốc cốt truyện và không thêm hướng dẫn chơi
+- Thêm test kiểm tra 49 lời dẫn khác nhau, không quá hai câu và không chứa câu “Tìm chuỗi”
+
+## 2026-10-14 02:06 GMT+7 — Rút gọn giới thiệu tầng còn 1–2 câu
+- Bỏ câu hướng dẫn lặp “Tìm chuỗi chiếu…” và câu yêu cầu thắng ván khỏi lời dẫn tầng
+- Panel chọn tầng chỉ giữ lời dẫn ngắn, tên/chân dung boss, nhãn độ khó và phần thưởng; bỏ đoạn hướng dẫn, hồ sơ dài và thoại trùng. Lời chào và tính cách boss trong màn đấu vẫn giữ nguyên
+
+## 2026-10-14 01:54 GMT+7 — Đổi Tháp Cờ sang 42 puzzle tăng dần và 7 boss, thêm bảng xem trước tầng
+- Mỗi chương gồm 6 puzzle riêng rồi một ván boss đầy đủ ở tầng chia hết cho 7; Elo puzzle ước lượng bắt đầu từ 800, giữ tiến độ và sáu mốc thoại
+- Boss dùng nhân vật, chân dung, tính cách và lời thoại từ danh sách AI; mỗi chương tăng giới hạn tìm kiếm thật, không gán Elo chưa kiểm chứng cho boss
+- Bản đồ cho chọn cả tầng khóa để xem mô tả, phần thưởng lần đầu và di vật mở ở tầng đó trong panel bên cạnh; chỉ tầng đã mở mới được vào chơi
+- Bộ 42 thế có đáp án chuỗi chiếu liên tiếp chiếu hết trong 1–3 nước; Elo tăng 25 mỗi puzzle đến 1825 nhưng chưa được calibration, hồ sơ AI vẫn dùng tính cách/phong cách nhập vai chứ không đổi thuật toán theo nhân vật
+- Tiến độ không reset; số dư suy ra từ các tầng đã qua được tính lại theo bảng thưởng mới
+- Kiểm tra: assembleDebug và 64 test campaign/puzzle/layout liên quan đều đạt; AI 24 đạt, 1 self-play dài bỏ qua theo cờ môi trường. Toàn bộ app 233/234 đạt, còn lỗi Profile SubScreenLayoutTest.profileBlocksDoNotOverlap đã có từ trước, không sửa ngoài phạm vi. Chưa kiểm tra giao diện trên thiết bị/emulator
+
 ## 2026-10-14 01:01 GMT+7 — Tự vẽ player/timer đơn giản và đưa nước đi lên dải ngang đầu màn chơi
 - Thay frame ảnh bằng hai card cùng bố cục, nền tối bo góc và viền mảnh; avatar tròn, tên và quân đã ăn căn trái, timer chữ monospace lớn bên phải
 - Nhấn viền/timer vàng cho bên đang tới lượt, cảnh báo đỏ khi ít giờ; giữ nguyên đồng hồ thật và ký hiệu ∞ cho ván không giới hạn, không nạp trước hai frame ảnh cũ

@@ -9,8 +9,9 @@ import kma.game.chess2d.campaign.TowerCatalog
 /**
  * Một đối thủ AI trong màn "Chọn đối thủ AI" (xem `docs/design/story-bible.md`).
  *
- * Engine chỉ có ba cấp độ ([Difficulty]); sức mạnh thật của nhân vật **chỉ** đến từ
- * [difficulty]. Phong cách, tính cách và câu thoại là phần mô tả/nhân vật, không đổi
+ * In regular AI selection, strength comes from [difficulty]. Campaign rematches
+ * reuse this identity with chapter-specific AiStrength search limits.
+ * Phong cách, tính cách và câu thoại là phần mô tả/nhân vật, không đổi
  * cách AI nghĩ — nên số sao và tốc độ nghĩ hiển thị đều suy ra từ [difficulty] chứ không
  * khai báo riêng, để màn hình không bao giờ hứa một độ khó mà AI không có.
  *

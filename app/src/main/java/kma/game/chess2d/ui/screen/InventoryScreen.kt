@@ -170,9 +170,9 @@ fun InventoryScreen(
     }
 }
 
-private class RelicArt(@DrawableRes val icon: Int, @StringRes val name: Int, @StringRes val description: Int)
+internal class RelicArt(@DrawableRes val icon: Int, @StringRes val name: Int, @StringRes val description: Int)
 
-private fun relicArt(relic: Relic): RelicArt = when (relic) {
+internal fun relicArt(relic: Relic): RelicArt = when (relic) {
     Relic.ANCIENT_KEY -> RelicArt(R.drawable.item_ancient_key, R.string.relic_ancient_key_name, R.string.relic_ancient_key_desc)
     Relic.SCROLL -> RelicArt(R.drawable.item_scroll, R.string.relic_scroll_name, R.string.relic_scroll_desc)
     Relic.POTION -> RelicArt(R.drawable.item_potion, R.string.relic_potion_name, R.string.relic_potion_desc)

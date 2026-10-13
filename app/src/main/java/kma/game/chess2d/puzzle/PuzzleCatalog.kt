@@ -15,6 +15,8 @@ data class Puzzle(
     val title: String,
     val startFen: String,
     val solutionUci: List<String>,
+    val estimatedElo: Int? = null,
+    val mateIn: Int? = null,
 )
 
 /**
@@ -45,13 +47,15 @@ object PuzzleCatalog {
         .filter { it.isNotEmpty() && !it.startsWith("#") }
         .map { line ->
             val parts = line.split('|')
-            require(parts.size == 3) { "câu đố sai định dạng: $line" }
+            require(parts.size in 3..5) { "câu đố sai định dạng: $line" }
             val moves = parts[2].trim().split(' ').filter { it.isNotEmpty() }
             require(moves.isNotEmpty()) { "câu đố không có nước giải: $line" }
             Puzzle(
                 title = parts[0].trim(),
                 startFen = parts[1].trim(),
                 solutionUci = moves,
+                estimatedElo = parts.getOrNull(3)?.trim()?.toInt()?.also { require(it >= 800) },
+                mateIn = parts.getOrNull(4)?.trim()?.toInt()?.also { require(it > 0) },
             )
         }
         .toList()
@@ -69,7 +73,17 @@ object PuzzleCatalog {
             val move = Engine.legalMoves(board).firstOrNull { it.toUci() == uci }
                 ?: error("\"${puzzle.title}\": nước thứ ${index + 1} ($uci) không hợp lệ")
             decoded.add(move)
+            val whiteMoved = board.whiteToMove
             board.makeMove(move)
+            if (puzzle.mateIn != null && whiteMoved) {
+                check(board.isInCheck()) { "${puzzle.title}: every white move must check" }
+            }
+        }
+        puzzle.mateIn?.let { mateIn ->
+            check(decoded.size == mateIn * 2 - 1) { "${puzzle.title}: incorrect mate length" }
+            check(kma.game.chess2d.engine.Rules.status(board) == kma.game.chess2d.engine.GameStatus.CHECKMATE) {
+                "${puzzle.title}: solution must end in checkmate"
+            }
         }
         return decoded
     }

@@ -61,8 +61,10 @@ sẵn** (chưa commit vào git trước khi agent này kiểm tra, đã commit k
    chức năng gọn: Rút lui / Gợi ý / Lịch sử / Cài đặt — **không nhồi nút**, bàn cờ
    phải là trọng tâm
 6. **Tower Map (Exploration)** — tiêu đề "THÁP CỜ — TẦNG N/49"; bản đồ dạng đường đi
-   node-to-node; loại node: Battle / Story / Treasure / Puzzle / Boss / Secret; tầng
-   chưa mở = khóa; tầng hiện tại = phát sáng vàng
+   node-to-node trong dải cuộn bên trái; 6 Puzzle rồi 1 Boss mỗi chương. Panel chữ
+   nhật bên phải hiện sơ lược cốt truyện, câu thoại/hồ sơ boss, độ khó và phần thưởng
+   của node đang chọn. Tầng chưa mở vẫn chọn xem trước nhưng không vào được; tầng
+   hiện tại phát sáng vàng. Thưởng đã nhận được đánh dấu khi chọn tầng cũ.
 7. **Dialogue** — background cảnh (đại sảnh/phòng ngai vàng/hành lang/đỉnh tháp);
    nhân vật đứng trái/phải; dialogue box lớn phía dưới + nút `▶` tiếp tục; có thể có
    lựa chọn nhánh thoại (vd. `[Tôi sẽ thử.]` / `[Tôi không còn lựa chọn.]`)

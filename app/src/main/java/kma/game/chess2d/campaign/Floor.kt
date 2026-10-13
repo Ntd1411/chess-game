@@ -1,6 +1,7 @@
 package kma.game.chess2d.campaign
 
 import kma.game.chess2d.ai.Difficulty
+import kma.game.chess2d.ai.AiStrength
 
 /**
  * Loại node trên bản đồ Tháp Cờ (xem `docs/design/ui-screens.md`, màn Tower Map).
@@ -33,7 +34,7 @@ enum class NodeKind {
 sealed interface FloorGoal {
 
     /** Chiếu hết AI. */
-    data class DefeatAi(val difficulty: Difficulty) : FloorGoal
+    data class DefeatAi(val difficulty: Difficulty, val strength: AiStrength? = null) : FloorGoal
 
     /** Giải đúng câu đố số [puzzleIndex] trong danh sách `PuzzleCatalog`. */
     data class SolvePuzzle(val puzzleIndex: Int) : FloorGoal
@@ -61,4 +62,7 @@ data class Floor(
     val goal: FloorGoal,
     val startFen: String? = null,
     val hasDialogue: Boolean = false,
+    val estimatedElo: Int? = null,
+    val bossId: String? = null,
+    val teaser: String = "",
 )

@@ -2,6 +2,9 @@ package kma.game.chess2d.ui.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
@@ -26,6 +29,7 @@ import kma.game.chess2d.campaign.FloorGoal
 import kma.game.chess2d.campaign.FloorResult
 import kma.game.chess2d.campaign.LossReason
 import kma.game.chess2d.campaign.NodeKind
+import kma.game.chess2d.campaign.TowerBosses
 import kma.game.chess2d.engine.GameStatus
 import kma.game.chess2d.engine.Piece
 import kma.game.chess2d.game.PauseItem
@@ -118,18 +122,23 @@ fun CampaignBattleRoute(
     }
     val isPuzzle = goal is FloorGoal.SolvePuzzle
     val isBoss = floor.kind == NodeKind.BOSS
+    val boss = TowerBosses.character(floor)
+    var showBossGreeting by rememberSaveable(floor.number, attempt) { mutableStateOf(boss != null) }
+    val puzzle = (goal as? FloorGoal.SolvePuzzle)?.let { puzzles[it.puzzleIndex] }
 
     MatchScaffold(
         opponent = MatchPlayer(
-            name = if (isPuzzle) floor.title else stringResource(R.string.match_computer),
+            name = if (isPuzzle) floor.title else boss?.let { stringResource(it.name) }
+                ?: stringResource(R.string.match_computer),
             subtitle = when {
                 state.game.aiThinking -> stringResource(R.string.match_thinking)
-                isPuzzle -> stringResource(R.string.tower_kind_puzzle)
+                isPuzzle -> stringResource(R.string.tower_puzzle_elo, floor.estimatedElo ?: 800)
+                boss != null -> stringResource(boss.personality)
                 else -> stringResource(labelOf(state.game.difficulty))
             },
             piece = Piece.of(Piece.KING, false),
             active = !state.game.whiteToMove,
-            portrait = if (isBoss) R.drawable.portrait_golden_queen else R.drawable.portrait_tower_keeper,
+            portrait = boss?.portrait ?: R.drawable.portrait_tower_keeper,
             hp = if (isPuzzle) null else MatchHp.fromLost(state.game.takenFromBlack),
             captured = state.game.takenFromWhite,
             advantage = -state.game.materialBalance,
@@ -173,7 +182,8 @@ fun CampaignBattleRoute(
                 onClick = { showPause = true },
             ),
         ),
-        headline = headline,
+        headline = if (isPuzzle && state.mistakes == 0 && puzzle?.mateIn != null)
+            stringResource(R.string.tower_puzzle_goal, puzzle.mateIn) else headline,
         modifier = modifier,
         sanMoves = state.game.sanMoves,
     ) {
@@ -189,6 +199,17 @@ fun CampaignBattleRoute(
             palette = appearance.boardPalette,
             pieceTheme = appearance.pieceTheme,
             modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    if (showBossGreeting && boss != null) {
+        AlertDialog(
+            onDismissRequest = { showBossGreeting = false },
+            title = { Text(stringResource(boss.name)) },
+            text = { Text(stringResource(TowerBosses.greeting(floor) ?: boss.quote) + "\n\n" + stringResource(boss.personality)) },
+            confirmButton = {
+                TextButton(onClick = { showBossGreeting = false }) { Text(stringResource(R.string.tower_enter)) }
+            },
         )
     }
 

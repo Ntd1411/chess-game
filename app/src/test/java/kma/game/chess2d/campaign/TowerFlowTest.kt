@@ -13,7 +13,7 @@ import org.junit.Test
  */
 class TowerFlowTest {
 
-    private val floors = TowerCatalog.build(puzzleCount = 5)
+    private val floors = TowerCatalog.build(puzzleCount = 42)
 
     @Test
     fun `thoai mo dau chi co o dung 6 tang moc`() {
@@ -43,6 +43,15 @@ class TowerFlowTest {
     }
 
     @Test
+    fun `thoai tang 45 gan vong lap voi that bai va khong goi Aria la ba`() {
+        val lines = FloorDialogues.intro(45)
+        assertTrue(lines.any { it.speaker == Speaker.ARIA && it.text.contains("thất bại ở đỉnh tháp") })
+        assertTrue(lines.none { it.text.contains("mỗi lần ngươi lên tới đỉnh") })
+        val traveler = lines.single { it.speaker == Speaker.TRAVELER }
+        assertEquals("Vậy vì sao lần này tôi được biết sự thật?", traveler.text)
+    }
+
+    @Test
     fun `thoai ket chi co o tang cuoi`() {
         val withEpilogue = (1..TowerCatalog.FLOOR_COUNT).filter { FloorDialogues.epilogue(it).isNotEmpty() }
         assertEquals(listOf(TowerCatalog.FLOOR_COUNT), withEpilogue)
@@ -62,18 +71,18 @@ class TowerFlowTest {
     }
 
     @Test
-    fun `tang cot truyen 45 di tu thoai thang toi chien thang khong co van`() {
+    fun `tang 45 xem thoai roi phai giai puzzle`() {
         val floor = floors[44]
-        assertEquals(NodeKind.STORY, floor.kind)
+        assertEquals(NodeKind.PUZZLE, floor.kind)
         assertEquals(TowerStage.INTRO, TowerFlow.onSelect(floor))
-        assertEquals(TowerStage.VICTORY, TowerFlow.afterIntro(floor))
+        assertEquals(TowerStage.BATTLE, TowerFlow.afterIntro(floor))
     }
 
     @Test
-    fun `tang kho bau khong thoai di thang toi chien thang`() {
+    fun `tang 4 khong con nhan thuong mien phi`() {
         val floor = floors[3] // tầng 4: kho báu
-        assertEquals(NodeKind.TREASURE, floor.kind)
-        assertEquals(TowerStage.VICTORY, TowerFlow.onSelect(floor))
+        assertEquals(NodeKind.PUZZLE, floor.kind)
+        assertEquals(TowerStage.BATTLE, TowerFlow.onSelect(floor))
     }
 
     @Test

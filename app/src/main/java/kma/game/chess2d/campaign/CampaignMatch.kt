@@ -1,5 +1,6 @@
 package kma.game.chess2d.campaign
 
+import kma.game.chess2d.ai.AiStrength
 import kma.game.chess2d.ai.Ai
 import kma.game.chess2d.ai.Difficulty
 import kma.game.chess2d.engine.CaptureTally
@@ -220,7 +221,12 @@ class CampaignMatch(
         val copy = Engine.fromFen(startFen)
         for (move in moves) copy.makeMove(move)
 
-        val move = ai.chooseMove(board = copy, difficulty = difficulty, isActive = isActive)
+        val move = ai.chooseMove(
+            board = copy,
+            difficulty = difficulty,
+            isActive = isActive,
+            strength = (goal as? FloorGoal.DefeatAi)?.strength ?: AiStrength.from(difficulty),
+        )
         return if (isActive()) move else null
     }
 

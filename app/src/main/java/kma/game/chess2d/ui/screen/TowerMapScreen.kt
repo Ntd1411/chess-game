@@ -5,7 +5,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +23,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalDensity
@@ -29,8 +36,11 @@ import kma.game.chess2d.R
 import kma.game.chess2d.campaign.Floor
 import kma.game.chess2d.campaign.FloorStatus
 import kma.game.chess2d.campaign.NodeKind
+import kma.game.chess2d.campaign.Relic
 import kma.game.chess2d.campaign.TowerCatalog
 import kma.game.chess2d.campaign.TowerProgress
+import kma.game.chess2d.campaign.TowerRewards
+import kma.game.chess2d.campaign.TowerBosses
 import kma.game.chess2d.ui.art.ArtImage
 import kma.game.chess2d.ui.art.ArtSizes
 import kma.game.chess2d.ui.art.DesignCanvas
@@ -55,7 +65,12 @@ internal object TowerMapLayout {
     const val BOTTOM_PAD = 180
 
     /** Tâm X lặp theo chu kỳ 4 tầng để đường đi uốn qua lại. */
-    private val CENTER_X = intArrayOf(495, 725, 495, 265)
+    const val MAP_WIDTH = 500
+    const val PREVIEW_X = 520
+    const val PREVIEW_WIDTH = 512
+    const val PREVIEW_TOP = 270
+    const val PREVIEW_HEIGHT = 1240
+    private val CENTER_X = intArrayOf(260, 360, 260, 160)
 
     /** Chiều cao cả dải bản đồ. */
     val contentHeight: Int = TOP_PAD + (TowerCatalog.FLOOR_COUNT - 1) * STEP + BOTTOM_PAD
@@ -71,8 +86,8 @@ internal object TowerMapLayout {
  * trước (nằm dưới) node, node theo trạng thái (`map_floor_node` / `_complete` / `_locked` /
  * `_boss` + `badge_boss`), quầng `map_floor_current_glow` dưới tầng hiện tại, và nút Vào tầng.
  *
- * Chạm node để chọn tầng (đánh dấu bằng `map_crown_marker`), bấm Vào tầng để chơi. Tầng khóa
- * không chọn được và giấu tên.
+ * Tap a node to preview it; press Enter to play. Locked floors can be previewed,
+ * but cannot be entered.
  */
 @Composable
 fun TowerMapScreen(
@@ -100,10 +115,10 @@ fun TowerMapScreen(
         ArtImage(R.drawable.decor_map_vignette, maxEdge = ArtSizes.BOARD, alpha = 0.6f,
             modifier = Modifier.at(0, 0, 1080, 1920))
 
-        Box(modifier = Modifier.at(0, MAP_TOP, 1080, MAP_HEIGHT).verticalScroll(scroll)) {
+        Box(modifier = Modifier.at(0, MAP_TOP, TowerMapLayout.MAP_WIDTH, MAP_HEIGHT).verticalScroll(scroll)) {
             Box(modifier = Modifier.fillMaxWidth().height(d.dp(TowerMapLayout.contentHeight))) {
                 ArtImage(R.drawable.map_tower_emblem, maxEdge = ArtSizes.PIECE, trim = true,
-                    modifier = Modifier.at(400, 20, 280, 200))
+                    modifier = Modifier.at(100, 20, 280, 200))
                 // Đường nối vẽ trước: luôn nằm sau node.
                 for (n in 1 until floors.size) {
                     Connection(from = n, to = n + 1, open = progress.statusOf(n) == FloorStatus.CLEARED)
@@ -117,6 +132,15 @@ fun TowerMapScreen(
                     )
                 }
             }
+        }
+
+        selectedFloor?.let { floor ->
+            FloorPreview(
+                floor = floor,
+                status = progress.statusOf(floor.number),
+                modifier = Modifier.at(TowerMapLayout.PREVIEW_X, TowerMapLayout.PREVIEW_TOP,
+                    TowerMapLayout.PREVIEW_WIDTH, TowerMapLayout.PREVIEW_HEIGHT),
+            )
         }
 
         ArtImage(R.drawable.decor_map_bottom_ornament, maxEdge = ArtSizes.PIECE, trim = true,
@@ -140,6 +164,66 @@ fun TowerMapScreen(
             modifier = Modifier.at(150, 1650, 780, 110),
         )
     }
+}
+
+/** Fixed rectangular preview beside the scrollable map; rewards stay visible. */
+@Composable
+private fun FloorPreview(floor: Floor, status: FloorStatus, modifier: Modifier = Modifier) {
+    val d = LocalDesign.current
+    val detailScroll = rememberScrollState()
+    LaunchedEffect(floor.number) { detailScroll.scrollTo(0) }
+    val boss = TowerBosses.character(floor)
+    val reward = TowerRewards.forFloor(floor)
+    Column(
+        modifier = modifier.background(GothicColors.Ink.copy(alpha = 0.94f))
+            .border(d.dp(3), GothicColors.Gold.copy(alpha = 0.7f)).padding(d.dp(28)),
+        verticalArrangement = Arrangement.spacedBy(d.dp(24)),
+    ) {
+        Column(
+            modifier = Modifier.weight(1f).verticalScroll(detailScroll),
+            verticalArrangement = Arrangement.spacedBy(d.dp(24)),
+        ) {
+            DesignText(stringResource(R.string.tower_floor_label, floor.number), 36,
+                color = GothicColors.Gold, weight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
+            DesignText(floor.title, 42, weight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
+            if (boss != null) {
+                PreviewText(stringResource(boss.name), colorGold = true)
+                ArtImage(boss.portrait, maxEdge = ArtSizes.PIECE,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).at(0, 0, 120, 120))
+            } else {
+                floor.estimatedElo?.let {
+                    PreviewText(stringResource(R.string.tower_puzzle_elo, it), colorGold = true)
+                }
+            }
+            PreviewText(floor.teaser, italic = true)
+            if (boss != null) {
+                PreviewText(stringResource(R.string.tower_preview_strength, TowerCatalog.chapterOf(floor.number)))
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(d.dp(12))) {
+            DesignText(stringResource(R.string.tower_preview_rewards), 36,
+                modifier = Modifier.fillMaxWidth(), weight = FontWeight.Bold, color = GothicColors.Gold)
+            DesignText(stringResource(R.string.tower_preview_reward_values, reward.gold, reward.crystals, reward.books),
+                36, modifier = Modifier.fillMaxWidth())
+            Relic.entries.firstOrNull { it.unlockFloor == floor.number }?.let { relic ->
+                DesignText(stringResource(R.string.tower_preview_relic, stringResource(relicArt(relic).name)),
+                    30, modifier = Modifier.fillMaxWidth(), color = GothicColors.Gold)
+            }
+            DesignText(stringResource(when (status) {
+                FloorStatus.LOCKED -> R.string.tower_preview_locked
+                FloorStatus.CLEARED -> R.string.tower_preview_cleared
+                FloorStatus.CURRENT -> R.string.tower_preview_ready
+            }), 30, modifier = Modifier.fillMaxWidth(),
+                color = if (status == FloorStatus.LOCKED) GothicColors.Parchment else GothicColors.Gold)
+        }
+    }
+}
+
+@Composable
+private fun PreviewText(text: String, colorGold: Boolean = false, italic: Boolean = false) {
+    DesignText(text, 36, modifier = Modifier.fillMaxWidth(), align = TextAlign.Start,
+        alignment = Alignment.CenterStart, italic = italic,
+        color = if (colorGold) GothicColors.Gold else GothicColors.Parchment)
 }
 
 /** "Tầng N · tên · loại" của tầng đang chọn. */
@@ -196,7 +280,7 @@ private fun FloorNode(floor: Floor, status: FloorStatus, isSelected: Boolean, on
         else -> R.drawable.map_floor_node
     }
     val description = if (status == FloorStatus.LOCKED) {
-        stringResource(R.string.tower_status_locked)
+        stringResource(R.string.tower_floor_label, floor.number) + " · " + stringResource(R.string.tower_status_locked)
     } else {
         stringResource(R.string.tower_floor_label, floor.number)
     }
@@ -207,10 +291,9 @@ private fun FloorNode(floor: Floor, status: FloorStatus, isSelected: Boolean, on
         contentDescription = description,
         modifier = Modifier.at(cx - half, cy - half, TowerMapLayout.NODE, TowerMapLayout.NODE)
             .clip(CircleShape)
-            // Tầng khóa không chạm được.
-            .then(if (status == FloorStatus.LOCKED) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick)),
+            .clickable(role = Role.Button, onClick = onClick),
     )
-    if (status != FloorStatus.LOCKED) {
+    run {
         DesignText(
             text = floor.number.toString(),
             size = 40,

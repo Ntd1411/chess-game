@@ -270,6 +270,8 @@
     <string name="ai_knight_style">Phòng thủ chắc chắn, ít khi bỏ quân</string>
     <string name="ai_knight_personality">Trầm lặng, kỷ luật</string>
     <string name="ai_knight_quote">“Ta canh giữ bóng tối. Ngươi sẽ không qua được.”</string>
+    <string name="tower_knight_rematch_quote">“Ta nhớ những nước đi của ngươi. Lần này, ta sẽ không để ngươi vượt qua.”</string>
+    <string name="tower_queen_rematch_quote">“Ngươi lại đến trước mặt ta, vẫn mang theo những ký ức ấy. Để xem ngươi giữ được chúng bao lâu.”</string>
     <string name="ai_queen_name">Nữ Hoàng Máu</string>
     <string name="ai_queen_style">Tấn công dữ dội, ép thế địch ngay từ đầu</string>
     <string name="ai_queen_personality">Hung hãn, kiêu ngạo</string>
@@ -281,7 +283,7 @@
     <string name="ai_hidden_name">\?\?\?</string>
     <string name="ai_hidden_style">Chưa ai thấy hắn ra tay</string>
     <string name="ai_hidden_personality">Không ai biết</string>
-    <string name="ai_hidden_quote">“…”</string>
+    <string name="ai_hidden_quote">“Không còn cánh cửa nào phía sau ta. Hãy tự tìm nước đi cuối cùng.”</string>
 
     <!-- Sảnh chính -->
     <string name="lobby_settings">Cài đặt</string>
@@ -421,4 +423,16 @@
     <string name="main_menu_spectate_short">AI vs AI</string>
     <string name="main_menu_local_tiny">2P</string>
     <string name="main_menu_spectate_tiny">Auto</string>
+    <string name="tower_puzzle_elo">Puzzle · Elo ước lượng %1$d</string>
+    <string name="tower_puzzle_goal">Chiếu liên tiếp · hết trong %1$d nước</string>
+    <string name="tower_preview_puzzle">Tìm chuỗi chiếu liên tiếp và kết thúc bằng chiếu hết. Đi sai được thử lại.</string>
+    <string name="tower_preview_boss">Thắng trọn ván cờ từ thế khởi đầu. Hòa hoặc thua phải thử lại.</string>
+    <string name="tower_preview_strength">Boss chương %1$d</string>
+    <string name="tower_preview_rewards">Phần thưởng lần đầu</string>
+    <string name="tower_preview_reward_values">%1$d vàng\n%2$d pha lê\n%3$d sách ký ức</string>
+    <string name="tower_preview_locked">Chưa mở · vượt tầng trước để vào</string>
+    <string name="tower_preview_cleared">Đã vượt · thưởng đã được nhận</string>
+    <string name="tower_preview_ready">Đã mở · sẵn sàng thử thách</string>
+    <string name="tower_preview_relic">Mở di vật: %1$s</string>
+    <string name="tower_elo_estimate_note">Elo ước lượng, chưa được kiểm chứng.</string>
 </resources>

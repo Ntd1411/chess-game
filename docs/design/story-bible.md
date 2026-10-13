@@ -25,7 +25,8 @@ Người chơi không phải người thứ 49 bước vào tháp, mà là **Att
 thứ 49"**. 48 "người chơi" trước là 48 lần thử trước của cùng một vòng lặp.
 
 - **Aria** — "Nữ hoàng Ký ức" (Memory Queen), hình thành từ ký ức các lần thử trước,
-  là Boss ở tầng 21, tiết lộ động cơ ở tầng 45.
+  xuất hiện ở tầng 21, tiết lộ động cơ ở tầng 45. Nữ Hoàng Máu là đối thủ
+  giữ cửa ký ức của Aria tại tầng 21 và tái đấu ở tầng 42.
 - **Player #48** — hồ sơ bị **CORRUPTED**, là đầu mối hé lộ sự thật ở tầng 42.
 - **Reveal giả** quanh tầng 20–30 → **reveal thật** tầng 42 → **final reveal** tầng
   49, cái kết cho phép Player bước ra khỏi bàn cờ.
@@ -58,10 +59,34 @@ Journal).
 Giữ đủ **49 tầng**, nhưng chỉ gắn thoại cốt truyện ở các **tầng mốc**:
 - Tầng 1 — mở đầu
 - Tầng 5 — giới thiệu Player #48
-- Tầng 21 — boss Aria
+- Tầng 21 — gặp Aria, đấu boss Nữ Hoàng Máu
 - Tầng 42 — true reveal (qua Player #48)
 - Tầng 45 — Aria tiết lộ lý do
 - Tầng 49 — final reveal + ending
 
-Các tầng còn lại: thuần gameplay (giải thế cờ / sống sót N nước / thắng AI theo độ
-khó tầng), không cần viết thoại.
+### Quy luật thử thách hiện hành
+
+Mỗi chương có **6 tầng puzzle + 1 tầng boss**. Chỉ các tầng **7, 14, 21, 28, 35,
+42, 49** là ván cờ đầy đủ từ thế khởi đầu; phải thắng, hòa không tính qua. Các
+loại Treasure/Secret/Story-only không còn dùng trong catalog, nhưng giữ kiểu dữ
+liệu cũ cho các fixture tương thích.
+
+- 42 puzzle khác nhau, chuỗi chiếu liên tiếp từ chiếu hết trong 1 đến 3 nước.
+- Elo **ước lượng** bắt đầu 800, tăng 25 mỗi puzzle, đến 1825; chưa qua calibration
+  với người chơi, không phải rating chính thức. Chuỗi giải dùng đáp án định trước.
+- Boss theo thứ tự: Pháp Sư Cờ → Hiệp Sĩ Bóng Đêm → Nữ Hoàng Máu → Vua Hắc Ám →
+  Hiệp Sĩ Bóng Đêm tái đấu → Nữ Hoàng Máu tái đấu → nhân vật ẩn `???`.
+- Boss dùng chung danh mục AI (tên, chân dung, tính cách, câu thoại). Giới hạn tìm
+  kiếm tăng theo từng chương: độ sâu 2–8, thời gian 0.5–5 giây/nước, giảm lựa chọn
+  ngẫu nhiên và tỷ lệ bỏ nước tốt. Tính cách/phong cách vẫn là phần nhập vai, chưa
+  phải một bộ thuật toán chơi riêng cho từng nhân vật.
+- Tầng 45 vẫn có thoại Aria, nhưng phải giải puzzle sau thoại để nhận thưởng.
+- Khi chọn bất kỳ node, kể cả node khóa, panel hình chữ nhật bên phải hiện lời
+  dẫn gắn chương/tầng, mục tiêu, mức ước lượng hoặc hồ sơ boss, và phần thưởng lần
+  đầu. Node khóa chỉ xem trước; nút Vào tầng bị vô hiệu hóa.
+- Thưởng dùng cùng `TowerRewards.forFloor` như màn chiến thắng, tầng đã qua ghi rõ
+  thưởng đã nhận. Tiến độ lưu không bị reset; ví vốn suy ra từ tiến độ sẽ được
+  tính lại theo catalog mới, không giữ tổng phần thưởng của quy luật cũ.
+
+Sáu mốc cốt truyện và kết thúc giữ nguyên, ngoài câu nối để phân biệt Aria với
+Nữ Hoàng Máu. Bản giới thiệu node không tiết lộ twist trước khi xem thoại mốc.

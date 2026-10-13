@@ -25,6 +25,28 @@ enum class Difficulty(
     HARD(depth = 6, timeBudgetMillis = 5_000, topMoveChoices = 1, blunderChance = 0.0),
 }
 
+/** Campaign search limits. Rating is not inferred from these settings. */
+data class AiStrength(
+    val depth: Int,
+    val timeBudgetMillis: Long,
+    val topMoveChoices: Int = 1,
+    val blunderChance: Double = 0.0,
+) {
+    init {
+        require(depth in 1..16)
+        require(timeBudgetMillis > 0)
+        require(topMoveChoices > 0)
+        require(blunderChance in 0.0..1.0)
+    }
+
+    companion object {
+        fun from(difficulty: Difficulty) = AiStrength(
+            difficulty.depth, difficulty.timeBudgetMillis,
+            difficulty.topMoveChoices, difficulty.blunderChance,
+        )
+    }
+}
+
 /**
  * Mặt tiền của AI — tầng duy nhất mà :app cần biết.
  *
@@ -56,12 +78,13 @@ class Ai(
         difficulty: Difficulty,
         isActive: () -> Boolean = { true },
         onProgress: (SearchProgress) -> Unit = {},
+        strength: AiStrength = AiStrength.from(difficulty),
     ): Move {
-        val needsExactScores = difficulty.topMoveChoices > 1
+        val needsExactScores = strength.topMoveChoices > 1
         val result = search.search(
             board = board,
-            depth = difficulty.depth,
-            timeBudgetMillis = difficulty.timeBudgetMillis,
+            depth = strength.depth,
+            timeBudgetMillis = strength.timeBudgetMillis,
             exactRootScores = needsExactScores,
             isActive = isActive,
             onProgress = onProgress,
@@ -75,12 +98,12 @@ class Ai(
         // ăn sạch mọi quân bỏ không và vẫn quá khó với người mới. Nhưng chọn nước
         // hoàn toàn ngẫu nhiên thì lại thành vô nghĩa. Cách giữa: vẫn chọn trong nhóm
         // nước tốt, nhưng thỉnh thoảng bỏ qua chính nước tốt nhất.
-        val pool = if (candidates.size > 1 && random.nextDouble() < difficulty.blunderChance) {
+        val pool = if (candidates.size > 1 && random.nextDouble() < strength.blunderChance) {
             candidates.subList(1, candidates.size)
         } else {
             candidates
         }
-        val choices = minOf(difficulty.topMoveChoices, pool.size)
+        val choices = minOf(strength.topMoveChoices, pool.size)
         return pool[random.nextInt(choices)].move
     }
 }

@@ -7,6 +7,14 @@ import org.junit.Test
 
 class LobbyLayoutTest {
     @Test
+    fun `preview o ben canh ban do khong che node hay nut vao tang`() {
+        assertTrue(TowerMapLayout.MAP_WIDTH < TowerMapLayout.PREVIEW_X)
+        assertTrue(TowerMapLayout.PREVIEW_X + TowerMapLayout.PREVIEW_WIDTH <= 1032)
+        assertTrue(TowerMapLayout.PREVIEW_TOP >= 210)
+        assertTrue(TowerMapLayout.PREVIEW_TOP + TowerMapLayout.PREVIEW_HEIGHT < 1650)
+    }
+
+    @Test
     fun `man chon che do va chon AI nam gon trong khung`() {
         val cards = (0 until 5).map(ModeSelectLayout::card)
         for (i in 0 until cards.size - 1) assertFalse(cards[i].overlaps(cards[i + 1]))
@@ -41,7 +49,8 @@ class LobbyLayoutTest {
         }
         for (n in 1..49) {
             val x = TowerMapLayout.centerX(n)
-            assertTrue(x - TowerMapLayout.NODE / 2 >= 48 && x + TowerMapLayout.NODE / 2 <= 1032)
+            assertTrue(x - TowerMapLayout.NODE / 2 >= 48 && x + TowerMapLayout.NODE / 2 <= TowerMapLayout.MAP_WIDTH)
+            assertTrue(x + 105 <= TowerMapLayout.MAP_WIDTH)
         }
     }
 }

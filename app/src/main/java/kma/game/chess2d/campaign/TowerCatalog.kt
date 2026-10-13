@@ -9,8 +9,8 @@ import kma.game.chess2d.puzzle.PuzzleCatalog
 /**
  * Bộ 49 tầng của Tháp Cờ.
  *
- * Phần lớn tầng được sinh theo quy luật lặp lại trong mỗi chương (7 chương × 7 tầng),
- * chỉ 6 tầng mốc có nội dung riêng theo `docs/design/story-bible.md`. Giống
+ * Each chapter has six checking puzzles followed by one full boss game.
+ * The six story milestones are preserved. Like
  * [PuzzleCatalog], [build] và [validate] đều là hàm thuần nên test JVM duyệt được cả
  * 49 tầng bằng engine thật, không cần máy Android.
  */
@@ -36,30 +36,19 @@ object TowerCatalog {
         else -> Difficulty.HARD
     }
 
-    /** Trùm mạnh hơn tầng thường một bậc, trần là HARD. */
-    private fun bossDifficultyFor(floor: Int): Difficulty = when (difficultyFor(floor)) {
-        Difficulty.EASY -> Difficulty.MEDIUM
-        Difficulty.MEDIUM, Difficulty.HARD -> Difficulty.HARD
-    }
+    const val PUZZLE_COUNT = 42
 
-    /**
-     * Dựng đủ [FLOOR_COUNT] tầng.
-     *
-     * @param puzzleCount số câu đố có sẵn; tầng PUZZLE của chương c lấy câu số
-     *        `(c - 1) % puzzleCount`, nên bộ câu đố ít hơn số chương vẫn dùng được.
-     */
+    /** Each non-boss floor gets a distinct puzzle, starting at an estimated Elo of 800. */
     fun build(puzzleCount: Int): List<Floor> {
-        require(puzzleCount > 0) { "cần ít nhất 1 câu đố cho các tầng PUZZLE" }
-        return (1..FLOOR_COUNT).map { floor(it, puzzleCount) }
+        require(puzzleCount >= PUZZLE_COUNT) { "cần ít nhất $PUZZLE_COUNT câu đố khác nhau" }
+        return (1..FLOOR_COUNT).map { floor(it) }
     }
 
-    private fun floor(number: Int, puzzleCount: Int): Floor {
+    private fun floor(number: Int): Floor {
         val chapter = chapterOf(number)
         val position = (number - 1) % FLOORS_PER_CHAPTER + 1
-        val difficulty = difficultyFor(number)
-        val dialogue = number in MILESTONES
-
-        // Tầng mốc có nội dung riêng; tầng 1, 5, 21, 42, 49 vẫn là ván cờ, chỉ 45 là thuần thoại.
+        val isBoss = position == FLOORS_PER_CHAPTER
+        val puzzleIndex = number - 1 - number / FLOORS_PER_CHAPTER
         val milestoneTitle = when (number) {
             1 -> "Cổng tháp"
             5 -> "Player #48"
@@ -69,59 +58,76 @@ object TowerCatalog {
             49 -> "Nước đi thứ 49"
             else -> null
         }
+        return Floor(
+            number = number,
+            kind = if (isBoss) NodeKind.BOSS else NodeKind.PUZZLE,
+            title = milestoneTitle ?: if (isBoss) "Người giữ cửa chương $chapter" else "Dấu vết $chapter · $position",
+            goal = if (isBoss) FloorGoal.DefeatAi(
+                when (chapter) {
+                    1 -> Difficulty.EASY
+                    2 -> Difficulty.MEDIUM
+                    else -> Difficulty.HARD
+                }, TowerBosses.strength(number),
+            ) else FloorGoal.SolvePuzzle(puzzleIndex),
+            hasDialogue = number in MILESTONES,
+            estimatedElo = if (isBoss) null else 800 + puzzleIndex * 25,
+            bossId = if (isBoss) TowerBosses.characterId(number) else null,
+            teaser = teaser(number),
+        )
+    }
 
-        if (number == 45) {
-            return Floor(
-                number = number,
-                kind = NodeKind.STORY,
-                title = milestoneTitle!!,
-                goal = FloorGoal.Claim,
-                hasDialogue = true,
-            )
-        }
-
-        return when (position) {
-            2 -> Floor(
-                number = number,
-                kind = NodeKind.PUZZLE,
-                title = milestoneTitle ?: "Thế cờ chương $chapter",
-                goal = FloorGoal.SolvePuzzle((chapter - 1) % puzzleCount),
-                hasDialogue = dialogue,
-            )
-
-            4 -> Floor(
-                number = number,
-                kind = NodeKind.TREASURE,
-                title = milestoneTitle ?: "Kho báu chương $chapter",
-                goal = FloorGoal.Claim,
-                hasDialogue = dialogue,
-            )
-
-            6 -> Floor(
-                number = number,
-                kind = NodeKind.SECRET,
-                title = milestoneTitle ?: "Căn phòng bí mật",
-                goal = FloorGoal.SurviveMoves(moves = 10 + 2 * chapter, difficulty = difficulty),
-                startFen = FEN_WHITE_NO_QUEEN,
-                hasDialogue = dialogue,
-            )
-
-            7 -> Floor(
-                number = number,
-                kind = NodeKind.BOSS,
-                title = milestoneTitle ?: "Trùm chương $chapter",
-                goal = FloorGoal.DefeatAi(bossDifficultyFor(number)),
-                hasDialogue = dialogue,
-            )
-
-            else -> Floor(
-                number = number,
-                kind = NodeKind.BATTLE,
-                title = milestoneTitle ?: "Đấu cờ tầng $number",
-                goal = FloorGoal.DefeatAi(difficulty),
-                hasDialogue = dialogue,
-            )
-        }
+    /** One distinct, spoiler-light introduction per floor, never a shared chapter template. */
+    private fun teaser(number: Int): String = when (number) {
+        1 -> "Ngươi cũng chỉ là một kẻ lạc lối sao? Ở nơi này, chỉ có chiến thắng mới đưa ngươi lên…"
+        2 -> "Bụi phủ kín cầu thang, trừ một vệt chân còn mới. Có người vừa đi qua đây."
+        3 -> "Ngọn nến bên bàn cờ bỗng sáng lên khi ngươi đến gần. Căn phòng dường như đã chờ từ lâu."
+        4 -> "Một chiếc chìa khóa nằm dưới quân xe. Ổ khóa của nó ở đâu đó phía trên."
+        5 -> "Một bóng người đứng bên bàn cờ. Vì sao ánh mắt của hắn quen thuộc đến vậy?"
+        6 -> "Những ký hiệu trên tường tỏa sáng nhè nhẹ. Từ tầng trên vọng xuống tiếng lật sách."
+        7 -> "Pháp Sư Cờ khép quyển sách và mỉm cười. Ngươi có tin một nước đi cũng có thể là phép thuật?"
+        8 -> "Cuộn giấy bên cửa chỉ còn đọc được vài chữ. Phần tên người viết đã bị xóa sạch."
+        9 -> "Một bộ giáp rỗng đứng giữa hành lang. Khi ngươi quay lưng, nó khẽ chuyển động."
+        10 -> "Mưa gõ lên khung cửa sổ vỡ. Ngoài kia không có lấy một ngọn đèn."
+        11 -> "Trên bàn có một ván cờ bị bỏ dở. Chiếc ghế đối diện vẫn còn ấm."
+        12 -> "Lọ thuốc xanh nằm cạnh một lá thư chưa gửi. Nét chữ run rẩy dừng ở lời chào."
+        13 -> "Cánh cửa sắt hé mở, để lộ ánh kiếm bên trong. Người canh gác đã biết ngươi sẽ đến."
+        14 -> "Hiệp Sĩ Bóng Đêm đặt kiếm xuống cạnh bàn. Không một tiếng động nào lọt qua chiếc mũ giáp."
+        15 -> "Tấm gương phản chiếu căn phòng, nhưng thiếu bóng ngươi. Một vết nứt đang lan từ chính giữa."
+        16 -> "Viên pha lê phát ra tiếng thì thầm. Ngươi chỉ nghe rõ một cái tên: Aria."
+        17 -> "Những bức chân dung đều bị che mặt. Một đôi mắt vẫn nhìn ngươi qua lớp vải đỏ."
+        18 -> "Tiếng nhạc vang lên từ cây đàn không người chạm. Giai điệu này khiến ngươi thấy nhớ một điều gì đó."
+        19 -> "Cánh hoa trắng rơi trên bàn cờ đen. Chưa ai tìm thấy khu vườn nơi nó mọc."
+        20 -> "Một quân tốt vỡ nằm trong góc phòng. Bên cạnh là một dấu tay mờ trên đá."
+        21 -> "Aria chờ sau tấm màn đỏ. Nữ Hoàng Máu giữ cửa căn phòng chứa những ký ức đã mất."
+        22 -> "Sau cánh cửa của nữ hoàng là một hành lang đầy gương. Mỗi tấm phản chiếu một bầu trời khác nhau."
+        23 -> "Một chiếc đồng hồ đã mất cả hai kim. Tiếng tích tắc vẫn vang đều trong phòng."
+        24 -> "Mảnh quân cờ khắc một ký hiệu quen thuộc. Ngươi không nhớ đã nhìn thấy nó ở đâu."
+        25 -> "Bức thư trên ngai trống không đề tên người nhận. Chỉ có lời hẹn gặp ở đỉnh tháp."
+        26 -> "Bóng của một vương miện trải dài trên tường. Chiếc vương miện thật đã biến mất."
+        27 -> "Hai hàng tượng cúi đầu trước cánh cửa đen. Phía sau cửa, có người đang chờ trong im lặng."
+        28 -> "Vua Hắc Ám ngồi bất động trên ngai. Với hắn, sự kiên nhẫn cũng là một thứ vũ khí."
+        29 -> "Mùi sắt lạnh thoảng qua căn phòng trống. Dấu kiếm trên tường vẫn còn rất mới."
+        30 -> "Một chiếc ghế đã được kéo sẵn cho ngươi. Trên lưng ghế có vết khắc giống tên mình."
+        31 -> "Tấm bản đồ dừng lại ở tầng này. Những bậc thang phía trước chưa từng được ghi lên giấy."
+        32 -> "Pha lê đỏ sáng lên giữa tro tàn. Ánh sáng của nó khiến các bóng đổ quay về phía ngươi."
+        33 -> "Một lời cảnh báo bị cào khỏi cánh cửa. Chỉ còn hai chữ: đừng quên."
+        34 -> "Tiếng bước chân bọc thép trở lại. Người giữ cửa cũ đã tìm thấy ngươi."
+        35 -> "Hiệp Sĩ Bóng Đêm tháo chiếc găng tay sứt mẻ. Lần này, hắn không còn định nương tay."
+        36 -> "Một thẻ phép mắc trong khe đá. Ký hiệu trên đó trùng với trang sách của Pháp Sư."
+        37 -> "Ngọn nến cuối phòng cháy bằng lửa trắng. Dưới chân nến là một trang giấy trắng tinh."
+        38 -> "Ngươi nghe thấy tiếng mình gọi từ bên kia cửa. Nhưng căn phòng phía sau hoàn toàn trống rỗng."
+        39 -> "Hồ sơ trên bàn đã bị nhòe gần hết. Số 48 là dòng duy nhất còn đọc được."
+        40 -> "Một đóa hồng đen nằm trên chiếc gối bạc. Gai của nó vẫn vương những sợi chỉ đỏ."
+        41 -> "Tấm màn cũ lại xuất hiện ở cuối hành lang. Lần này, bên trong không còn tiếng nhạc."
+        42 -> "Nữ Hoàng Máu trở lại. Sau bàn cờ của nàng, một sự thật vẫn đang chờ được gọi tên."
+        43 -> "Những bậc thang phía sau chìm dần trong sương. Tiếng gọi của Player #48 vẫn còn vang trong đầu."
+        44 -> "Quả cầu phép soi lên những căn phòng ngươi đã đi qua. Có một cánh cửa trong đó chưa từng được mở."
+        45 -> "Aria để lại một thế cờ cùng lời nhắn: hãy tìm lối ra, không phải thêm một chiếc ngai."
+        46 -> "Một bàn cờ trống nằm dưới ánh trăng đỏ. Bên cạnh nó chỉ có một chiếc ghế."
+        47 -> "Gió từ đỉnh tháp mang theo những cánh hoa trắng. Lần đầu tiên, không khí ở đây bớt lạnh."
+        48 -> "Mảnh cờ vàng nằm trên bậc thang cuối. Cánh cửa phía trước không có ổ khóa."
+        49 -> "Kẻ không tên chờ ở đỉnh tháp. Nước đi cuối cùng sẽ khép lại điều gì?"
+        else -> error("floor $number has no introduction")
     }
 
     /**
@@ -177,7 +183,19 @@ object TowerCatalog {
             check(floor.hasDialogue == (floor.number in MILESTONES)) {
                 "tầng ${floor.number}: cờ thoại không khớp danh sách tầng mốc"
             }
+            check((floor.kind == NodeKind.BOSS) == (floor.number % FLOORS_PER_CHAPTER == 0)) {
+                "tầng ${floor.number}: only multiples of seven may be bosses"
+            }
             validate(floor, puzzles)
+            (floor.goal as? FloorGoal.SolvePuzzle)?.let { goal ->
+                check(floor.estimatedElo == puzzles[goal.puzzleIndex].estimatedElo) {
+                    "tầng ${floor.number}: puzzle rating differs from the preview"
+                }
+            }
         }
+        val puzzleFloors = floors.filter { it.goal is FloorGoal.SolvePuzzle }
+        check(puzzleFloors.size == PUZZLE_COUNT)
+        check(puzzleFloors.map { (it.goal as FloorGoal.SolvePuzzle).puzzleIndex }.toSet().size == PUZZLE_COUNT)
+        check(puzzleFloors.map { puzzles[(it.goal as FloorGoal.SolvePuzzle).puzzleIndex].startFen }.toSet().size == PUZZLE_COUNT)
     }
 }
